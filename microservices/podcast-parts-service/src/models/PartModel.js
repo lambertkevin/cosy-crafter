@@ -1,5 +1,7 @@
-import mongoose from 'mongoose';
+import Boom from '@hapi/boom';
 import mongooseUniqueValidator from 'mongoose-unique-validator';
+import mongoose from 'mongoose';
+import Podcast from './PodcastModel';
 import arrayToProjection from '../utils/arrayToProjection';
 
 export const hiddenFields = [
@@ -35,5 +37,22 @@ const schema = new mongoose.Schema({
 
 // This allow for beautified E11000 errors for 'uniqueness' of fields
 schema.plugin(mongooseUniqueValidator);
+
+// Cascade update to add part to podcast parts array
+schema.post('validate', async (part, next) => {
+  try {
+    await Podcast.findOneAndUpdate({
+      _id: part.podcast
+    }, {
+      $addToSet: {
+        parts: part._id
+      }
+    }).exec();
+
+    next();
+  } catch (e) {
+    next(Boom.resourceGone('Error while updating the podcast'));
+  }
+});
 
 export default mongoose.model('Part', schema);
