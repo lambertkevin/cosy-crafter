@@ -4,6 +4,7 @@ import arrayToProjection from '../utils/arrayToProjection';
 
 export const hiddenFields = [
   'createdAt',
+  'updatedAt',
   '__v'
 ];
 
@@ -14,11 +15,9 @@ const schema = new mongoose.Schema({
     type: String,
     required: true,
     unique: true
-  },
-  createdAt: {
-    type: Date,
-    default: Date.now
   }
+}, {
+  timestamps: true
 });
 
 // This allow for beautified E11000 errors for 'uniqueness' of fields
