@@ -2,7 +2,7 @@ import joi from '@hapi/joi';
 import * as podcastController from '../controllers/PodcastController';
 
 export default {
-  name: 'podcastsApi',
+  name: 'podcastApi',
   async register(server) {
     server.route({
       method: 'GET',

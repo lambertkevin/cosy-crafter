@@ -1,5 +1,5 @@
-import PodcastsApi from './PodcastsApi';
+import PodcastApi from './PodcastApi';
 
 export default [
-  { plugin: PodcastsApi, routes: { prefix: '/v1/podcasts' } }
+  { plugin: PodcastApi, routes: { prefix: '/v1/podcasts' } }
 ];
