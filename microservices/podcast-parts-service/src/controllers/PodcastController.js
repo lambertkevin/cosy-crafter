@@ -69,9 +69,13 @@ export const update = (id, {
 }, _.isUndefined))
   .exec()
   .then(async (res) => {
-    if (!res.nModified) {
+    if (!res.n) {
       return Boom.notFound();
     }
+    if (!res.nModified) {
+      return Boom.expectationFailed('No changes required');
+    }
+
     const podcast = await findOne(id);
     return podcast;
   })
