@@ -61,14 +61,20 @@ export const update = (id, {
   edition,
   parts,
   tags
-}) => Podcast.updateOne({ _id: id }, {
+}) => Podcast.updateOne({ _id: id }, _.omitBy({
   name,
   edition,
   parts,
   tags
-})
+}, _.isUndefined))
   .exec()
-  .then((podcast) => calibrate.response(_.omit(podcast.toObject(), hiddenFields)))
+  .then(async (res) => {
+    if (!res.nModified) {
+      return Boom.notFound();
+    }
+    const podcast = await findOne(id);
+    return podcast;
+  })
   .catch((error) => {
     if (error.name === 'ValidationError') {
       const response =  Boom.boomify(error, { statusCode: 409 });
