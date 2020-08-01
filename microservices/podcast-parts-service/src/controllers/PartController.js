@@ -4,12 +4,16 @@ import calibrate from 'calibrate';
 import * as PodcastController from './PodcastController';
 import * as PartTypeController from './PartTypeController';
 import Part, { projection, hiddenFields } from '../models/PartModel';
+import { projection as podcastProjection } from '../models/PodcastModel';
+import { projection as partTypeProjection } from '../models/PartTypeModel';
 
 /**
  * Return a list of all part
  * @return {Promise<Object[]>} {[Part]}
  */
 export const find = () => Part.find({}, projection)
+  .populate('podcast', { ...podcastProjection, parts: false })
+  .populate('type', partTypeProjection)
   .exec()
   .then(calibrate.response)
   .catch(Boom.boomify);
@@ -20,6 +24,8 @@ export const find = () => Part.find({}, projection)
  * @return {Promise<Object>} {Part}
  */
 export const findOne = (id) => Part.findOne({ _id: id }, projection)
+  .populate('podcast', { ...podcastProjection, parts: false })
+  .populate('type', partTypeProjection)
   .exec()
   .then(calibrate.response)
   .catch(Boom.boomify);
@@ -109,10 +115,10 @@ export const update = (id, {
 
 /**
  * Create a part
- * @param {String} id
+ * @param {Array<String>} ids
  * @return {Promise<void>}
  */
-export const remove = (id) => Part.deleteOne({ _id: id })
+export const remove = (ids) => Part.deleteMany({ _id: { $in: ids } })
   .exec()
   .then((res) => {
     if (!res.deletedCount) {
@@ -120,7 +126,7 @@ export const remove = (id) => Part.deleteOne({ _id: id })
     }
 
     return calibrate.response({
-      deleted: id
+      deleted: ids
     });
   })
   .catch(Boom.boomify);

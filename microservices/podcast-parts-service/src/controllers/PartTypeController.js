@@ -74,10 +74,10 @@ export const update = (id, { name }) => PartType
 
 /**
  * Create a partType
- * @param {String} id
+ * @param {Arrays} ids
  * @return {Promise<void>}
  */
-export const remove = (id) => PartType.deleteOne({ _id: id })
+export const remove = (ids) => PartType.deleteMany({ _id: { $in: ids } })
   .exec()
   .then((res) => {
     if (!res.deletedCount) {
@@ -85,7 +85,7 @@ export const remove = (id) => PartType.deleteOne({ _id: id })
     }
 
     return calibrate.response({
-      deleted: id
+      deleted: ids
     });
   })
   .catch(Boom.boomify);

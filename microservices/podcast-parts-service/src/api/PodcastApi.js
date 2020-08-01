@@ -39,8 +39,8 @@ export default {
 
     server.route({
       method: 'DELETE',
-      path: '/{id}',
-      handler: (request) => podcastController.remove(request.params.id)
+      path: '/',
+      handler: (request) => podcastController.remove(request.payload.ids)
     });
   }
 };
