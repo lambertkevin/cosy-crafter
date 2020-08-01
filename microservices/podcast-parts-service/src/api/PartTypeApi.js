@@ -37,8 +37,8 @@ export default {
 
     server.route({
       method: 'DELETE',
-      path: '/{id}',
-      handler: (request) => partTypeController.remove(request.params.id)
+      path: '/',
+      handler: (request) => partTypeController.remove(request.payload.ids)
     });
   }
 };

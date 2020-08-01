@@ -40,8 +40,8 @@ export default {
 
     server.route({
       method: 'DELETE',
-      path: '/{id}',
-      handler: (request) => partController.remove(request.params.id)
+      path: '/',
+      handler: (request) => partController.remove(request.payload.ids)
     });
   }
 };

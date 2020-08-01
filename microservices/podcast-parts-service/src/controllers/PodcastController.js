@@ -1,14 +1,15 @@
 import _ from 'lodash';
 import Boom from '@hapi/boom';
-import mongoose from 'mongoose';
 import calibrate from 'calibrate';
 import Podcast, { projection, hiddenFields } from '../models/PodcastModel';
+import { projection as partProjection } from '../models/PartModel';
 
 /**
  * Return a list of all podcasts
  * @return {Promise<Object[]>} {[Podcast]}
  */
 export const find = () => Podcast.find({}, projection)
+  .populate('parts', { ...partProjection, podcast: false })
   .exec()
   .then(calibrate.response)
   .catch(Boom.boomify);
@@ -19,6 +20,7 @@ export const find = () => Podcast.find({}, projection)
  * @return {Promise<Object>} {Podcast}
  */
 export const findOne = (id) => Podcast.findOne({ _id: id }, projection)
+  .populate('parts', { ...partProjection, podcast: false })
   .exec()
   .then(calibrate.response)
   .catch(Boom.boomify);
@@ -92,10 +94,10 @@ export const update = (id, {
 
 /**
  * Create a podcast
- * @param {String} id
+ * @param {Array<String>} ids
  * @return {Promise<void>}
  */
-export const remove = (id) => Podcast.deleteOne({ _id: id })
+export const remove = (ids) => Podcast.deleteMany({ _id: { $in: ids } })
   .exec()
   .then((res) => {
     if (!res.deletedCount) {
@@ -103,7 +105,7 @@ export const remove = (id) => Podcast.deleteOne({ _id: id })
     }
 
     return calibrate.response({
-      deleted: id
+      deleted: ids
     });
   })
   .catch(Boom.boomify);
