@@ -1,0 +1,28 @@
+version: "3.8"
+
+services:
+    mongo-service:
+        image: mongo:4.4.0
+        volumes: 
+            - ./services/mongo-service/db:/data/db
+        healthcheck:
+            test: ["CMD", "curl", "-f", "http://localhost:27017"]
+            interval: 10s
+            timeout: 10s
+            retries: 5
+    
+    podcast-parts-service:
+        image: "node:12.18"
+        user: "node"
+        working_dir: /home/node/app
+        environment:
+            - NODE_ENV=production
+        volumes:
+            - ./services/podcast-parts-service:/home/node/app
+        expose: 
+            - 3000
+        ports:
+            - "3000:3000"
+        command: ${START_COMMAND:-npm run dev}
+        links:
+            - mongo-service      
