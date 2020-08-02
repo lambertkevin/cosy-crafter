@@ -3,7 +3,7 @@
  * @type {Object}
  */
 export const nodeConfig = {
-  port: 3000
+  port: process.env.PODCAST_PARTS_SERVICE_EXPOSED_PORT
 };
 
 /**

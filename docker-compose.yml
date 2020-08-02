@@ -20,9 +20,17 @@ services:
         volumes:
             - ./services/podcast-parts-service:/home/node/app
         expose: 
-            - 3000
+            - ${PODCAST_PARTS_SERVICE_EXPOSED_PORT}
         ports:
-            - "3000:3000"
-        command: ${START_COMMAND:-npm run dev}
+            - "${PODCAST_PARTS_SERVICE_EXPOSED_PORT}:${PODCAST_PARTS_SERVICE_EXPOSED_PORT}"
+        environment: 
+            - NODE_ENV=${NODE_ENV}
+            - DB_HOST=${DB_HOST}
+            - DB_PORT=${DB_PORT}
+            - DB_NAME=${DB_NAME}
+            - DB_USER=${DB_USER}
+            - DB_PASSWORD=${DB_PASSWORD}
+            - PODCAST_PARTS_SERVICE_EXPOSED_PORT=${PODCAST_PARTS_SERVICE_EXPOSED_PORT}
+        command: ./run.sh
         links:
             - mongo-service      
