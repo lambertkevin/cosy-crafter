@@ -11,9 +11,9 @@ export const nodeConfig = {
  * @type {Object}
  */
 export const databaseConfig = {
-  host: process.env.DB_HOST,
-  port: process.env.DB_PORT,
-  db: process.env.DB_NAME,
-  username: process.env.DB_USER,
-  password: process.env.DB_PASSWORD
+  host: process.env.MONGO_DB_HOST,
+  port: process.env.MONGO_DB_PORT,
+  db: process.env.PODCAST_PARTS_DB_NAME,
+  username: process.env.PODCAST_PARTS_DB_USER,
+  password: process.env.PODCAST_PARTS_DB_PASSWORD
 };
