@@ -1,6 +1,2 @@
 .env
-
 node_modules
-
-services/mongo-service/db/*
-!services/mongo-service/db/.gitkeep
