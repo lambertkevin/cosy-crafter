@@ -1,0 +1,39 @@
+{
+  "name": "podcast-parts-service",
+  "version": "0.0.1",
+  "description": "Service that handle serving podcast parts either for internal use or for public api",
+  "main": "index.js",
+  "scripts": {
+    "start": "babel-node ./src/index.js",
+    "dev": "nodemon --exec npm start -e js",
+    "lint": "eslint ./src",
+    "debug": "npm run start --inspect",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@babel/cli": "^7.10.5",
+    "@babel/core": "^7.11.0",
+    "@babel/node": "^7.10.5",
+    "@babel/preset-env": "^7.11.0",
+    "@hapi/boom": "^9.1.0",
+    "@hapi/hapi": "^19.2.0",
+    "@hapi/joi": "^17.1.1",
+    "babel-cli": "^6.26.0",
+    "calibrate": "^4.2.0",
+    "dotenv": "^8.2.0",
+    "lodash": "^4.17.19",
+    "mongoose": "^5.9.26",
+    "mongoose-unique-validator": "^2.0.3"
+  },
+  "devDependencies": {
+    "@hapi/eslint-config-hapi": "^13.0.2",
+    "@hapi/eslint-plugin-hapi": "^4.3.5",
+    "babel-eslint": "^10.1.0",
+    "eslint": "^7.5.0",
+    "eslint-config-airbnb-base": "^14.2.0",
+    "eslint-plugin-import": "^2.22.0",
+    "nodemon": "^2.0.4"
+  }
+}
