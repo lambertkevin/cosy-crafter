@@ -1,12 +1,9 @@
-import OS from 'os';
-
 /**
  * Config for Node
  * @type {Object}
  */
 export const nodeConfig = {
-  port: 3000,
-  host: OS.hostname()
+  port: 3000
 };
 
 /**
