@@ -1,4 +1,4 @@
-import joi from '@hapi/joi';
+import joi from 'joi';
 import * as partTypeController from '../controllers/PartTypeController';
 
 export default {

@@ -1,4 +1,4 @@
-import joi from '@hapi/joi';
+import joi from 'joi';
 import * as podcastController from '../controllers/PodcastController';
 
 export default {
