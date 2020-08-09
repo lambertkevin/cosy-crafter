@@ -34,17 +34,21 @@ export default () => {
      * Will upload a stream to one of the storage available
      * depending on a priority list given as argument
      *
-     * @param {Array|String} _storagesPriority
+     * @param {Array|String} _storagesTypePriority
      * @param {ReadableStream} stream
      * @param {String} filepath
      *
      * @return {String|void} storageType {aws|scaleway|local|null}
      */
-    const setFileFromReadable = async (_storagesPriority, stream, filepath) => {
+    const setFileFromReadable = async (
+      _storagesTypePriority,
+      stream,
+      filepath
+    ) => {
       const storagesPriority =
-        typeof _storagesPriority === 'string'
-          ? [_storagesPriority]
-          : _storagesPriority;
+        typeof _storagesTypePriority === 'string'
+          ? [_storagesTypePriority]
+          : _storagesTypePriority;
       let storageName;
 
       for (let i = 0; i < storagesPriority.length; i += 1) {
@@ -57,7 +61,7 @@ export default () => {
             await storage.addFileFromReadable(stream, filepath);
             break;
           } catch (e) {
-            console.log(e);
+            /** @WARNING Log dat */
             storageName = null;
           }
         }
@@ -66,8 +70,26 @@ export default () => {
       return storageName;
     };
 
+    /**
+     * Get a file from a storage type returned as a stream
+     *
+     * @param {String} storageType
+     * @param {String} filepath
+     * @param {String} filename
+     *
+     * @return {Promise<ReadableStream>}
+     */
+    const getFileAsReadable = (storageType, filepath, filename) => {
+      const storage = storages[storageType];
+      if (!storage) {
+        return null;
+      }
+      return storage.getFileAsReadable(`${filepath}/${filename}`);
+    };
+
     return {
-      setFileFromReadable
+      setFileFromReadable,
+      getFileAsReadable
     };
   } catch (e) {
     return e;

@@ -38,5 +38,12 @@ export default {
       },
       handler: ({ payload }) => StorageController.addPodcastPartFile(payload)
     });
+
+    server.route({
+      method: 'GET',
+      path: '/podcast-part/{id}',
+      handler: async ({ params }, h) =>
+        StorageController.getPodcastPartFile(params.id, h)
+    });
   }
 };
