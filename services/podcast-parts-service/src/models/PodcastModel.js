@@ -44,7 +44,7 @@ schema.plugin(mongooseUniqueValidator);
 schema.pre('deleteMany', async function preDeleteManyMiddelware(next) {
   try {
     const Part = _.get(this, ['mongooseCollection', 'conn', 'models', 'Part']);
-    const ids = await _.get(this, ['_conditions', '_id', '$in'], []);
+    const ids = _.get(this, ['_conditions', '_id', '$in'], []);
     const podcasts = await Promise.all(
       ids.map((id) => this.model.findById(id))
     );
