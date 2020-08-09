@@ -1,5 +1,5 @@
 import path from 'path';
-import { Storage,  StorageType } from '@tweedegolf/storage-abstraction';
+import { Storage, StorageType } from '@tweedegolf/storage-abstraction';
 
 export default () => {
   try {
@@ -41,7 +41,10 @@ export default () => {
      * @return {String|void} storageType {aws|scaleway|local|null}
      */
     const setFileFromReadable = async (_storagesPriority, stream, filepath) => {
-      const storagesPriority = typeof _storagesPriority === 'string' ? [_storagesPriority] : _storagesPriority;
+      const storagesPriority =
+        typeof _storagesPriority === 'string'
+          ? [_storagesPriority]
+          : _storagesPriority;
       let storageName;
 
       for (let i = 0; i < storagesPriority.length; i += 1) {
