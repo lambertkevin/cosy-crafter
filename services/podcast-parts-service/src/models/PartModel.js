@@ -30,7 +30,25 @@ const schema = new mongoose.Schema({
     {
       type: String
     }
-  ]
+  ],
+  originalFilename: {
+    type: String,
+    required: true
+  },
+  storageType: {
+    type: String,
+    enum: ['aws', 'scaleway', 'local'],
+    default: 'local',
+    required: true
+  },
+  storagePath: {
+    type: String,
+    required: true
+  },
+  storageFilename: {
+    type: String,
+    required: true
+  }
 }, {
   timestamps: true
 });
