@@ -12,40 +12,55 @@ import { projection as partTypeProjection } from '../models/PartTypeModel';
 
 /**
  * Return a list of all part
+ *
+ * @param {Boolean} sanitized
+ *
  * @return {Promise<Object[]>} {[Part]}
  */
-export const find = () => Part.find({}, projection)
-  .populate('podcast', { ...podcastProjection, parts: false })
-  .populate('type', partTypeProjection)
-  .exec()
-  .then(calibrate.response)
-  .catch(Boom.boomify);
+export const find = (sanitized = true) =>
+  Part.find({}, sanitized ? projection : {})
+    .populate('podcast', { ...podcastProjection, parts: false })
+    .populate('type', partTypeProjection)
+    .exec()
+    .then(calibrate.response)
+    .catch(Boom.boomify);
 
 /**
  * Return a specific part
+ *
  * @param {String} id
+ * @param {Boolean} sanitized
+ *
  * @return {Promise<Object>} {Part}
  */
-export const findOne = (id) => Part.findOne({ _id: id }, projection)
-  .populate('podcast', { ...podcastProjection, parts: false })
-  .populate('type', partTypeProjection)
-  .exec()
-  .then(calibrate.response)
-  .catch(Boom.boomify);
+export const findOne = (id, sanitized = true) =>
+  Part.findOne({ _id: id }, sanitized ? projection : {})
+    .populate('podcast', { ...podcastProjection, parts: false })
+    .populate('type', partTypeProjection)
+    .exec()
+    .then(calibrate.response)
+    .catch(Boom.boomify);
 
 /**
  * Create a part
- * @param {Object} payload
+ *
+ * @param {Object} data
+ * @param {String} data.name
+ * @param {String} data.type
+ * @param {String} data.podcast
+ * @param {String} data.tags
+ * @param {ReadableStream} data.file
+ * @param {Boolean} sanitized
+ *
  * @return {Promise<Object>} {Part}
  */
-export const create = async (payload) => {
-  const {
-    name,
-    type,
-    podcast: podcastId,
-    tags: stringTags = '',
-    file
-  } = payload;
+export const create = async ({
+  name,
+  type,
+  podcast: podcastId,
+  tags: stringTags = '',
+  file
+}, sanitized = true) => {
   let podcast;
 
   try {
@@ -57,7 +72,7 @@ export const create = async (payload) => {
     podcast = dependencies[1].data;
     const dependenciesErrors = dependencies.filter((x) => x instanceof Error);
     if (dependenciesErrors.length) {
-      return Boom.notAcceptable('At least one dependency doesn\'t exist');
+      return Boom.notAcceptable("At least one dependency doesn't exist");
     }
   } catch (error) {
     return error;
@@ -72,9 +87,13 @@ export const create = async (payload) => {
   formData.append('file', fs.createReadStream(file.path));
 
   try {
-    const { data: savedFile } = await axios.post('http://storage-service:3001/podcast-part', formData, {
-      headers: formData.getHeaders()
-    });
+    const { data: savedFile } = await axios.post(
+      'http://storage-service:3001/podcast-part',
+      formData,
+      {
+        headers: formData.getHeaders()
+      }
+    );
 
     return Part.create({
       name,
@@ -86,10 +105,10 @@ export const create = async (payload) => {
       storagePath: savedFile.location,
       storageFilename: savedFile.filename
     })
-      .then((part) => calibrate.response(_.omit(part.toObject(), hiddenFields)))
+      .then((part) => calibrate.response(sanitized ? _.omit(part.toObject(), hiddenFields) : part))
       .catch((error) => {
         if (error.name === 'ValidationError') {
-          const response =  Boom.boomify(error, { statusCode: 409 });
+          const response = Boom.boomify(error, { statusCode: 409 });
           response.output.payload.data = error.errors;
 
           return response;
@@ -102,75 +121,98 @@ export const create = async (payload) => {
   } catch (error) {
     const storageServiceError = _.get(error, ['response', 'data']);
 
-    return new Boom.Boom(storageServiceError.message, storageServiceError) || Boom.boomify(error);
+    return (
+      new Boom.Boom(storageServiceError.message, storageServiceError) ||
+      Boom.boomify(error)
+    );
   }
 };
 
 /**
  * Update a specific part
  * @param {String} id
+ * 
  * @param {Object} data
+ * @param {String} data.name
+ * @param {String} data.type
+ * @param {String} data.podcast
+ * @param {String} data.tags
+ * @param {ReadableStream} data.file
+ * @param {Boolean} sanitized
+ * 
  * @return {Promise<Object>} {Part}
  */
-export const update = (id, {
-  name,
-  type,
-  podcast,
-  tags,
-  originalFilename,
-  storageType,
-  storagePath,
-  storageFilename
-}) => Part.updateOne({ _id: id }, _.omitBy({
-  name,
-  type,
-  podcast,
-  tags,
-  originalFilename,
-  storageType,
-  storagePath,
-  storageFilename
-}, _.isUndefined))
-  .exec()
-  .then(async (res) => {
-    if (!res.n) {
-      return Boom.notFound();
-    }
-    if (!res.nModified) {
-      return Boom.expectationFailed('No changes required');
-    }
+export const update = (
+  id,
+  {
+    name,
+    type,
+    podcast,
+    tags,
+    originalFilename,
+    storageType,
+    storagePath,
+    storageFilename
+  },
+  sanitized = true
+) =>
+  Part.updateOne(
+    { _id: id },
+    _.omitBy(
+      {
+        name,
+        type,
+        podcast,
+        tags,
+        originalFilename,
+        storageType,
+        storagePath,
+        storageFilename
+      },
+      _.isUndefined
+    )
+  )
+    .exec()
+    .then(async (res) => {
+      if (!res.n) {
+        return Boom.notFound();
+      }
+      if (!res.nModified) {
+        return Boom.expectationFailed('No changes required');
+      }
 
-    const part = await findOne(id);
-    return part;
-  })
-  .catch((error) => {
-    if (error.name === 'ValidationError') {
-      const response =  Boom.boomify(error, { statusCode: 409 });
-      response.output.payload.data = error.errors;
+      const part = await findOne(id, sanitized);
+      return part;
+    })
+    .catch((error) => {
+      if (error.name === 'ValidationError') {
+        const response = Boom.boomify(error, { statusCode: 409 });
+        response.output.payload.data = error.errors;
 
-      return response;
-    }
+        return response;
+      }
 
-    return Boom.boomify(error);
-  });
+      return Boom.boomify(error);
+    });
 
 /**
  * Create a part
  * @param {Array<String>} ids
  * @return {Promise<void>}
  */
-export const remove = (ids) => Part.deleteMany({ _id: { $in: ids } })
-  .exec()
-  .then((res) => {
-    if (!res.deletedCount) {
-      return Boom.notFound();
-    }
+export const remove = (ids) =>
+  Part.deleteMany({ _id: { $in: ids } })
+    .exec()
+    .then((res) => {
+      if (!res.deletedCount) {
+        return Boom.notFound();
+      }
 
-    return calibrate.response({
-      deleted: ids
-    });
-  })
-  .catch(Boom.boomify);
+      return calibrate.response({
+        deleted: ids
+      });
+    })
+    .catch(Boom.boomify);
 
 export default {
   find,

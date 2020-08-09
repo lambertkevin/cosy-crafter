@@ -8,7 +8,7 @@ export default {
     server.route({
       method: 'GET',
       path: '/',
-      handler: partController.find
+      handler: () => partController.find()
     });
 
     server.route({
@@ -33,7 +33,14 @@ export default {
             name: joi.string().min(1).max(50).required(),
             type: joi.string().length(24).required(),
             podcast: joi.string().length(24).required(),
-            tags: joi.string().regex(/^[a-zA-Z0-9, ]*$/, 'Alphanumerics, space and comma characters').min(3).max(200),
+            tags: joi
+              .string()
+              .regex(
+                /^[a-zA-Z0-9, ]*$/,
+                'Alphanumerics, space and comma characters'
+              )
+              .min(3)
+              .max(200),
             file: joi.any().required()
           })
         }
@@ -44,7 +51,8 @@ export default {
     server.route({
       method: 'PATCH',
       path: '/{id}',
-      handler: (request) => partController.update(request.params.id, request.payload)
+      handler: (request) =>
+        partController.update(request.params.id, request.payload)
     });
 
     server.route({
