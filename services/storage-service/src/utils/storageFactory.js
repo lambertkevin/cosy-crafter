@@ -1,4 +1,5 @@
 import path from 'path';
+import Boom from '@hapi/boom';
 import { Storage, StorageType } from '@tweedegolf/storage-abstraction';
 
 export default () => {
@@ -82,14 +83,32 @@ export default () => {
     const getFileAsReadable = (storageType, filepath, filename) => {
       const storage = storages[storageType];
       if (!storage) {
-        return null;
+        throw Boom.badData('Storage type not existing');
       }
       return storage.getFileAsReadable(`${filepath}/${filename}`);
     };
 
+    /**
+     * Remove a file from a storage type
+     *
+     * @param {String} storageType
+     * @param {String} filepath
+     * @param {String} filename
+     *
+     * @return {Promise<ReadableStream>}
+     */
+    const removeFile = (storageType, filepath, filename) => {
+      const storage = storages[storageType];
+      if (!storage) {
+        throw Boom.badData('Storage type not existing');
+      }
+      return storage.removeFile(`${filepath}/${filename}`);
+    };
+
     return {
       setFileFromReadable,
-      getFileAsReadable
+      getFileAsReadable,
+      removeFile
     };
   } catch (e) {
     return e;
