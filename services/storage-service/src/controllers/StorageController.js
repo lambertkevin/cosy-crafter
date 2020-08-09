@@ -1,6 +1,7 @@
 import _ from 'lodash';
 import axios from 'axios';
 import Boom from '@hapi/boom';
+import calibrate from 'calibrate';
 import { v4 as uuid } from 'uuid';
 import StorageFactory from '../utils/storageFactory';
 import axiosErrorBoomifier from '../utils/axiosErrorBoomifier';
@@ -26,7 +27,7 @@ export const addPodcastPartFile = async ({
   const filename = `${uuid()}.${extension}`;
   const location = `podcasts/${_.kebabCase(podcastName)}`;
   const storageStrategy =
-    process.env.NODE_ENV === 'production' ? ['scaleway', 'local'] : ['local'];
+    process.env.NODE_ENV === 'production' ? ['scaleway', 'local'] : ['aws'];
   const storageType = await storages.setFileFromReadable(
     storageStrategy,
     file,
@@ -43,7 +44,7 @@ export const addPodcastPartFile = async ({
 };
 
 /**
- * Get a podcast file and returns it as a stream
+ * Get a podcast part file and returns it as a stream
  *
  * @param {String} id
  * @param {Object} h
@@ -55,7 +56,7 @@ export const getPodcastPartFile = async (id, h) => {
     .get(`http://podcast-parts-service:3000/v1/parts/${id}`)
     .then(({ data }) => data)
     .then(async ({ data }) => {
-      const stream = await storages.getFileAsReadable(
+      const stream = await storages.removeFile(
         data.storageType,
         data.storagePath,
         data.storageFilename
@@ -70,11 +71,40 @@ export const getPodcastPartFile = async (id, h) => {
       if (error.code === 'ENOENT' || error.statusCode === 404) {
         return Boom.resourceGone('File has been deleted in storage');
       }
+      if (error.isBoom) {
+        return error;
+      }
       if (error.statusCode) {
         return new Boom.Boom(error.message, { statusCode: error.statusCode });
       }
       return Boom.boomify(error);
     });
+};
+
+/**
+ * Remove a podcast part file
+ *
+ * @param {Object} data
+ * @param {String} data.storageType
+ * @param {String} data.storagePath
+ * @param {String} data.storageFilename
+ *
+ * @return {Object}
+ */
+export const removePodcastPartFile = async ({
+  storageType,
+  storagePath,
+  storageFilename
+}) => {
+  try {
+    await storages.removeFile(storageType, storagePath, storageFilename);
+    return calibrate.response({ deleted: storageFilename });
+  } catch (e) {
+    if (e.isBoom) {
+      return e;
+    }
+    return Boom.badData();
+  }
 };
 
 export default {

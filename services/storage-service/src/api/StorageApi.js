@@ -39,11 +39,24 @@ export default {
       handler: ({ payload }) => StorageController.addPodcastPartFile(payload)
     });
 
+    /**
+     * Podcast Part Link Route
+     */
     server.route({
       method: 'GET',
       path: '/podcast-part/{id}',
       handler: async ({ params }, h) =>
         StorageController.getPodcastPartFile(params.id, h)
+    });
+
+    /**
+     * Podcast Part Deletion Route
+     */
+    server.route({
+      method: 'DELETE',
+      path: '/podcast-part',
+      handler: async ({ payload }) =>
+        StorageController.removePodcastPartFile(payload)
     });
   }
 };
