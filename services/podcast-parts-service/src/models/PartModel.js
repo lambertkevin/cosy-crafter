@@ -45,6 +45,10 @@ const schema = new mongoose.Schema(
     storageFilename: {
       type: String,
       required: true
+    },
+    contentType: {
+      type: String,
+      required: true
     }
   },
   {

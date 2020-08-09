@@ -6,6 +6,7 @@ import FormData from 'form-data';
 import calibrate from 'calibrate';
 import * as PodcastController from './PodcastController';
 import * as PartTypeController from './PartTypeController';
+import axiosErrorBoomifier from '../utils/axiosErrorBoomifier';
 import Part, { projection, hiddenFields } from '../models/PartModel';
 import { projection as podcastProjection } from '../models/PodcastModel';
 import { projection as partTypeProjection } from '../models/PartTypeModel';
@@ -77,7 +78,7 @@ export const create = async (
 
   const tags =
     typeof _tags === 'string' ? _tags.split(',').map((x) => x.trim()) : _tags;
-  const { filename } = file;
+  const { headers, filename } = file;
 
   const formData = new FormData();
   formData.append('podcastName', podcast.name);
@@ -101,7 +102,8 @@ export const create = async (
       originalFilename: filename,
       storageType: savedFile.storageType,
       storagePath: savedFile.location,
-      storageFilename: savedFile.filename
+      storageFilename: savedFile.filename,
+      contentType: headers['content-type']
     })
       .then((part) =>
         calibrate.response(
@@ -109,10 +111,13 @@ export const create = async (
         )
       )
       .catch((error) => {
+        if (error.isAxiosError) {
+          return axiosErrorBoomifier(error);
+        }
+
         if (error.name === 'ValidationError') {
           const response = Boom.boomify(error, { statusCode: 409 });
           response.output.payload.data = error.errors;
-
           return response;
         }
 
