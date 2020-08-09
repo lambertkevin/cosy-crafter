@@ -1,25 +1,19 @@
 import path from 'path';
 import Boom from '@hapi/boom';
 import { Storage, StorageType } from '@tweedegolf/storage-abstraction';
+import { storagesConfig } from '../config';
 
 export default () => {
   try {
     const storages = {
       scaleway: new Storage({
         type: StorageType.S3,
-        bucketName: process.env.SCALEWAY_BUCKET_NAME,
-        region: process.env.SCALEWAY_REGION,
-        endpoint: process.env.SCALEWAY_ENDPOINT,
-        accessKeyId: process.env.SCALEWAY_ACCESS_KEY_ID,
-        secretAccessKey: process.env.SCALEWAY_SECRET_ACCESS_KEY
+        ...storagesConfig.scaleway
       }),
 
       aws: new Storage({
         type: StorageType.S3,
-        bucketName: process.env.AWS_BUCKET_NAME,
-        region: process.env.AWS_REGION,
-        accessKeyId: process.env.AWS_ACCESS_KEY_ID,
-        secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
+        ...storagesConfig.aws,
         useDualStack: true,
         sslEnabled: true
       }),
@@ -51,15 +45,21 @@ export default () => {
           ? [_storagesTypePriority]
           : _storagesTypePriority;
       let storageName;
+      let publicLink;
 
       for (let i = 0; i < storagesPriority.length; i += 1) {
         storageName = storagesPriority[i];
         const storage = storages[storageName];
+        const storageConfig = storagesConfig[storageName];
 
         if (storage) {
           try {
             // eslint-disable-next-line no-await-in-loop
             await storage.addFileFromReadable(stream, filepath);
+            if (storageConfig) {
+              publicLink = storageConfig.publicLinkGenerator(filepath);
+            }
+
             break;
           } catch (e) {
             /** @WARNING Log dat */
@@ -68,7 +68,10 @@ export default () => {
         }
       }
 
-      return storageName;
+      return {
+        storageName,
+        publicLink
+      };
     };
 
     /**
