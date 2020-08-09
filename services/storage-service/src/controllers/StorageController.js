@@ -27,18 +27,19 @@ export const addPodcastPartFile = async ({
   const filename = `${uuid()}.${extension}`;
   const location = `podcasts/${_.kebabCase(podcastName)}`;
   const storageStrategy =
-    process.env.NODE_ENV === 'production' ? ['scaleway', 'local'] : ['aws'];
-  const storageType = await storages.setFileFromReadable(
+    process.env.NODE_ENV === 'production' ? ['scaleway', 'local'] : ['local'];
+  const storedFile = await storages.setFileFromReadable(
     storageStrategy,
     file,
     `${location}/${filename}`
   );
 
-  return storageType
+  return storedFile
     ? {
         filename,
         location,
-        storageType
+        storageType: storedFile.storageName,
+        publicLink: storedFile.publicLink
       }
     : Boom.serverUnavailable('All storages options have failed');
 };
