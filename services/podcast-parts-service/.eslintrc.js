@@ -1,5 +1,9 @@
 module.exports = {
-  extends: ['@hapi/eslint-config-hapi', 'eslint-config-airbnb-base'],
+  extends: [
+    '@hapi/eslint-config-hapi',
+    'eslint-config-airbnb-base',
+    'prettier'
+  ],
   parser: 'babel-eslint',
   env: {
     browser: false,
@@ -8,11 +12,14 @@ module.exports = {
     mocha: true
   },
   rules: {
-    'valid-jsdoc': ['error', {
-      requireReturnType: true,
-      requireReturnDescription: false,
-      requireParamDescription: false
-    }],
+    'valid-jsdoc': [
+      'error',
+      {
+        requireReturnType: true,
+        requireReturnDescription: false,
+        requireParamDescription: false
+      }
+    ],
     'comma-dangle': ['error', 'never'],
     'no-multi-spaces': 0,
     'no-underscore-dangle': 0,
