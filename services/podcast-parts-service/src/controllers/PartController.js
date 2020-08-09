@@ -1,5 +1,8 @@
+import fs from 'fs';
 import _ from 'lodash';
+import axios from 'axios';
 import Boom from '@hapi/boom';
+import FormData from 'form-data';
 import calibrate from 'calibrate';
 import * as PodcastController from './PodcastController';
 import * as PartTypeController from './PartTypeController';
@@ -32,20 +35,26 @@ export const findOne = (id) => Part.findOne({ _id: id }, projection)
 
 /**
  * Create a part
- * @param {Object} data
+ * @param {Object} payload
  * @return {Promise<Object>} {Part}
  */
-export const create = async ({
-  name,
-  type,
-  podcast,
-  tags
-}) => {
+export const create = async (payload) => {
+  const {
+    name,
+    type,
+    podcast: podcastId,
+    tags: stringTags = '',
+    file
+  } = payload;
+  let podcast;
+
   try {
     const dependencies = await Promise.all([
       PartTypeController.findOne(type),
-      PodcastController.findOne(podcast)
+      PodcastController.findOne(podcastId)
     ]);
+    // eslint-disable-next-line prefer-destructuring
+    podcast = dependencies[1].data;
     const dependenciesErrors = dependencies.filter((x) => x instanceof Error);
     if (dependenciesErrors.length) {
       return Boom.notAcceptable('At least one dependency doesn\'t exist');
@@ -54,23 +63,47 @@ export const create = async ({
     return error;
   }
 
-  return Part.create({
-    name,
-    type,
-    podcast,
-    tags
-  })
-    .then((part) => calibrate.response(_.omit(part.toObject(), hiddenFields)))
-    .catch((error) => {
-      if (error.name === 'ValidationError') {
-        const response =  Boom.boomify(error, { statusCode: 409 });
-        response.output.payload.data = error.errors;
+  const tags = stringTags.split(',').map((x) => x.trim());
+  const { filename } = file;
 
-        return response;
-      }
+  const formData = new FormData();
+  formData.append('podcastName', podcast.name);
+  formData.append('filename', filename);
+  formData.append('file', fs.createReadStream(file.path));
 
-      return Boom.boomify(error);
+  try {
+    const { data: savedFile } = await axios.post('http://storage-service:3001/podcast-part', formData, {
+      headers: formData.getHeaders()
     });
+
+    return Part.create({
+      name,
+      type,
+      podcast,
+      tags,
+      originalFilename: filename,
+      storageType: savedFile.storageType,
+      storagePath: savedFile.location,
+      storageFilename: savedFile.filename
+    })
+      .then((part) => calibrate.response(_.omit(part.toObject(), hiddenFields)))
+      .catch((error) => {
+        if (error.name === 'ValidationError') {
+          const response =  Boom.boomify(error, { statusCode: 409 });
+          response.output.payload.data = error.errors;
+
+          return response;
+        }
+
+        /** @WARNING Remember to remove file when the api is available */
+
+        return Boom.boomify(error);
+      });
+  } catch (error) {
+    const storageServiceError = _.get(error, ['response', 'data']);
+
+    return new Boom.Boom(storageServiceError.message, storageServiceError) || Boom.boomify(error);
+  }
 };
 
 /**
@@ -83,12 +116,20 @@ export const update = (id, {
   name,
   type,
   podcast,
-  tags
+  tags,
+  originalFilename,
+  storageType,
+  storagePath,
+  storageFilename
 }) => Part.updateOne({ _id: id }, _.omitBy({
   name,
   type,
   podcast,
-  tags
+  tags,
+  originalFilename,
+  storageType,
+  storagePath,
+  storageFilename
 }, _.isUndefined))
   .exec()
   .then(async (res) => {
