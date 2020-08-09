@@ -19,7 +19,8 @@ export const addPodcastPartFile = async ({
   podcastName,
   filename: originalFilename
 }) => {
-  const filename = `${uuid()}.${originalFilename}`;
+  const extension = originalFilename.split('.').pop();
+  const filename = `${uuid()}.${extension}`;
   const location = `/podcasts/${podcastName}`;
   const storageStrategy =
     process.env.NODE_ENV === 'production' ? ['scaleway', 'local'] : ['local'];
