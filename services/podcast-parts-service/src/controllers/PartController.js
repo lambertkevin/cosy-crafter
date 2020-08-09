@@ -103,6 +103,7 @@ export const create = async (
       storageType: savedFile.storageType,
       storagePath: savedFile.location,
       storageFilename: savedFile.filename,
+      publicLink: savedFile.publicLink,
       contentType: headers['content-type']
     })
       .then((part) =>
@@ -162,7 +163,9 @@ export const update = (
     originalFilename,
     storageType,
     storagePath,
-    storageFilename
+    storageFilename,
+    publicLink,
+    contentType
   },
   sanitized = true
 ) =>
@@ -177,7 +180,9 @@ export const update = (
         originalFilename,
         storageType,
         storagePath,
-        storageFilename
+        storageFilename,
+        publicLink,
+        contentType
       },
       _.isUndefined
     )

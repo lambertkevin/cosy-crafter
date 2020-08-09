@@ -37,7 +37,6 @@ const schema = new mongoose.Schema(
     storageType: {
       type: String,
       enum: ['aws', 'scaleway', 'local'],
-      default: 'local',
       required: true
     },
     storagePath: {
@@ -47,6 +46,9 @@ const schema = new mongoose.Schema(
     storageFilename: {
       type: String,
       required: true
+    },
+    publicLink: {
+      type: String
     },
     contentType: {
       type: String,
