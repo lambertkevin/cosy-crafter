@@ -7,7 +7,7 @@ export default {
     server.route({
       method: 'GET',
       path: '/',
-      handler: partTypeController.find
+      handler: () => partTypeController.find()
     });
 
     server.route({
@@ -32,7 +32,8 @@ export default {
     server.route({
       method: 'PATCH',
       path: '/{id}',
-      handler: (request) => partTypeController.update(request.params.id, request.payload)
+      handler: (request) =>
+        partTypeController.update(request.params.id, request.payload)
     });
 
     server.route({
