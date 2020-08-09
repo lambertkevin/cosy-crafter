@@ -11,13 +11,16 @@ import { projection as partProjection } from '../models/PartModel';
  *
  * @return {Promise<Object[]>} {[Podcast]}
  */
-export const find = (sanitized = true) =>
-  Podcast.find({}, sanitized ? projection : null)
+export const find = (sanitized = false) =>{
+  console.log(sanitized);
+
+  return Podcast.find({}, sanitized ? projection : null)
     .populate('parts', { ...partProjection, podcast: false })
     .exec()
     .then(calibrate.response)
     .catch(Boom.boomify);
 
+}
 /**
  * Return a specific podcast
  *

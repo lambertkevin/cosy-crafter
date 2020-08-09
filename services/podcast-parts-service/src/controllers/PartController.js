@@ -48,19 +48,16 @@ export const findOne = (id, sanitized = true) =>
  * @param {String} data.name
  * @param {String} data.type
  * @param {String} data.podcast
- * @param {String} data.tags
+ * @param {Array<String>|String} data.tags
  * @param {ReadableStream} data.file
  * @param {Boolean} sanitized
  *
  * @return {Promise<Object>} {Part}
  */
-export const create = async ({
-  name,
-  type,
-  podcast: podcastId,
-  tags: stringTags = '',
-  file
-}, sanitized = true) => {
+export const create = async (
+  { name, type, podcast: podcastId, tags: _tags = [], file },
+  sanitized = true
+) => {
   let podcast;
 
   try {
@@ -78,7 +75,8 @@ export const create = async ({
     return error;
   }
 
-  const tags = stringTags.split(',').map((x) => x.trim());
+  const tags =
+    typeof _tags === 'string' ? _tags.split(',').map((x) => x.trim()) : _tags;
   const { filename } = file;
 
   const formData = new FormData();
@@ -105,7 +103,11 @@ export const create = async ({
       storagePath: savedFile.location,
       storageFilename: savedFile.filename
     })
-      .then((part) => calibrate.response(sanitized ? _.omit(part.toObject(), hiddenFields) : part))
+      .then((part) =>
+        calibrate.response(
+          sanitized ? _.omit(part.toObject(), hiddenFields) : part
+        )
+      )
       .catch((error) => {
         if (error.name === 'ValidationError') {
           const response = Boom.boomify(error, { statusCode: 409 });
@@ -131,7 +133,7 @@ export const create = async ({
 /**
  * Update a specific part
  * @param {String} id
- * 
+ *
  * @param {Object} data
  * @param {String} data.name
  * @param {String} data.type
@@ -139,7 +141,7 @@ export const create = async ({
  * @param {String} data.tags
  * @param {ReadableStream} data.file
  * @param {Boolean} sanitized
- * 
+ *
  * @return {Promise<Object>} {Part}
  */
 export const update = (
