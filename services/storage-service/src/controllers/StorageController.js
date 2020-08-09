@@ -18,11 +18,11 @@ export const addPodcastPartFile = async ({
   file, podcastName, filename: originalFilename
 }) => {
   const filename = `${uuid()}.${originalFilename}`;
-  const location = `/podcasts/${podcastName}/${filename}`;
+  const location = `/podcasts/${podcastName}`;
   const storageStrategy = process.env.NODE_ENV === 'production'
     ? ['scaleway', 'local']
     : ['local'];
-  const storageType = await storages.setFileFromReadable(storageStrategy, file, location);
+  const storageType = await storages.setFileFromReadable(storageStrategy, file, `${location}/${filename}`);
 
   return storageType
     ? {
