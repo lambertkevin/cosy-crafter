@@ -1,3 +1,5 @@
+import _ from 'lodash';
+import axios from 'axios';
 import Boom from '@hapi/boom';
 import mongooseUniqueValidator from 'mongoose-unique-validator';
 import mongoose from 'mongoose';
@@ -76,6 +78,33 @@ schema.post('validate', async (part, next) => {
     next();
   } catch (e) {
     next(Boom.resourceGone('Error while updating the podcast'));
+  }
+});
+
+// Remove all files related to parts
+schema.pre('deleteMany', async function preDeleteManyMiddelware(next) {
+  try {
+    const ids = _.get(this, ['_conditions', '_id', '$in'], []);
+    const parts = await Promise.all(
+      ids.map((id) => this.model.findById(id))
+    ).then((_parts) => _parts.filter((x) => x));
+
+    const deletions = parts.map((part) => {
+      return axios.delete('http://storage-service:3001/podcast-part', {
+        data: {
+          storageType: part.storageType,
+          storagePath: part.storagePath,
+          storageFilename: part.storageFilename
+        }
+      });
+    });
+
+    await Promise.all(deletions);
+
+    next();
+  } catch (e) {
+    console.log(e);
+    next(Boom.boomify(e));
   }
 });
 

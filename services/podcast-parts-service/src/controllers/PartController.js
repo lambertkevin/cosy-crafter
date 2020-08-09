@@ -118,20 +118,23 @@ export const create = async (
         if (error.name === 'ValidationError') {
           const response = Boom.boomify(error, { statusCode: 409 });
           response.output.payload.data = error.errors;
+
+          // Delete the saved file since the Part isn't validated
+          axios.delete('http://storage-service:3001/podcast-part', {
+            data: {
+              storageType: savedFile.storageType,
+              storagePath: savedFile.location,
+              storageFilename: savedFile.filename
+            }
+          });
+
           return response;
         }
-
-        /** @WARNING Remember to remove file when the api is available */
 
         return Boom.boomify(error);
       });
   } catch (error) {
-    const storageServiceError = _.get(error, ['response', 'data']);
-
-    return (
-      new Boom.Boom(storageServiceError.message, storageServiceError) ||
-      Boom.boomify(error)
-    );
+    return axiosErrorBoomifier(error);
   }
 };
 
