@@ -1,5 +1,6 @@
-import joi from '@hapi/joi';
+import joi from 'joi';
 import * as partController from '../controllers/PartController';
+import failValidationHandler from '../utils/failValidationHandler';
 
 export default {
   name: 'partApi',
@@ -7,7 +8,7 @@ export default {
     server.route({
       method: 'GET',
       path: '/',
-      handler: partController.find
+      handler: () => partController.find()
     });
 
     server.route({
@@ -19,23 +20,39 @@ export default {
     server.route({
       method: 'POST',
       path: '/',
-      handler: (request) => partController.create(request.payload),
       options: {
+        payload: {
+          output: 'file',
+          maxBytes: 200 * 1024 * 1024, // 200 Mo limit on upload size
+          multipart: true,
+          parse: true
+        },
         validate: {
+          failAction: failValidationHandler,
           payload: joi.object({
             name: joi.string().min(1).max(50).required(),
             type: joi.string().length(24).required(),
             podcast: joi.string().length(24).required(),
-            tags: joi.array().items(joi.string().min(1).max(50))
+            tags: joi
+              .string()
+              .regex(
+                /^[a-zA-Z0-9, ]*$/,
+                'Alphanumerics, space and comma characters'
+              )
+              .min(3)
+              .max(200),
+            file: joi.any().required()
           })
         }
-      }
+      },
+      handler: ({ payload }) => partController.create(payload)
     });
 
     server.route({
       method: 'PATCH',
       path: '/{id}',
-      handler: (request) => partController.update(request.params.id, request.payload)
+      handler: (request) =>
+        partController.update(request.params.id, request.payload)
     });
 
     server.route({

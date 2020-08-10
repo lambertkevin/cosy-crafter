@@ -1,7 +1,7 @@
 {
-  "name": "podcast-parts-service",
+  "name": "storage-service",
   "version": "0.0.1",
-  "description": "Service that handle serving podcast parts either for internal use or for public api",
+  "description": "Service handling file storage through local and object storage abstractions",
   "main": "index.js",
   "scripts": {
     "start": "babel-node ./src/index.js",
@@ -19,14 +19,19 @@
     "@babel/preset-env": "^7.11.0",
     "@hapi/boom": "^9.1.0",
     "@hapi/hapi": "^19.2.0",
+    "@hapi/inert": "^6.0.1",
+    "@tweedegolf/storage-abstraction": "^1.4.3",
+    "aws-sdk": "^2.725.0",
     "axios": "^0.19.2",
     "calibrate": "^4.2.0",
     "dotenv": "^8.2.0",
-    "form-data": "^3.0.0",
+    "glob": "^7.1.6",
     "joi": "^17.1.1",
     "lodash": "^4.17.19",
     "mongoose": "^5.9.26",
-    "mongoose-unique-validator": "^2.0.3"
+    "mongoose-unique-validator": "^2.0.3",
+    "rimraf": "^3.0.2",
+    "uuid": "^8.3.0"
   },
   "devDependencies": {
     "@hapi/eslint-config-hapi": "^13.0.2",
@@ -37,6 +42,6 @@
     "eslint-config-prettier": "^6.11.0",
     "eslint-plugin-import": "^2.22.0",
     "nodemon": "^2.0.4",
-    "prettier": "2.0.5"
+    "prettier": "^2.0.5"
   }
 }
