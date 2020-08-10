@@ -1,4 +1,4 @@
-import joi from '@hapi/joi';
+import joi from 'joi';
 import * as podcastController from '../controllers/PodcastController';
 
 export default {
@@ -7,7 +7,7 @@ export default {
     server.route({
       method: 'GET',
       path: '/',
-      handler: podcastController.find
+      handler: () => podcastController.find()
     });
 
     server.route({
@@ -34,7 +34,8 @@ export default {
     server.route({
       method: 'PATCH',
       path: '/{id}',
-      handler: (request) => podcastController.update(request.params.id, request.payload)
+      handler: (request) =>
+        podcastController.update(request.params.id, request.payload)
     });
 
     server.route({
