@@ -1,9 +1,22 @@
+import Package from '../package.json';
+
 /**
  * Config for Node
  * @type {Object}
  */
 export const nodeConfig = {
-  port: process.env.PODCAST_PARTS_SERVICE_EXPOSED_PORT
+  port: process.env.PODCAST_PARTS_SERVICE_EXPOSED_PORT || 3000
+};
+
+/**
+ * Config for Swagger
+ * @type {Object}
+ */
+export const swaggerConfig = {
+  info: {
+    title: 'Podcast Parts Service API',
+    version: Package.version
+  }
 };
 
 /**
