@@ -73,6 +73,7 @@ export const create = async (
       return Boom.notAcceptable("At least one dependency doesn't exist");
     }
   } catch (error) {
+    console.log(error);
     return error;
   }
 
@@ -119,15 +120,22 @@ export const create = async (
         if (error.name === 'ValidationError') {
           const response = Boom.boomify(error, { statusCode: 409 });
           response.output.payload.data = error.errors;
+          const {
+            storageType,
+            location: storagePath,
+            filename: storageFilename
+          } = savedFile;
 
-          // Delete the saved file since the Part isn't validated
-          axios.delete('http://storage-service:3001/podcast-part', {
-            data: {
-              storageType: savedFile.storageType,
-              storagePath: savedFile.location,
-              storageFilename: savedFile.filename
-            }
-          });
+          if (storageType && storagePath && storageFilename) {
+            // Delete the saved file since the Part isn't validated
+            axios.delete('http://storage-service:3001/podcast-part', {
+              data: {
+                storageType,
+                storagePath,
+                storageFilename
+              }
+            });
+          }
 
           return response;
         }
@@ -216,7 +224,7 @@ export const update = (
  * @return {Promise<void>}
  */
 export const remove = (ids) =>
-  Part.deleteMany({ _id: { $in: ids } })
+  Part.deleteMany({ _id: { $in: ids.filter((x) => x) } })
     .exec()
     .then((res) => {
       if (!res.deletedCount) {
