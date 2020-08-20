@@ -1,40 +1,17 @@
 import _ from 'lodash';
 import Boom from '@hapi/boom';
 import mongoose from 'mongoose';
+import joigoose from 'joigoose';
 import mongooseUniqueValidator from 'mongoose-unique-validator';
 import arrayToProjection from '../utils/arrayToProjection';
+import PodcastSchema from '../schemas/PodcastSchema';
 
 export const hiddenFields = ['createdAt', 'updatedAt', '__v'];
 
 export const projection = arrayToProjection(hiddenFields);
 
 const schema = new mongoose.Schema(
-  {
-    name: {
-      type: String,
-      required: true,
-      unique: true
-    },
-    edition: {
-      type: Number,
-      required: true,
-      unique: true
-    },
-    parts: [
-      {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: 'Part'
-      }
-    ],
-    tags: [
-      {
-        type: String
-      }
-    ]
-  },
-  {
-    timestamps: true
-  }
+  joigoose(mongoose, { _id: true, timestamps: true }).convert(PodcastSchema)
 );
 
 // This allow for beautified E11000 errors for 'uniqueness' of fields
@@ -48,10 +25,9 @@ schema.pre('deleteMany', async function preDeleteManyMiddelware(next) {
     const podcasts = await Promise.all(
       ids.map((id) => this.model.findById(id))
     );
-    const partsIds = podcasts.reduce(
-      (curr, acc) => [...curr, ..._.get(acc, ['parts'], [])],
-      []
-    );
+    const partsIds = podcasts.reduce((acc, curr) => {
+      return [...acc, ..._.get(curr, ['parts'], [])];
+    }, []);
 
     await Part.deleteMany({ _id: { $in: partsIds } }).exec();
 
