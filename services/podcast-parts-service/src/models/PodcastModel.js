@@ -3,10 +3,15 @@ import Boom from '@hapi/boom';
 import mongoose from 'mongoose';
 import joigoose from 'joigoose';
 import mongooseUniqueValidator from 'mongoose-unique-validator';
+import PodcastSchema, { hiddenProperties } from '../schemas/PodcastSchema';
 import arrayToProjection from '../utils/arrayToProjection';
-import PodcastSchema from '../schemas/PodcastSchema';
 
-export const hiddenFields = ['createdAt', 'updatedAt', '__v'];
+export const hiddenFields = [
+  ...hiddenProperties,
+  'createdAt',
+  'updatedAt',
+  '__v'
+];
 
 export const projection = arrayToProjection(hiddenFields);
 
