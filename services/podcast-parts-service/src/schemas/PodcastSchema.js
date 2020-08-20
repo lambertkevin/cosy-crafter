@@ -1,5 +1,7 @@
 import joi from 'joi';
 
+export const hiddenProperties = [];
+
 export const creationSchema = joi.object({
   name: joi
     .string()
@@ -38,8 +40,10 @@ export const validationSchema = creationSchema
   })
   .label('Podcast');
 
-export const responseSchema = validationSchema.append({
-  _id: joi.string().length(24).required().example('5f3d73a658a9ae0ec8061fb1')
-});
+export const responseSchema = validationSchema
+  .append({
+    _id: joi.string().length(24).required().example('5f3d73a658a9ae0ec8061fb1')
+  })
+  .fork(hiddenProperties, (x) => x.forbidden());
 
 export default validationSchema;
