@@ -1,63 +1,28 @@
 import _ from 'lodash';
 import axios from 'axios';
 import Boom from '@hapi/boom';
+import joigoose from 'joigoose';
 import mongooseUniqueValidator from 'mongoose-unique-validator';
 import mongoose from 'mongoose';
 import Podcast from './PodcastModel';
+import PartSchema from '../schemas/PartSchema';
 import arrayToProjection from '../utils/arrayToProjection';
 
-export const hiddenFields = ['createdAt', 'updatedAt', '__v'];
+export const hiddenFields = [
+  'createdAt',
+  'updatedAt',
+  '__v',
+  'originalFilename',
+  'storageFilename',
+  'storageType',
+  'storagePath',
+  'contentType'
+];
 
 export const projection = arrayToProjection(hiddenFields);
 
 const schema = new mongoose.Schema(
-  {
-    name: {
-      type: String,
-      required: true,
-      unique: true
-    },
-    type: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: 'PartType'
-    },
-    podcast: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: 'Podcast'
-    },
-    tags: [
-      {
-        type: String
-      }
-    ],
-    originalFilename: {
-      type: String,
-      required: true
-    },
-    storageType: {
-      type: String,
-      enum: ['aws', 'scaleway', 'local'],
-      required: true
-    },
-    storagePath: {
-      type: String,
-      required: true
-    },
-    storageFilename: {
-      type: String,
-      required: true
-    },
-    publicLink: {
-      type: String
-    },
-    contentType: {
-      type: String,
-      required: true
-    }
-  },
-  {
-    timestamps: true
-  }
+  joigoose(mongoose, { _id: true, timestamps: true }).convert(PartSchema)
 );
 
 // This allow for beautified E11000 errors for 'uniqueness' of fields
@@ -91,22 +56,34 @@ schema.pre('deleteMany', async function preDeleteManyMiddelware(next) {
       ids.map((id) => this.model.findById(id))
     ).then((_parts) => _parts.filter((x) => x));
 
-    const deletions = parts.map((part) => {
-      return axios.delete('http://storage-service:3001/podcast-part', {
-        data: {
-          storageType: part.storageType,
-          storagePath: part.storagePath,
-          storageFilename: part.storageFilename
-        }
-      });
-    });
+    const deletions = parts.map(
+      ({ storageType, storagePath, storageFilename }) => {
+        return storageType && storagePath && storageFilename
+          ? axios.delete('http://storage-service:3001/podcast-part', {
+              data: {
+                storageType,
+                storagePath,
+                storageFilename
+              }
+            })
+          : Promise.resolve();
+      }
+    );
 
     await Promise.all(deletions);
 
     next();
   } catch (e) {
-    console.log(e);
-    next(Boom.boomify(e));
+    if (e.isAxiosError) {
+      next(
+        Boom.failedDependency(
+          'An error occured while deleting the parts files from storage',
+          e
+        )
+      );
+    } else {
+      next(Boom.boomify(e));
+    }
   }
 });
 
