@@ -11,7 +11,7 @@ import { projection as partProjection } from '../models/PartModel';
  *
  * @return {Promise<Object[]>} {[Podcast]}
  */
-export const find = (sanitized = false) =>
+export const find = (sanitized = true) =>
   Podcast.find({}, sanitized ? projection : null)
     .populate(
       'parts',

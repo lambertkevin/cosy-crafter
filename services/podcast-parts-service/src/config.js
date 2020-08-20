@@ -16,7 +16,8 @@ export const swaggerConfig = {
   info: {
     title: 'Podcast Parts Service API',
     version: Package.version
-  }
+  },
+  grouping: 'tags'
 };
 
 /**
