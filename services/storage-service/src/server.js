@@ -1,12 +1,21 @@
 import Hapi from '@hapi/hapi';
 import Inert from '@hapi/inert';
-import { nodeConfig as config } from './config';
+import Vision from '@hapi/vision';
+import HapiSwagger from 'hapi-swagger';
+import { nodeConfig, swaggerConfig } from './config';
 import StorageApi from './api/StorageApi';
 
 const init = async () => {
   try {
-    const server = Hapi.server(config);
-    await server.register(Inert);
+    const server = Hapi.server(nodeConfig);
+    await server.register([
+      Inert,
+      Vision,
+      {
+        plugin: HapiSwagger,
+        options: swaggerConfig
+      }
+    ]);
     await server.register(StorageApi);
     await server.start();
 
