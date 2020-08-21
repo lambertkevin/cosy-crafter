@@ -1,14 +1,14 @@
 import joi from 'joi';
-import { responseSchema, creationSchema } from '../schemas/PartTypeSchema';
-import * as partTypeController from '../controllers/PartTypeController';
+import { responseSchema, creationSchema } from '../schemas/SectionSchema';
+import * as sectionController from '../controllers/SectionController';
 import { calibrateSchema, schemaKeys } from '../utils/schemasUtils';
 import failValidationHandler from '../utils/failValidationHandler';
 
 export default {
-  name: 'partTypeApi',
+  name: 'sectionApi',
   async register(server) {
     /**
-     * Get all part types
+     * Get all sections
      *
      * @method GET
      */
@@ -16,10 +16,10 @@ export default {
       method: 'GET',
       path: '/',
       options: {
-        handler: () => partTypeController.find(),
-        tags: ['api', 'part types', 'v1'],
-        description: 'Get all Part Types',
-        notes: 'Returns all the part types',
+        handler: () => sectionController.find(),
+        tags: ['api', 'sections', 'v1'],
+        description: 'Get all Sections',
+        notes: 'Returns all the sections',
         plugins: {
           'hapi-swagger': {
             responses: {
@@ -33,7 +33,7 @@ export default {
     });
 
     /**
-     * Get one part type
+     * Get one section
      *
      * @method GET
      * @param {String} id
@@ -42,10 +42,10 @@ export default {
       method: 'GET',
       path: '/{id}',
       options: {
-        handler: (request) => partTypeController.findOne(request.params.id),
-        tags: ['api', 'part types', 'v1'],
-        description: 'Get a Part Type',
-        notes: 'Returns a specific part type',
+        handler: (request) => sectionController.findOne(request.params.id),
+        tags: ['api', 'sections', 'v1'],
+        description: 'Get a Section',
+        notes: 'Returns a specific section',
         validate: {
           failAction: failValidationHandler,
           params: joi.object({
@@ -65,7 +65,7 @@ export default {
     });
 
     /**
-     * Create one part type
+     * Create one section
      *
      * @method POST
      * @see creationSchema
@@ -74,14 +74,14 @@ export default {
       method: 'POST',
       path: '/',
       options: {
-        handler: (request) => partTypeController.create(request.payload),
+        handler: (request) => sectionController.create(request.payload),
         validate: {
           failAction: failValidationHandler,
           payload: creationSchema
         },
-        tags: ['api', 'part types', 'v1'],
-        description: 'Create a Part Type',
-        notes: 'Creates a part type and returns it',
+        tags: ['api', 'sections', 'v1'],
+        description: 'Create a Section',
+        notes: 'Creates a section and returns it',
         plugins: {
           'hapi-swagger': {
             responses: {
@@ -95,7 +95,7 @@ export default {
     });
 
     /**
-     * Update one part type
+     * Update one section
      *
      * @method PATCH
      * @param {String} id
@@ -106,7 +106,7 @@ export default {
       path: '/{id}',
       options: {
         handler: (request) =>
-          partTypeController.update(request.params.id, request.payload),
+          sectionController.update(request.params.id, request.payload),
         validate: {
           failAction: failValidationHandler,
           params: joi.object({
@@ -116,9 +116,9 @@ export default {
             x.optional()
           )
         },
-        tags: ['api', 'part types', 'v1'],
-        description: 'Update a Part Type',
-        notes: 'Updates a part type and returns it',
+        tags: ['api', 'sections', 'v1'],
+        description: 'Update a Section',
+        notes: 'Updates a section and returns it',
         plugins: {
           'hapi-swagger': {
             responses: {
@@ -132,7 +132,7 @@ export default {
     });
 
     /**
-     * Delete part types
+     * Delete sections
      *
      * @method DELETE
      * @payload {Array} ids
@@ -141,7 +141,7 @@ export default {
       method: 'DELETE',
       path: '/',
       options: {
-        handler: (request) => partTypeController.remove(request.payload.ids),
+        handler: (request) => sectionController.remove(request.payload.ids),
         validate: {
           failAction: failValidationHandler,
           payload: joi.object({
@@ -156,9 +156,9 @@ export default {
               )
           })
         },
-        tags: ['api', 'part types', 'v1'],
-        description: 'Delete Part Types',
-        notes: 'Deletes part types and returns their id to confirm',
+        tags: ['api', 'sections', 'v1'],
+        description: 'Delete Sections',
+        notes: 'Deletes sections and returns their id to confirm',
         plugins: {
           'hapi-swagger': {
             responses: {
@@ -185,7 +185,7 @@ export default {
     });
 
     /**
-     * Delete one part type
+     * Delete one section
      *
      *
      * @method DELETE
@@ -195,16 +195,16 @@ export default {
       method: 'DELETE',
       path: '/{id}',
       options: {
-        handler: (request) => partTypeController.remove([request.params.id]),
+        handler: (request) => sectionController.remove([request.params.id]),
         validate: {
           failAction: failValidationHandler,
           params: joi.object({
             id: joi.string().length(24).required()
           })
         },
-        tags: ['api', 'part types', 'v1'],
-        description: 'Delete a Part Type',
-        notes: 'Delete a part type and returns its id to confirm',
+        tags: ['api', 'sections', 'v1'],
+        description: 'Delete a Section',
+        notes: 'Delete a section and returns its id to confirm',
         plugins: {
           'hapi-swagger': {
             responses: {

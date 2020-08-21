@@ -3,7 +3,7 @@ import Boom from '@hapi/boom';
 import joigoose from 'joigoose';
 import mongoose from 'mongoose';
 import mongooseUniqueValidator from 'mongoose-unique-validator';
-import PartTypeSchema, { hiddenProperties } from '../schemas/PartTypeSchema';
+import SectionSchema, { hiddenProperties } from '../schemas/SectionSchema';
 import arrayToProjection from '../utils/arrayToProjection';
 
 export const hiddenFields = [
@@ -16,7 +16,7 @@ export const hiddenFields = [
 export const projection = arrayToProjection(hiddenFields);
 
 const schema = new mongoose.Schema(
-  joigoose(mongoose, { _id: true, timestamps: true }).convert(PartTypeSchema)
+  joigoose(mongoose, { _id: true, timestamps: true }).convert(SectionSchema)
 );
 
 // This allow for beautified E11000 errors for 'uniqueness' of fields
@@ -39,4 +39,4 @@ schema.pre('deleteMany', async function preDeleteManyMiddelware(next) {
   }
 });
 
-export default mongoose.model('PartType', schema);
+export default mongoose.model('Section', schema);
