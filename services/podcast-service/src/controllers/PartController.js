@@ -95,7 +95,7 @@ export const create = async (
   formData.append('file', fs.createReadStream(file.path));
 
   try {
-    const { data: savedFile } = await axios.post(
+    const savingFile = await axios.post(
       'http://storage-service:3001/podcast-part',
       formData,
       {
@@ -104,6 +104,7 @@ export const create = async (
         maxContentLength: 200 * 1024 * 1024 // 200MB max part size
       }
     );
+    const savedFile = _.get(savingFile, ['data', 'data'], {});
 
     return Part.create({
       name,
