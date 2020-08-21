@@ -35,12 +35,13 @@ export const addPodcastPartFile = async ({
   );
 
   return storedFile
-    ? {
+    ? calibrate.response({
         filename,
         location,
         storageType: storedFile.storageName,
-        publicLink: storedFile.publicLink
-      }
+        publicLink: storedFile.publicLink,
+        prout: null
+      })
     : Boom.serverUnavailable('All storages options have failed');
 };
 
@@ -57,7 +58,7 @@ export const getPodcastPartFile = async (id, h) => {
     .get(`http://podcast-service:3000/v1/parts/${id}`)
     .then(({ data }) => data)
     .then(async ({ data }) => {
-      const stream = await storages.removeFile(
+      const stream = await storages.getFileAsReadable(
         data.storageType,
         data.storagePath,
         data.storageFilename
