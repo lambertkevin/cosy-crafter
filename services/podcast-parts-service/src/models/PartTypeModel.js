@@ -3,10 +3,15 @@ import Boom from '@hapi/boom';
 import joigoose from 'joigoose';
 import mongoose from 'mongoose';
 import mongooseUniqueValidator from 'mongoose-unique-validator';
+import PartTypeSchema, { hiddenProperties } from '../schemas/PartTypeSchema';
 import arrayToProjection from '../utils/arrayToProjection';
-import PartTypeSchema from '../schemas/PartTypeSchema';
 
-export const hiddenFields = ['createdAt', 'updatedAt', '__v'];
+export const hiddenFields = [
+  ...hiddenProperties,
+  'createdAt',
+  'updatedAt',
+  '__v'
+];
 
 export const projection = arrayToProjection(hiddenFields);
 
