@@ -55,7 +55,7 @@ schema.pre('deleteMany', async function preDeleteManyMiddelware(next) {
     const deletions = parts.map(
       ({ storageType, storagePath, storageFilename }) => {
         return storageType && storagePath && storageFilename
-          ? axios.delete('http://storage-service:3001/podcast-part', {
+          ? axios.delete('http://storage-service:3001/v1/podcast-parts', {
               data: {
                 storageType,
                 storagePath,
