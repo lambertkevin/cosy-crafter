@@ -24,7 +24,7 @@ export default {
      */
     server.route({
       method: 'POST',
-      path: '/podcast-part',
+      path: '/',
       options: {
         handler: ({ payload }) => StorageController.addPodcastPartFile(payload),
         tags: ['api', 'podcasts'],
@@ -89,7 +89,7 @@ export default {
      */
     server.route({
       method: 'GET',
-      path: '/podcast-part/{id}',
+      path: '/{id}',
       options: {
         handler: async ({ params }, h) =>
           StorageController.getPodcastPartFile(params.id, h),
@@ -121,7 +121,7 @@ export default {
      */
     server.route({
       method: 'DELETE',
-      path: '/podcast-part',
+      path: '/',
       options: {
         handler: async ({ payload }) =>
           StorageController.removePodcastPartFile(payload),
