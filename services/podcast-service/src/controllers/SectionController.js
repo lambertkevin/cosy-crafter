@@ -1,49 +1,49 @@
 import _ from 'lodash';
 import Boom from '@hapi/boom';
 import calibrate from 'calibrate';
-import PartType, { projection, hiddenFields } from '../models/PartTypeModel';
+import Section, { projection, hiddenFields } from '../models/SectionModel';
 
 /**
- * Return a list of all partType
+ * Return a list of all Section
  *
  * @param {Boolean} sanitized
  *
- * @return {Promise<Object[]>} {[PartType]}
+ * @return {Promise<Object[]>} {[Section]}
  */
 export const find = (sanitized = true) =>
-  PartType.find({}, sanitized ? projection : {})
+  Section.find({}, sanitized ? projection : {})
     .exec()
     .then(calibrate.response)
     .catch(Boom.boomify);
 
 /**
- * Return a specific partType
+ * Return a specific Section
  *
  * @param {String} id
  * @param {Boolean} sanitized
  *
- * @return {Promise<Object>} {PartType}
+ * @return {Promise<Object>} {Section}
  */
 export const findOne = (id, sanitized = true) =>
-  PartType.findOne({ _id: id }, sanitized ? projection : {})
+  Section.findOne({ _id: id }, sanitized ? projection : {})
     .exec()
     .then(calibrate.response)
     .catch(Boom.boomify);
 
 /**
- * Create a partType
+ * Create a Section
  *
  * @param {Object} data
  * @param {String} data.name
  * @param {Boolean} sanitized
  *
- * @return {Promise<Object>} {PartType}
+ * @return {Promise<Object>} {Section}
  */
 export const create = ({ name }, sanitized = true) =>
-  PartType.create({ name })
-    .then((partType) =>
+  Section.create({ name })
+    .then((section) =>
       calibrate.response(
-        sanitized ? _.omit(partType.toObject(), hiddenFields) : partType
+        sanitized ? _.omit(section.toObject(), hiddenFields) : section
       )
     )
     .catch((error) => {
@@ -58,17 +58,17 @@ export const create = ({ name }, sanitized = true) =>
     });
 
 /**
- * Update a specific partType
+ * Update a specific Section
  *
  * @param {String} id
  * @param {Object} data
  * @param {String} data.name
  * @param {Boolean} sanitized
  *
- * @return {Promise<Object[]>} {PartType}
+ * @return {Promise<Object[]>} {Section}
  */
 export const update = (id, { name }, sanitized = true) =>
-  PartType.updateOne({ _id: id }, _.omitBy({ name }, _.isUndefined))
+  Section.updateOne({ _id: id }, _.omitBy({ name }, _.isUndefined))
     .exec()
     .then(async (res) => {
       if (!res.n) {
@@ -78,8 +78,8 @@ export const update = (id, { name }, sanitized = true) =>
         return Boom.expectationFailed('No changes required');
       }
 
-      const partType = await findOne(id, sanitized);
-      return partType;
+      const section = await findOne(id, sanitized);
+      return section;
     })
     .catch((error) => {
       if (error.name === 'ValidationError') {
@@ -93,12 +93,12 @@ export const update = (id, { name }, sanitized = true) =>
     });
 
 /**
- * Create a partType
+ * Create a Section
  * @param {Arrays} ids
  * @return {Promise<void>}
  */
 export const remove = (ids) =>
-  PartType.deleteMany({ _id: { $in: ids.filter((x) => x) } })
+  Section.deleteMany({ _id: { $in: ids.filter((x) => x) } })
     .exec()
     .then((res) => {
       if (!res.deletedCount) {

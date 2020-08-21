@@ -19,14 +19,14 @@ export const creationSchema = joi.object({
       _mongoose: { unique: true }
     })
     .example('La partie qui est rigolote. LOL!'),
-  type: joi
+  section: joi
     .string()
     .length(24)
     .required()
     .meta({
       _mongoose: {
         type: 'ObjectId',
-        ref: 'PartType'
+        ref: 'Section'
       }
     })
     .example('5f3ee652c4ed94844d8288ee'),
