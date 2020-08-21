@@ -1,22 +1,18 @@
 import _ from 'lodash';
 import axios from 'axios';
 import Boom from '@hapi/boom';
+import mongoose from 'mongoose';
 import joigoose from 'joigoose';
 import mongooseUniqueValidator from 'mongoose-unique-validator';
-import mongoose from 'mongoose';
-import Podcast from './PodcastModel';
-import PartSchema from '../schemas/PartSchema';
+import PartSchema, { hiddenProperties } from '../schemas/PartSchema';
 import arrayToProjection from '../utils/arrayToProjection';
+import Podcast from './PodcastModel';
 
 export const hiddenFields = [
+  ...hiddenProperties,
   'createdAt',
   'updatedAt',
-  '__v',
-  'originalFilename',
-  'storageFilename',
-  'storageType',
-  'storagePath',
-  'contentType'
+  '__v'
 ];
 
 export const projection = arrayToProjection(hiddenFields);

@@ -73,12 +73,20 @@ export const create = async (
       return Boom.notAcceptable("At least one dependency doesn't exist");
     }
   } catch (error) {
-    console.log(error);
     return error;
   }
 
   const tags =
-    typeof _tags === 'string' ? _tags.split(',').map((x) => x.trim()) : _tags;
+    typeof _tags === 'string'
+      ? Array.from(
+          new Set(
+            _tags
+              .split(',')
+              .map((x) => x.trim())
+              .filter((x) => x)
+          )
+        )
+      : Array.from(new Set(_tags));
   const { headers, filename } = file;
 
   const formData = new FormData();
@@ -91,14 +99,16 @@ export const create = async (
       'http://storage-service:3001/podcast-part',
       formData,
       {
-        headers: formData.getHeaders()
+        headers: formData.getHeaders(),
+        maxBodyLength: 200 * 1024 * 1024, // 200MB max part size
+        maxContentLength: 200 * 1024 * 1024 // 200MB max part size
       }
     );
 
     return Part.create({
       name,
       type,
-      podcast,
+      podcast: podcastId,
       tags,
       originalFilename: filename,
       storageType: savedFile.storageType,
@@ -149,74 +159,147 @@ export const create = async (
 
 /**
  * Update a specific part
- * @param {String} id
  *
- * @param {Object} data
- * @param {String} data.name
- * @param {String} data.type
- * @param {String} data.podcast
- * @param {String} data.tags
- * @param {ReadableStream} data.file
+ * @param {String} id
+ * @param {Object} payload
  * @param {Boolean} sanitized
  *
  * @return {Promise<Object>} {Part}
  */
-export const update = (
-  id,
-  {
-    name,
-    type,
-    podcast,
-    tags,
-    originalFilename,
-    storageType,
-    storagePath,
-    storageFilename,
-    publicLink,
-    contentType
-  },
-  sanitized = true
-) =>
-  Part.updateOne(
-    { _id: id },
-    _.omitBy(
-      {
-        name,
-        type,
-        podcast,
-        tags,
-        originalFilename,
-        storageType,
-        storagePath,
-        storageFilename,
-        publicLink,
-        contentType
-      },
-      _.isUndefined
+export const update = async (id, payload, sanitized = true) => {
+  if (!payload || _.isEmpty(payload)) {
+    return Boom.expectationFailed('No changes required');
+  }
+
+  const { name, type, podcast: podcastId, tags: _tags, file } = payload;
+  // First test part existence
+  let part;
+  try {
+    part = await Part.findById(id);
+    if (!part) {
+      return Boom.notFound();
+    }
+  } catch (e) {
+    return Boom.boomify(e);
+  }
+
+  // Then test dependencies existence
+  let podcast;
+  // We get the new or old podcast (we'll need its name later on)
+  try {
+    const { data } = await PodcastController.findOne(podcastId || part.podcast);
+    // eslint-disable-next-line prefer-destructuring
+    podcast = data;
+  } catch (error) {
+    return Boom.notAcceptable("At least one dependency doesn't exist");
+  }
+  if (type) {
+    try {
+      await PartTypeController.findOne(type);
+    } catch (error) {
+      return Boom.notAcceptable("At least one dependency doesn't exist");
+    }
+  }
+
+  // Process update
+  try {
+    let tags;
+    if (typeof _tags === 'string' || _.isArray(_tags)) {
+      // Transform tags as array if string
+      tags =
+        typeof _tags === 'string'
+          ? Array.from(
+              new Set(
+                _tags
+                  .split(',')
+                  .map((x) => x.trim())
+                  .filter((x) => x)
+              )
+            )
+          : Array.from(new Set(_tags));
+    }
+
+    let fileInfos = {};
+    if (file) {
+      // Delete old file
+      const { storageType, storagePath, storageFilename } = part;
+
+      if (storageType && storagePath && storageFilename) {
+        axios.delete('http://storage-service:3001/podcast-part', {
+          data: {
+            storageType,
+            storagePath,
+            storageFilename
+          }
+        });
+      }
+
+      // Then upload new file
+      const { headers, filename } = file;
+      const formData = new FormData();
+      formData.append('podcastName', podcast.name);
+      formData.append('filename', filename);
+      formData.append('file', fs.createReadStream(file.path));
+
+      const { data: savedFile } = await axios.post(
+        'http://storage-service:3001/podcast-part',
+        formData,
+        {
+          headers: formData.getHeaders(),
+          maxBodyLength: 200 * 1024 * 1024, // 200MB max part size
+          maxContentLength: 200 * 1024 * 1024 // 200MB max part size
+        }
+      );
+
+      fileInfos = {
+        originalFilename: filename,
+        storageType: savedFile.storageTypefilename,
+        storagePath: savedFile.locationfilename,
+        storageFilename: savedFile.filename,
+        publicLink: savedFile.publicLinkfilename,
+        contentType: headers['content-type']
+      };
+    }
+
+    return Part.updateOne(
+      { _id: id },
+      _.omitBy(
+        {
+          name,
+          type,
+          podcast: podcastId,
+          tags,
+          ...fileInfos
+        },
+        _.isUndefined
+      )
     )
-  )
-    .exec()
-    .then(async (res) => {
-      if (!res.n) {
-        return Boom.notFound();
-      }
-      if (!res.nModified) {
-        return Boom.expectationFailed('No changes required');
-      }
+      .exec()
+      .then(async (res) => {
+        if (!res.n) {
+          return Boom.notFound();
+        }
+        if (!res.nModified) {
+          return Boom.expectationFailed('No changes required');
+        }
 
-      const part = await findOne(id, sanitized);
-      return part;
-    })
-    .catch((error) => {
-      if (error.name === 'ValidationError') {
-        const response = Boom.boomify(error, { statusCode: 409 });
-        response.output.payload.data = error.errors;
+        const updatedPart = await findOne(id, sanitized);
+        return updatedPart;
+      })
+      .catch((error) => {
+        if (error.name === 'ValidationError') {
+          const response = Boom.boomify(error, { statusCode: 409 });
+          response.output.payload.data = error.errors;
 
-        return response;
-      }
+          return response;
+        }
 
-      return Boom.boomify(error);
-    });
+        return Boom.boomify(error);
+      });
+  } catch (e) {
+    return Boom.boomify(e);
+  }
+};
 
 /**
  * Create a part
