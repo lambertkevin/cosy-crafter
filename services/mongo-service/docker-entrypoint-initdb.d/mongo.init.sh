@@ -6,9 +6,9 @@ mongo -- "$MONGO_INITDB_DATABASE" <<EOF
     var admin = db.getSiblingDB('admin');
     admin.auth(rootUser, rootPassword);
 
-    var podcastPartsUser = '$PODCAST_PARTS_DB_USER';
-    var podcastPartsPwd = '$PODCAST_PARTS_DB_PASSWORD';
-    var podcastPartsDb = '$PODCAST_PARTS_DB_NAME'
-    use $PODCAST_PARTS_DB_NAME;
+    var podcastPartsUser = '$PODCAST_DB_USER';
+    var podcastPartsPwd = '$PODCAST_DB_PASSWORD';
+    var podcastPartsDb = '$PODCAST_DB_NAME'
+    use $PODCAST_DB_NAME;
     db.createUser({user: podcastPartsUser, pwd: podcastPartsPwd, roles:[{role: "readWrite", db: podcastPartsDb}]})
 EOF
