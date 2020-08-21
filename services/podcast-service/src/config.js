@@ -14,7 +14,7 @@ export const nodeConfig = {
  */
 export const swaggerConfig = {
   info: {
-    title: 'Podcast Parts Service API',
+    title: 'Podcast Service API',
     version: Package.version
   },
   grouping: 'tags'

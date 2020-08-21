@@ -54,7 +54,7 @@ export const addPodcastPartFile = async ({
  */
 export const getPodcastPartFile = async (id, h) => {
   return axios
-    .get(`http://podcast-parts-service:3000/v1/parts/${id}`)
+    .get(`http://podcast-service:3000/v1/parts/${id}`)
     .then(({ data }) => data)
     .then(async ({ data }) => {
       const stream = await storages.removeFile(

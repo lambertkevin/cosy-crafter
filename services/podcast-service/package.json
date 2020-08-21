@@ -1,5 +1,5 @@
 {
-  "name": "podcast-parts-service",
+  "name": "podcast-service",
   "version": "0.0.1",
   "description": "Service that handle serving podcast parts either for internal use or for public api",
   "main": "index.js",
