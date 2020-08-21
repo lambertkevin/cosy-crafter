@@ -11,16 +11,15 @@ import { projection as partProjection } from '../models/PartModel';
  *
  * @return {Promise<Object[]>} {[Podcast]}
  */
-export const find = (sanitized = false) =>{
-  console.log(sanitized);
-
-  return Podcast.find({}, sanitized ? projection : null)
-    .populate('parts', { ...partProjection, podcast: false })
+export const find = (sanitized = true) =>
+  Podcast.find({}, sanitized ? projection : null)
+    .populate(
+      'parts',
+      sanitized ? { ...partProjection, podcast: false } : { podcast: false }
+    )
     .exec()
     .then(calibrate.response)
     .catch(Boom.boomify);
-
-}
 /**
  * Return a specific podcast
  *
@@ -31,7 +30,10 @@ export const find = (sanitized = false) =>{
  */
 export const findOne = (id, sanitized = true) =>
   Podcast.findOne({ _id: id }, sanitized ? projection : null)
-    .populate('parts', { ...partProjection, podcast: false })
+    .populate(
+      'parts',
+      sanitized ? { ...partProjection, podcast: false } : { podcast: false }
+    )
     .exec()
     .then(calibrate.response)
     .catch(Boom.boomify);
@@ -48,7 +50,10 @@ export const findOne = (id, sanitized = true) =>
  *
  * @return {Promise<Object>} {Podcast}
  */
-export const create = ({ name, edition, parts, tags }, sanitized = true) =>
+export const create = (
+  { name, edition, parts = [], tags = [] },
+  sanitized = true
+) =>
   Podcast.create({
     name,
     edition,
@@ -130,7 +135,7 @@ export const update = (id, { name, edition, parts, tags }, sanitized = true) =>
  * @return {Promise<void>}
  */
 export const remove = (ids) =>
-  Podcast.deleteMany({ _id: { $in: ids } })
+  Podcast.deleteMany({ _id: { $in: ids.filter((x) => x) } })
     .exec()
     .then((res) => {
       if (!res.deletedCount) {

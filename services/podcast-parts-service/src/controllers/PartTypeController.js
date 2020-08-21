@@ -98,7 +98,7 @@ export const update = (id, { name }, sanitized = true) =>
  * @return {Promise<void>}
  */
 export const remove = (ids) =>
-  PartType.deleteMany({ _id: { $in: ids } })
+  PartType.deleteMany({ _id: { $in: ids.filter((x) => x) } })
     .exec()
     .then((res) => {
       if (!res.deletedCount) {
