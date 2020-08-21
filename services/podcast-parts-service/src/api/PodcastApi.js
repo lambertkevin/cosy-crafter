@@ -44,7 +44,7 @@ export default {
       options: {
         handler: (request) => podcastController.findOne(request.params.id),
         tags: ['api', 'podcasts', 'v1'],
-        description: 'Get one Podcast',
+        description: 'Get a Podcast',
         notes: 'Returns a specific podcast',
         validate: {
           failAction: failValidationHandler,
@@ -166,10 +166,14 @@ export default {
                 schema: calibrateSchema(
                   joi.object({
                     deleted: joi
-                      .string()
-                      .length(24)
-                      .required()
-                      .example('5f3ed184201d35c0c309aaaa')
+                      .array()
+                      .items(
+                        joi
+                          .string()
+                          .length(24)
+                          .required()
+                          .example('5f3ed184201d35c0c309aaaa')
+                      )
                   }),
                   false
                 )
@@ -208,10 +212,14 @@ export default {
                 schema: calibrateSchema(
                   joi.object({
                     deleted: joi
-                      .string()
-                      .length(24)
-                      .required()
-                      .example('5f3ed184201d35c0c309aaaa')
+                      .array()
+                      .items(
+                        joi
+                          .string()
+                          .length(24)
+                          .required()
+                          .example('5f3ed184201d35c0c309aaaa')
+                      )
                   }),
                   false
                 )
