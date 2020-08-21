@@ -19,13 +19,13 @@ services:
       timeout: 10s
       retries: 5
 
-  podcast-parts-service:
-    container_name: podcast-parts-service
+  podcast-service:
+    container_name: podcast-service
     image: 'node:12.18'
     user: 'node'
     working_dir: /home/node/app
     volumes:
-      - ./services/podcast-parts-service:/home/node/app
+      - ./services/podcast-service:/home/node/app
     expose:
       - ${PODCAST_PARTS_SERVICE_EXPOSED_PORT}
     ports:
