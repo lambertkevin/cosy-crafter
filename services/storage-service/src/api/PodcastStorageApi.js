@@ -4,7 +4,7 @@ import failValidationHandler from '../utils/failValidationHandler';
 import { calibrateSchema } from '../utils/schemasUtils';
 
 export default {
-  name: 'storageApi',
+  name: 'podcastStorageApi',
   async register(server) {
     /**
      * Health Check Route
