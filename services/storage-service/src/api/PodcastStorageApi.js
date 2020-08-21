@@ -28,7 +28,7 @@ export default {
       options: {
         handler: ({ payload }) => StorageController.addPodcastPartFile(payload),
         tags: ['api', 'podcasts'],
-        description: 'Upload a podcast part file to storage',
+        description: 'Upload a podcast part file',
         notes: 'Act like a pipeline to store a stream into a storage',
         payload: {
           allow: 'multipart/form-data',
@@ -106,7 +106,8 @@ export default {
           'hapi-swagger': {
             responses: {
               200: {
-                description: 'Returns the file as a readable stream'
+                description: 'Returns the file as a readable stream',
+                schema: joi.binary().meta({ swaggerType: 'file' })
               }
             }
           }
