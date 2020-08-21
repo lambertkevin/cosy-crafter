@@ -155,7 +155,8 @@ export default {
               200: {
                 schema: calibrateSchema(responseSchema)
               }
-            }
+            },
+            payloadType: 'form'
           }
         }
       }
