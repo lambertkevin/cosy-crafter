@@ -5,11 +5,11 @@ import Boom from '@hapi/boom';
 import FormData from 'form-data';
 import calibrate from 'calibrate';
 import * as PodcastController from './PodcastController';
-import * as PartTypeController from './PartTypeController';
+import * as SectionController from './SectionController';
 import axiosErrorBoomifier from '../utils/axiosErrorBoomifier';
 import Part, { projection, hiddenFields } from '../models/PartModel';
 import { projection as podcastProjection } from '../models/PodcastModel';
-import { projection as partTypeProjection } from '../models/PartTypeModel';
+import { projection as sectionProjection } from '../models/SectionModel';
 
 /**
  * Return a list of all part
@@ -21,7 +21,7 @@ import { projection as partTypeProjection } from '../models/PartTypeModel';
 export const find = (sanitized = true) =>
   Part.find({}, sanitized ? projection : {})
     .populate('podcast', { ...podcastProjection, parts: false })
-    .populate('type', partTypeProjection)
+    .populate('section', sectionProjection)
     .exec()
     .then(calibrate.response)
     .catch(Boom.boomify);
@@ -37,7 +37,7 @@ export const find = (sanitized = true) =>
 export const findOne = (id, sanitized = true) =>
   Part.findOne({ _id: id }, sanitized ? projection : {})
     .populate('podcast', { ...podcastProjection, parts: false })
-    .populate('type', partTypeProjection)
+    .populate('section', sectionProjection)
     .exec()
     .then(calibrate.response)
     .catch(Boom.boomify);
@@ -56,14 +56,14 @@ export const findOne = (id, sanitized = true) =>
  * @return {Promise<Object>} {Part}
  */
 export const create = async (
-  { name, type, podcast: podcastId, tags: _tags = [], file },
+  { name, section, podcast: podcastId, tags: _tags = [], file },
   sanitized = true
 ) => {
   let podcast;
 
   try {
     const dependencies = await Promise.all([
-      PartTypeController.findOne(type),
+      SectionController.findOne(section),
       PodcastController.findOne(podcastId)
     ]);
     // eslint-disable-next-line prefer-destructuring
@@ -107,7 +107,7 @@ export const create = async (
 
     return Part.create({
       name,
-      type,
+      section,
       podcast: podcastId,
       tags,
       originalFilename: filename,
@@ -171,7 +171,7 @@ export const update = async (id, payload, sanitized = true) => {
     return Boom.expectationFailed('No changes required');
   }
 
-  const { name, type, podcast: podcastId, tags: _tags, file } = payload;
+  const { name, section, podcast: podcastId, tags: _tags, file } = payload;
   // First test part existence
   let part;
   try {
@@ -193,9 +193,9 @@ export const update = async (id, payload, sanitized = true) => {
   } catch (error) {
     return Boom.notAcceptable("At least one dependency doesn't exist");
   }
-  if (type) {
+  if (section) {
     try {
-      await PartTypeController.findOne(type);
+      await SectionController.findOne(section);
     } catch (error) {
       return Boom.notAcceptable("At least one dependency doesn't exist");
     }
@@ -266,7 +266,7 @@ export const update = async (id, payload, sanitized = true) => {
       _.omitBy(
         {
           name,
-          type,
+          section,
           podcast: podcastId,
           tags,
           ...fileInfos

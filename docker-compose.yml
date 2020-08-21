@@ -10,34 +10,34 @@ services:
     environment:
       - MONGO_INITDB_ROOT_USERNAME=${MONGO_INITDB_ROOT_USERNAME}
       - MONGO_INITDB_ROOT_PASSWORD=${MONGO_INITDB_ROOT_PASSWORD}
-      - PODCAST_PARTS_DB_NAME=${PODCAST_PARTS_DB_NAME}
-      - PODCAST_PARTS_DB_USER=${PODCAST_PARTS_DB_USER}
-      - PODCAST_PARTS_DB_PASSWORD=${PODCAST_PARTS_DB_PASSWORD}
+      - PODCAST_DB_NAME=${PODCAST_DB_NAME}
+      - PODCAST_DB_USER=${PODCAST_DB_USER}
+      - PODCAST_DB_PASSWORD=${PODCAST_DB_PASSWORD}
     healthcheck:
       test: ['CMD', 'curl', '-f', 'http://localhost:27017']
       interval: 10s
       timeout: 10s
       retries: 5
 
-  podcast-parts-service:
-    container_name: podcast-parts-service
+  podcast-service:
+    container_name: podcast-service
     image: 'node:12.18'
     user: 'node'
     working_dir: /home/node/app
     volumes:
-      - ./services/podcast-parts-service:/home/node/app
+      - ./services/podcast-service:/home/node/app
     expose:
-      - ${PODCAST_PARTS_SERVICE_EXPOSED_PORT}
+      - ${PODCAST_SERVICE_EXPOSED_PORT}
     ports:
-      - '${PODCAST_PARTS_SERVICE_EXPOSED_PORT}:${PODCAST_PARTS_SERVICE_EXPOSED_PORT}'
+      - '${PODCAST_SERVICE_EXPOSED_PORT}:${PODCAST_SERVICE_EXPOSED_PORT}'
     environment:
       - NODE_ENV=${NODE_ENV}
       - MONGO_DB_HOST=${MONGO_DB_HOST}
       - MONGO_DB_PORT=${MONGO_DB_PORT}
-      - PODCAST_PARTS_DB_NAME=${PODCAST_PARTS_DB_NAME}
-      - PODCAST_PARTS_DB_USER=${PODCAST_PARTS_DB_USER}
-      - PODCAST_PARTS_DB_PASSWORD=${PODCAST_PARTS_DB_PASSWORD}
-      - PODCAST_PARTS_SERVICE_EXPOSED_PORT=${PODCAST_PARTS_SERVICE_EXPOSED_PORT}
+      - PODCAST_DB_NAME=${PODCAST_DB_NAME}
+      - PODCAST_DB_USER=${PODCAST_DB_USER}
+      - PODCAST_DB_PASSWORD=${PODCAST_DB_PASSWORD}
+      - PODCAST_SERVICE_EXPOSED_PORT=${PODCAST_SERVICE_EXPOSED_PORT}
     command: ./run.sh
     links:
       - mongo-service
