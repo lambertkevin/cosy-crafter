@@ -19,3 +19,15 @@ export const swaggerConfig = {
   },
   grouping: 'tags'
 };
+
+/**
+ * Config for DB
+ * @type {Object}
+ */
+export const databaseConfig = {
+  host: process.env.MONGO_DB_HOST,
+  port: process.env.MONGO_DB_PORT,
+  db: process.env.AUTH_DB_NAME,
+  username: process.env.AUTH_DB_USER,
+  password: process.env.AUTH_DB_PASSWORD
+};
