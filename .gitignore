@@ -1,5 +1,6 @@
 .env
 node_modules
+.initialized
 
 # Mongo
 services/mongo-service/db
