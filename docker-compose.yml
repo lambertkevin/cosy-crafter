@@ -67,5 +67,21 @@ services:
       - AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}
       - AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}
     command: ./run.sh
+
+  auth-service:
+    container_name: auth-service
+    image: 'node:12.18'
+    user: 'node'
+    working_dir: /home/node/app
+    volumes:
+      - ./services/auth-service:/home/node/app
+    expose:
+      - ${AUTH_SERVICE_EXPOSED_PORT}
+    ports:
+      - '${AUTH_SERVICE_EXPOSED_PORT}:${AUTH_SERVICE_EXPOSED_PORT}'
+    environment:
+      - NODE_ENV=${NODE_ENV}
+      - AUTH_SERVICE_EXPOSED_PORT=${AUTH_SERVICE_EXPOSED_PORT}
+    command: ./run.sh
     links:
       - mongo-service
