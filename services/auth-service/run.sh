@@ -1,6 +1,8 @@
 #!/bin/bash
 set +e
 
+./scripts/db_check.sh
+
 echo "Environnement: ${NODE_ENV:-unkown}"
 
 if [ "$NODE_ENV" = "development" ]; then
