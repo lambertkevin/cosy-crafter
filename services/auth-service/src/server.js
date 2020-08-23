@@ -3,10 +3,12 @@ import Inert from '@hapi/inert';
 import Vision from '@hapi/vision';
 import HapiSwagger from 'hapi-swagger';
 import { nodeConfig, swaggerConfig } from './config';
+import db from './database';
 
 const init = async () => {
   try {
     const server = Hapi.server(nodeConfig);
+    await db();
     await server.register([
       Inert,
       Vision,
