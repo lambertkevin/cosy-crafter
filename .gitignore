@@ -2,6 +2,9 @@
 node_modules
 .initialized
 
+#auth
+.keys
+
 # Mongo
 services/mongo-service/db
 
