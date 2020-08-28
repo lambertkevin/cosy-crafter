@@ -26,6 +26,10 @@ services:
     working_dir: /home/node/app
     volumes:
       - ./services/podcast-service:/home/node/app
+      - type: bind
+        source: .keys/auth.pub
+        target: /.keys/auth.pub
+        read_only: true
     expose:
       - ${PODCAST_SERVICE_EXPOSED_PORT}
     ports:
@@ -38,6 +42,8 @@ services:
       - PODCAST_DB_USER=${PODCAST_DB_USER}
       - PODCAST_DB_PASSWORD=${PODCAST_DB_PASSWORD}
       - PODCAST_SERVICE_EXPOSED_PORT=${PODCAST_SERVICE_EXPOSED_PORT}
+      - RSA_KEYS_LOCATION=${RSA_KEYS_LOCATION}
+      - RSA_KEYS_NAME=${RSA_KEYS_NAME}
     command: ./run.sh
     links:
       - mongo-service
@@ -49,6 +55,10 @@ services:
     working_dir: /home/node/app
     volumes:
       - ./services/storage-service:/home/node/app
+      - type: bind
+        source: .keys/auth.pub
+        target: /.keys/auth.pub
+        read_only: true
     expose:
       - ${STORAGE_SERVICE_EXPOSED_PORT}
     ports:
@@ -65,6 +75,8 @@ services:
       - AWS_REGION=${AWS_REGION}
       - AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}
       - AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}
+      - RSA_KEYS_LOCATION=${RSA_KEYS_LOCATION}
+      - RSA_KEYS_NAME=${RSA_KEYS_NAME}
     command: ./run.sh
 
   auth-service:
@@ -74,6 +86,10 @@ services:
     working_dir: /home/node/app
     volumes:
       - ./services/auth-service:/home/node/app
+      - type: bind
+        source: .keys
+        target: /.keys
+        read_only: true
     expose:
       - ${AUTH_SERVICE_EXPOSED_PORT}
     ports:
@@ -81,13 +97,18 @@ services:
     environment:
       - NODE_ENV=${NODE_ENV}
       - AUTH_SERVICE_EXPOSED_PORT=${AUTH_SERVICE_EXPOSED_PORT}
+      - AUTH_DB_NAME=${AUTH_DB_NAME}
+      - AUTH_DB_USER=${AUTH_DB_USER}
+      - AUTH_DB_PASSWORD=${AUTH_DB_PASSWORD}
+      - PODCAST_SERVICE_JWT_SECRET=${PODCAST_SERVICE_JWT_SECRET}
+      - STORAGE_SERVICE_JWT_SECRET=${STORAGE_SERVICE_JWT_SECRET}
+      - GLOBAL_JWT_SECRET=${GLOBAL_JWT_SECRET}
       - MONGO_DB_HOST=${MONGO_DB_HOST}
       - MONGO_DB_PORT=${MONGO_DB_PORT}
       - MONGO_INITDB_ROOT_USERNAME=${MONGO_INITDB_ROOT_USERNAME}
       - MONGO_INITDB_ROOT_PASSWORD=${MONGO_INITDB_ROOT_PASSWORD}
-      - AUTH_DB_NAME=${AUTH_DB_NAME}
-      - AUTH_DB_USER=${AUTH_DB_USER}
-      - AUTH_DB_PASSWORD=${AUTH_DB_PASSWORD}
+      - RSA_KEYS_LOCATION=${RSA_KEYS_LOCATION}
+      - RSA_KEYS_NAME=${RSA_KEYS_NAME}
     command: ./run.sh
     links:
       - mongo-service
