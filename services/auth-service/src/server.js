@@ -3,6 +3,7 @@ import Inert from '@hapi/inert';
 import Vision from '@hapi/vision';
 import HapiSwagger from 'hapi-swagger';
 import { nodeConfig, swaggerConfig } from './config';
+import apis from './api';
 import db from './database';
 
 const init = async () => {
@@ -17,6 +18,7 @@ const init = async () => {
         options: swaggerConfig
       }
     ]);
+    await server.register(apis);
     await server.start();
 
     console.log('Server running on %s', server.info.uri);
