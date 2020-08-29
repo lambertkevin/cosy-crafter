@@ -1,28 +1,25 @@
 import fs from 'fs';
 import path from 'path';
 import Boom from '@hapi/boom';
-import NodeRsa from 'node-rsa';
 import privateIp from 'private-ip';
+import { rsaPrivateDecrypter } from '../utils/RsaUtils';
 
 export const checkSignature = (request, h) => {
   try {
-    const privateKey = new NodeRsa(
-      fs.readFileSync(
-        path.join(process.env.RSA_KEYS_LOCATION, process.env.RSA_KEYS_NAME)
-      ),
-      'pkcs1-private-pem'
-    );
-    const { payload } = request;
-    const decrypted = privateKey.decrypt(payload.signature, 'utf8');
+    const { headers } = request;
+    const decrypter = rsaPrivateDecrypter();
+    const decrypted = decrypter(headers['x-authorization']);
     const decryptedTimestamp = new Date(Number(decrypted)).getTime();
     const now = Date.now();
-    const timing = process.env.NODE_ENV === 'production' ? 1000 : 1800000;
+    const timing =
+      process.env.NODE_ENV === 'production' ? 1000 : 12 * 60 * 60 * 1000;
 
     if (now - decryptedTimestamp > timing) {
       throw Boom.unauthorized();
     }
     return h.continue;
   } catch (e) {
+    console.log(e);
     /** @WARNING LOG DAT */
     throw Boom.unauthorized();
   }
@@ -31,7 +28,7 @@ export const checkSignature = (request, h) => {
 export const checkIpWhiteList = (request, h) => {
   const ip = request.info.remoteAddress;
   const { whitelist = [] } = fs.readFileSync(
-    path.join(path.resolve('./'), 'whitelist.json'),
+    path.join(path.resolve('./'), 'remoteAddresses.json'),
     'utf8'
   );
 
