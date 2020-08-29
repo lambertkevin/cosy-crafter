@@ -52,7 +52,7 @@ export default {
       options: {
         handler: (request) =>
           ServiceController.findOne(request.params.identifier),
-        tags: ['api', 'services', 'v1'],
+        tags: ['api', 'services'],
         description: 'Get a Service',
         notes: 'Returns a specific service',
         validate: {
@@ -112,7 +112,7 @@ export default {
           failAction: failValidationHandler,
           payload: creationSchema
         },
-        tags: ['api', 'services', 'v1'],
+        tags: ['api', 'services'],
         description: 'Create a Service',
         notes: 'Register a service and returns it',
         plugins: {
@@ -148,7 +148,7 @@ export default {
               .required()
           })
         },
-        tags: ['api', 'services', 'v1'],
+        tags: ['api', 'services'],
         description: 'Delete Services',
         notes: 'Deletes services and returns their id to confirm',
         plugins: {
@@ -216,7 +216,7 @@ export default {
               .required()
           })
         },
-        tags: ['api', 'services', 'v1'],
+        tags: ['api', 'services'],
         description: 'Log in a Service',
         notes: 'Login a service to get JWT tokens',
         plugins: {
@@ -262,7 +262,7 @@ export default {
             refreshToken: joi.string().required()
           })
         },
-        tags: ['api', 'services', 'v1'],
+        tags: ['api', 'services'],
         description: "Refresh a Service's tokens",
         notes: 'Refresh JWT tokens for a service',
         plugins: {

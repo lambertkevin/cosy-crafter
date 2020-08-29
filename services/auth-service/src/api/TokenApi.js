@@ -17,7 +17,7 @@ export default {
       path: '/',
       options: {
         handler: () => tokenController.find(),
-        tags: ['api', 'tokens', 'v1'],
+        tags: ['api', 'tokens'],
         description: 'Get all Tokens',
         notes: 'Returns all the blacklisted tokens',
         plugins: {
@@ -43,7 +43,7 @@ export default {
       path: '/{jwtid}',
       options: {
         handler: (request) => tokenController.findOne(request.params.jwtid),
-        tags: ['api', 'tokens', 'v1'],
+        tags: ['api', 'tokens'],
         description: 'Get a Token',
         notes: 'Returns a specific blacklisted token',
         validate: {
@@ -77,7 +77,7 @@ export default {
           failAction: failValidationHandler,
           payload: creationSchema
         },
-        tags: ['api', 'tokens', 'v1'],
+        tags: ['api', 'tokens'],
         description: 'Create a Token',
         notes: 'Blacklist a token and returns it',
         plugins: {
@@ -117,7 +117,7 @@ export default {
               )
           })
         },
-        tags: ['api', 'tokens', 'v1'],
+        tags: ['api', 'tokens'],
         description: 'Delete Tokens',
         notes:
           'Removes tokens from the blacklist and returns their jwtid to confirm',
@@ -164,7 +164,7 @@ export default {
             jwtid: joi.string().length(36).required()
           })
         },
-        tags: ['api', 'tokens', 'v1'],
+        tags: ['api', 'tokens'],
         description: 'Delete a Token',
         notes:
           'Removes a token from blacklist and returns its jwtid to confirm',
