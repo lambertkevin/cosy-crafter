@@ -2,12 +2,12 @@ import fs from 'fs';
 import path from 'path';
 import Boom from '@hapi/boom';
 import privateIp from 'private-ip';
-import { rsaPrivateDecrypter } from '../utils/RsaUtils';
+import { makeRsaPrivateDecrypter } from '../utils/RsaUtils';
 
 export const checkSignature = (request, h) => {
   try {
     const { headers } = request;
-    const decrypter = rsaPrivateDecrypter();
+    const decrypter = makeRsaPrivateDecrypter();
     const decrypted = decrypter(headers['x-authorization']);
     const decryptedTimestamp = new Date(Number(decrypted)).getTime();
     const now = Date.now();

@@ -5,7 +5,10 @@ import { responseSchema, creationSchema } from '../schemas/ServiceSchema';
 import * as ServiceController from '../controllers/ServiceController';
 import { calibrateSchema } from '../utils/schemasUtils';
 import failValidationHandler from '../utils/failValidationHandler';
-import { rsaPrivateEncrypter, rsaPrivateDecrypter } from '../utils/RsaUtils';
+import {
+  makeRsaPrivateEncrypter,
+  makeRsaPrivateDecrypter
+} from '../utils/RsaUtils';
 import {
   checkSignature,
   checkIpWhiteList
@@ -99,7 +102,7 @@ export default {
               ip: request.info.remoteAddress
             });
 
-            const encryptor = rsaPrivateEncrypter();
+            const encryptor = makeRsaPrivateEncrypter();
             return encryptor(password);
           } catch (e) {
             return Boom.boomify(e);
@@ -187,7 +190,7 @@ export default {
       options: {
         handler: (request) => {
           try {
-            const decryptor = rsaPrivateDecrypter();
+            const decryptor = makeRsaPrivateDecrypter();
             const key = decryptor(request.payload.key);
 
             return ServiceController.login(
