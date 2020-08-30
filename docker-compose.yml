@@ -45,9 +45,11 @@ services:
       - PODCAST_DB_PASSWORD=${PODCAST_DB_PASSWORD}
       - RSA_KEYS_LOCATION=${RSA_KEYS_LOCATION}
       - RSA_KEYS_NAME=${RSA_KEYS_NAME}
+      - SERVICE_JWT_SECRET=${SERVICE_JWT_SECRET}
     command: ./run.sh
     links:
       - mongo-service
+      - auth-service
 
   storage-service:
     container_name: storage-service
@@ -79,7 +81,10 @@ services:
       - AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}
       - RSA_KEYS_LOCATION=${RSA_KEYS_LOCATION}
       - RSA_KEYS_NAME=${RSA_KEYS_NAME}
+      - SERVICE_JWT_SECRET=${SERVICE_JWT_SECRET}
     command: ./run.sh
+    link:
+      - auth-service
 
   auth-service:
     container_name: auth-service
