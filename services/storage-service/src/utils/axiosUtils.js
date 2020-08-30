@@ -62,10 +62,8 @@ export const makeAxiosInstance = () => {
     const accessToken = _.get(request, ['headers', 'authorization']);
     if (accessToken) {
       try {
-        const test = jwt.verify(accessToken, process.env.SERVICE_JWT_SECRET);
-        console.log(test);
+        jwt.verify(accessToken, process.env.SERVICE_JWT_SECRET);
       } catch (e) {
-        console.log(e);
         await refresh();
         _.set(request, ['headers', 'authorization'], tokens.accessToken);
       }
