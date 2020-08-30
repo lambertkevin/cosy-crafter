@@ -27,7 +27,9 @@ export const responseSchema = validationSchema
   .append({
     _id: joi.string().length(24).required().example('5f3ec14cb2d104269d3c3282')
   })
-  .fork(hiddenProperties, (x) => x.forbidden())
+  .fork(hiddenProperties, (x) =>
+    x.optional().description('Only if not sanitized')
+  )
   .label('TokenResponse');
 
 export default validationSchema;
