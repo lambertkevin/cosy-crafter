@@ -29,8 +29,8 @@ services:
     volumes:
       - ./services/podcast-service:/home/node/app
       - type: bind
-        source: .keys/auth.pub
-        target: /.keys/auth.pub
+        source: .keys/auth.pem
+        target: /.keys/auth.pem
         read_only: true
     expose:
       - ${PODCAST_SERVICE_PORT}
@@ -57,8 +57,8 @@ services:
     volumes:
       - ./services/storage-service:/home/node/app
       - type: bind
-        source: .keys/auth.pub
-        target: /.keys/auth.pub
+        source: .keys/auth.pem
+        target: /.keys/auth.pem
         read_only: true
     expose:
       - ${STORAGE_SERVICE_PORT}
