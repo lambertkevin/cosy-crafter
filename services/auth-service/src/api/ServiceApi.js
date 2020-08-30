@@ -3,8 +3,9 @@ import Boom from '@hapi/boom';
 import generatePassword from 'generate-password';
 import { responseSchema, creationSchema } from '../schemas/ServiceSchema';
 import * as ServiceController from '../controllers/ServiceController';
-import { calibrateSchema } from '../utils/schemasUtils';
 import failValidationHandler from '../utils/failValidationHandler';
+import axiosErrorBoomifier from '../utils/axiosErrorBoomifier';
+import { calibrateSchema } from '../utils/schemasUtils';
 import {
   makeRsaPrivateEncrypter,
   makeRsaPrivateDecrypter
@@ -96,12 +97,15 @@ export default {
               strict: true
             });
 
-            await ServiceController.create({
+            const service = await ServiceController.create({
               ...request.payload,
               key: password,
               ip: request.info.remoteAddress
             });
 
+            if (service.isBoom) {
+              return axiosErrorBoomifier(service);
+            }
             const encryptor = makeRsaPrivateEncrypter();
             return encryptor(password);
           } catch (e) {
