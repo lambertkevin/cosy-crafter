@@ -7,17 +7,6 @@ export default {
   name: 'podcastStorageApi',
   async register(server) {
     /**
-     * Health Check Route
-     *
-     * @method GET
-     */
-    server.route({
-      method: 'GET',
-      path: '/ping',
-      handler: () => 'pong'
-    });
-
-    /**
      * Upload a podcast part file
      *
      * @method POST
@@ -26,10 +15,10 @@ export default {
       method: 'POST',
       path: '/',
       options: {
-        handler: ({ payload }) => StorageController.addPodcastPartFile(payload),
-        tags: ['api', 'podcasts'],
-        description: 'Upload a podcast part file',
-        notes: 'Act like a pipeline to store a stream into a storage',
+        auth: {
+          strategy: 'service-jwt',
+          mode: 'required'
+        },
         payload: {
           allow: 'multipart/form-data',
           output: 'stream',
@@ -50,8 +39,17 @@ export default {
               filename: joi.string().required().example('fichier.mp3'),
               file: joi.any().required().meta({ swaggerType: 'file' })
             })
-            .label('PodcastPartCreationSchema')
+            .label('PodcastPartCreationSchema'),
+          headers: joi
+            .object({
+              authorization: joi.string().required()
+            })
+            .unknown()
         },
+        handler: ({ payload }) => StorageController.addPodcastPartFile(payload),
+        tags: ['api', 'podcasts', 'v1'],
+        description: 'Upload a podcast part file',
+        notes: 'Act like a pipeline to store a stream into a storage',
         plugins: {
           'hapi-swagger': {
             responses: {
@@ -93,7 +91,7 @@ export default {
       options: {
         handler: async ({ params }, h) =>
           StorageController.getPodcastPartFile(params.id, h),
-        tags: ['api', 'podcasts'],
+        tags: ['api', 'podcasts', 'v1'],
         description: 'Get a podcast part file',
         notes: 'Returns a podcast part file from its podcast part id',
         validate: {
@@ -124,9 +122,13 @@ export default {
       method: 'DELETE',
       path: '/',
       options: {
+        auth: {
+          strategy: 'service-jwt',
+          mode: 'required'
+        },
         handler: async ({ payload }) =>
           StorageController.removePodcastPartFile(payload),
-        tags: ['api', 'podcasts'],
+        tags: ['api', 'podcasts', 'v1'],
         description: 'Delete a podcast part file',
         notes: 'Deletes a specific file the podcast files',
         validate: {
@@ -144,7 +146,12 @@ export default {
                 .required()
                 .example('0d6c46e6-dc6f-46e0-b1e4-3e36e9b62f04.mp3')
             })
-            .label('PodcastPartDeletionSchema')
+            .label('PodcastPartDeletionSchema'),
+          headers: joi
+            .object({
+              authorization: joi.string().required()
+            })
+            .unknown()
         },
         plugins: {
           'hapi-swagger': {
