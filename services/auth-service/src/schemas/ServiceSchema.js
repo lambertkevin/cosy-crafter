@@ -22,7 +22,9 @@ export const validationSchema = creationSchema.append({
 });
 
 export const responseSchema = validationSchema
-  .fork(hiddenProperties, (x) => x.forbidden())
+  .fork(hiddenProperties, (x) =>
+    x.optional().description('Only if not sanitized')
+  )
   .label('ServiceResponse');
 
 export default validationSchema;
