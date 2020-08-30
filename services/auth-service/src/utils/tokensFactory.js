@@ -1,6 +1,7 @@
 import jwt from 'jsonwebtoken';
 
-const ACCESS_TOKEN_LIFETIME = '5m';
+const ACCESS_TOKEN_LIFETIME =
+  process.env.NODE_ENV === 'production' ? '5m' : '2h';
 const REFRESH_TOKEN_LIFETIME = '1d';
 
 /**
