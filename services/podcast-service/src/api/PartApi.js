@@ -8,17 +8,6 @@ export default {
   name: 'partApi',
   async register(server) {
     /**
-     * Health Check Route
-     *
-     * @method GET
-     */
-    server.route({
-      method: 'GET',
-      path: '/ping',
-      handler: () => 'pong'
-    });
-
-    /**
      * Get all parts
      *
      * @method GET
@@ -27,7 +16,19 @@ export default {
       method: 'GET',
       path: '/',
       options: {
-        handler: () => partController.find(),
+        auth: {
+          mode: 'optional',
+          strategy: 'service-jwt'
+        },
+        validate: {
+          headers: joi
+            .object({
+              authorization: joi.string().optional()
+            })
+            .unknown()
+        },
+        handler: (request) =>
+          partController.find(!request.auth.isAuthenticated),
         tags: ['api', 'parts', 'v1'],
         description: 'Get all Parts',
         notes: 'Returns all the parts',
@@ -53,16 +54,29 @@ export default {
       method: 'GET',
       path: '/{id}',
       options: {
-        handler: (request) => partController.findOne(request.params.id),
-        tags: ['api', 'parts', 'v1'],
-        description: 'Get a Part',
-        notes: 'Returns a specific part',
+        auth: {
+          mode: 'optional',
+          strategy: 'service-jwt'
+        },
         validate: {
           failAction: failValidationHandler,
           params: joi.object({
             id: joi.string().length(24).required()
-          })
+          }),
+          headers: joi
+            .object({
+              authorization: joi.string().optional()
+            })
+            .unknown()
         },
+        handler: (request) =>
+          partController.findOne(
+            request.params.id,
+            !request.auth.isAuthenticated
+          ),
+        tags: ['api', 'parts', 'v1'],
+        description: 'Get a Part',
+        notes: 'Returns a specific part',
         plugins: {
           'hapi-swagger': {
             responses: {
@@ -85,17 +99,27 @@ export default {
       method: 'POST',
       path: '/',
       options: {
-        handler: ({ payload }) => partController.create(payload),
+        auth: {
+          mode: 'required',
+          strategy: 'service-jwt'
+        },
+        handler: (request) =>
+          partController.create(request.payload, !request.auth.isAuthenticated),
+        validate: {
+          failAction: failValidationHandler,
+          payload: creationSchema,
+          headers: joi
+            .object({
+              authorization: joi.string().required()
+            })
+            .unknown()
+        },
         payload: {
           allow: 'multipart/form-data',
           output: 'file',
           maxBytes: 200 * 1024 * 1024, // 200 Mo limit on upload size
           multipart: true,
           parse: true
-        },
-        validate: {
-          failAction: failValidationHandler,
-          payload: creationSchema
         },
         tags: ['api', 'parts', 'v1'],
         description: 'Create a Part',
@@ -128,14 +152,9 @@ export default {
       method: 'PATCH',
       path: '/{id}',
       options: {
-        handler: (request) =>
-          partController.update(request.params.id, request.payload),
-        payload: {
-          allow: 'multipart/form-data',
-          output: 'file',
-          maxBytes: 200 * 1024 * 1024, // 200 Mo limit on upload size
-          multipart: true,
-          parse: true
+        auth: {
+          mode: 'required',
+          strategy: 'service-jwt'
         },
         validate: {
           failAction: failValidationHandler,
@@ -144,7 +163,25 @@ export default {
           }),
           payload: creationSchema.fork(schemaKeys(creationSchema), (x) =>
             x.optional()
-          )
+          ),
+          headers: joi
+            .object({
+              authorization: joi.string().required()
+            })
+            .unknown()
+        },
+        handler: (request) =>
+          partController.update(
+            request.params.id,
+            request.payload,
+            !request.auth.isAuthenticated
+          ),
+        payload: {
+          allow: 'multipart/form-data',
+          output: 'file',
+          maxBytes: 200 * 1024 * 1024, // 200 Mo limit on upload size
+          multipart: true,
+          parse: true
         },
         tags: ['api', 'parts', 'v1'],
         description: 'Update a Part',
@@ -172,7 +209,10 @@ export default {
       method: 'DELETE',
       path: '/',
       options: {
-        handler: (request) => partController.remove(request.payload.ids),
+        auth: {
+          mode: 'required',
+          strategy: 'service-jwt'
+        },
         validate: {
           failAction: failValidationHandler,
           payload: joi.object({
@@ -185,8 +225,14 @@ export default {
                   .required()
                   .example('5f3fa3c85d413d6f42bf67b2')
               )
-          })
+          }),
+          headers: joi
+            .object({
+              authorization: joi.string().required()
+            })
+            .unknown()
         },
+        handler: (request) => partController.remove(request.payload.ids),
         tags: ['api', 'parts', 'v1'],
         description: 'Delete Parts',
         notes: 'Deletes parts and returns their id to confirm',
@@ -225,13 +271,22 @@ export default {
       method: 'DELETE',
       path: '/{id}',
       options: {
-        handler: (request) => partController.remove([request.params.id]),
+        auth: {
+          mode: 'required',
+          strategy: 'service-jwt'
+        },
         validate: {
           failAction: failValidationHandler,
           params: joi.object({
             id: joi.string().length(24).required()
-          })
+          }),
+          headers: joi
+            .object({
+              authorization: joi.string().required()
+            })
+            .unknown()
         },
+        handler: (request) => partController.remove([request.params.id]),
         tags: ['api', 'parts', 'v1'],
         description: 'Delete a Part',
         notes: 'Deletes one part and returns its id to confirm',
