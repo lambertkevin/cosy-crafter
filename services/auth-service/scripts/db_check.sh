@@ -14,7 +14,7 @@ else
         rm mongo.deb
     fi
 
-    mongo --host $MONGO_DB_HOST --port $MONGO_DB_PORT --username $MONGO_INITDB_ROOT_USERNAME --password $MONGO_INITDB_ROOT_PASSWORD <<EOF
+    mongo --host $MONGO_SERVICE_NAME --port $MONGO_SERVICE_PORT --username $MONGO_INITDB_ROOT_USERNAME --password $MONGO_INITDB_ROOT_PASSWORD <<EOF
         use $AUTH_DB_NAME
 
         var authDbName = '$AUTH_DB_NAME';

@@ -6,6 +6,7 @@ import { v4 as uuid } from 'uuid';
 import StorageFactory from '../utils/storageFactory';
 import axiosErrorBoomifier from '../utils/axiosErrorBoomifier';
 
+const { STORAGE_SERVICE_NAME, STORAGE_SERVICE_PORT } = process.env;
 const storages = StorageFactory();
 
 /**
@@ -55,7 +56,9 @@ export const addPodcastPartFile = async ({
  */
 export const getPodcastPartFile = async (id, h) => {
   return axios
-    .get(`http://podcast-service:3000/v1/parts/${id}`)
+    .get(
+      `http://${STORAGE_SERVICE_NAME}:${STORAGE_SERVICE_PORT}/v1/parts/${id}`
+    )
     .then(({ data }) => data)
     .then(async ({ data }) => {
       const stream = await storages.getFileAsReadable(

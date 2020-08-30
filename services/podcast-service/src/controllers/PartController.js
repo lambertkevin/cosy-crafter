@@ -11,6 +11,8 @@ import Part, { projection, hiddenFields } from '../models/PartModel';
 import { projection as podcastProjection } from '../models/PodcastModel';
 import { projection as sectionProjection } from '../models/SectionModel';
 
+const { STORAGE_SERVICE_NAME, STORAGE_SERVICE_PORT } = process.env;
+
 /**
  * Return a list of all part
  *
@@ -96,7 +98,7 @@ export const create = async (
 
   try {
     const savingFile = await axios.post(
-      'http://storage-service:3001/v1/podcast-parts',
+      `http://${STORAGE_SERVICE_NAME}:${STORAGE_SERVICE_PORT}/v1/podcast-parts`,
       formData,
       {
         headers: formData.getHeaders(),
@@ -139,13 +141,16 @@ export const create = async (
 
           if (storageType && storagePath && storageFilename) {
             // Delete the saved file since the Part isn't validated
-            axios.delete('http://storage-service:3001/v1/podcast-parts', {
-              data: {
-                storageType,
-                storagePath,
-                storageFilename
+            axios.delete(
+              `http://${STORAGE_SERVICE_NAME}:${STORAGE_SERVICE_PORT}/v1/podcast-parts`,
+              {
+                data: {
+                  storageType,
+                  storagePath,
+                  storageFilename
+                }
               }
-            });
+            );
           }
 
           return response;
@@ -226,13 +231,16 @@ export const update = async (id, payload, sanitized = true) => {
       const { storageType, storagePath, storageFilename } = part;
 
       if (storageType && storagePath && storageFilename) {
-        axios.delete('http://storage-service:3001/v1/podcast-parts', {
-          data: {
-            storageType,
-            storagePath,
-            storageFilename
+        axios.delete(
+          `http://${STORAGE_SERVICE_NAME}:${STORAGE_SERVICE_PORT}/v1/podcast-parts`,
+          {
+            data: {
+              storageType,
+              storagePath,
+              storageFilename
+            }
           }
-        });
+        );
       }
 
       // Then upload new file
@@ -243,7 +251,7 @@ export const update = async (id, payload, sanitized = true) => {
       formData.append('file', fs.createReadStream(file.path));
 
       const { data: savedFile } = await axios.post(
-        'http://storage-service:3001/v1/podcast-parts',
+        `http://${STORAGE_SERVICE_NAME}:${STORAGE_SERVICE_PORT}/v1/podcast-parts`,
         formData,
         {
           headers: formData.getHeaders(),

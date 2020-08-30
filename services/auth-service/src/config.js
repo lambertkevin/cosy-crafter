@@ -5,7 +5,7 @@ import Package from '../package.json';
  * @type {Object}
  */
 export const nodeConfig = {
-  port: process.env.AUTH_SERVICE_EXPOSED_PORT || 3000
+  port: process.env.AUTH_SERVICE_PORT || 3000
 };
 
 /**
@@ -25,8 +25,8 @@ export const swaggerConfig = {
  * @type {Object}
  */
 export const databaseConfig = {
-  host: process.env.MONGO_DB_HOST,
-  port: process.env.MONGO_DB_PORT,
+  host: process.env.MONGO_SERVICE_NAME,
+  port: process.env.MONGO_SERVICE_PORT,
   db: process.env.AUTH_DB_NAME,
   username: process.env.AUTH_DB_USER,
   password: process.env.AUTH_DB_PASSWORD
