@@ -40,8 +40,7 @@ export const addPodcastPartFile = async ({
         filename,
         location,
         storageType: storedFile.storageName,
-        publicLink: storedFile.publicLink,
-        prout: null
+        publicLink: storedFile.publicLink
       })
     : Boom.serverUnavailable('All storages options have failed');
 };
