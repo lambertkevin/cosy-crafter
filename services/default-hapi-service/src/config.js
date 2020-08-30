@@ -5,7 +5,7 @@ import Package from '../package.json';
  * @type {Object}
  */
 export const nodeConfig = {
-  port: process.env.XXX_SERVICE_EXPOSED_PORT || 3000
+  port: process.env.XXX_SERVICE_PORT || 3000
 };
 
 /**

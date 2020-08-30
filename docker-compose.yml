@@ -7,6 +7,8 @@ services:
     volumes:
       - ./services/mongo-service/db:/data/db
       - ./services/mongo-service/docker-entrypoint-initdb.d:/docker-entrypoint-initdb.d
+    env_file:
+      - services.env
     environment:
       - MONGO_INITDB_ROOT_USERNAME=${MONGO_INITDB_ROOT_USERNAME}
       - MONGO_INITDB_ROOT_PASSWORD=${MONGO_INITDB_ROOT_PASSWORD}
@@ -31,17 +33,16 @@ services:
         target: /.keys/auth.pub
         read_only: true
     expose:
-      - ${PODCAST_SERVICE_EXPOSED_PORT}
+      - ${PODCAST_SERVICE_PORT}
     ports:
-      - '${PODCAST_SERVICE_EXPOSED_PORT}:${PODCAST_SERVICE_EXPOSED_PORT}'
+      - '${PODCAST_SERVICE_PORT}:${PODCAST_SERVICE_PORT}'
+    env_file:
+      - services.env
     environment:
       - NODE_ENV=${NODE_ENV}
-      - MONGO_DB_HOST=${MONGO_DB_HOST}
-      - MONGO_DB_PORT=${MONGO_DB_PORT}
       - PODCAST_DB_NAME=${PODCAST_DB_NAME}
       - PODCAST_DB_USER=${PODCAST_DB_USER}
       - PODCAST_DB_PASSWORD=${PODCAST_DB_PASSWORD}
-      - PODCAST_SERVICE_EXPOSED_PORT=${PODCAST_SERVICE_EXPOSED_PORT}
       - RSA_KEYS_LOCATION=${RSA_KEYS_LOCATION}
       - RSA_KEYS_NAME=${RSA_KEYS_NAME}
     command: ./run.sh
@@ -60,12 +61,13 @@ services:
         target: /.keys/auth.pub
         read_only: true
     expose:
-      - ${STORAGE_SERVICE_EXPOSED_PORT}
+      - ${STORAGE_SERVICE_PORT}
     ports:
-      - '${STORAGE_SERVICE_EXPOSED_PORT}:${STORAGE_SERVICE_EXPOSED_PORT}'
+      - '${STORAGE_SERVICE_PORT}:${STORAGE_SERVICE_PORT}'
+    env_file:
+      - services.env
     environment:
       - NODE_ENV=${NODE_ENV}
-      - STORAGE_SERVICE_EXPOSED_PORT=${STORAGE_SERVICE_EXPOSED_PORT}
       - SCALEWAY_BUCKET_NAME=${SCALEWAY_BUCKET_NAME}
       - SCALEWAY_REGION=${SCALEWAY_REGION}
       - SCALEWAY_ENDPOINT=${SCALEWAY_ENDPOINT}
@@ -91,20 +93,18 @@ services:
         target: /.keys
         read_only: true
     expose:
-      - ${AUTH_SERVICE_EXPOSED_PORT}
+      - ${AUTH_SERVICE_PORT}
     ports:
-      - '${AUTH_SERVICE_EXPOSED_PORT}:${AUTH_SERVICE_EXPOSED_PORT}'
+      - '${AUTH_SERVICE_PORT}:${AUTH_SERVICE_PORT}'
+    env_file:
+      - services.env
     environment:
       - NODE_ENV=${NODE_ENV}
-      - AUTH_SERVICE_EXPOSED_PORT=${AUTH_SERVICE_EXPOSED_PORT}
       - AUTH_DB_NAME=${AUTH_DB_NAME}
       - AUTH_DB_USER=${AUTH_DB_USER}
       - AUTH_DB_PASSWORD=${AUTH_DB_PASSWORD}
-      - PODCAST_SERVICE_JWT_SECRET=${PODCAST_SERVICE_JWT_SECRET}
-      - STORAGE_SERVICE_JWT_SECRET=${STORAGE_SERVICE_JWT_SECRET}
-      - GLOBAL_JWT_SECRET=${GLOBAL_JWT_SECRET}
-      - MONGO_DB_HOST=${MONGO_DB_HOST}
-      - MONGO_DB_PORT=${MONGO_DB_PORT}
+      - SERVICE_JWT_SECRET=${SERVICE_JWT_SECRET}
+      - SERVICE_JWT_REFRESH_SECRET=${SERVICE_JWT_REFRESH_SECRET}
       - MONGO_INITDB_ROOT_USERNAME=${MONGO_INITDB_ROOT_USERNAME}
       - MONGO_INITDB_ROOT_PASSWORD=${MONGO_INITDB_ROOT_PASSWORD}
       - RSA_KEYS_LOCATION=${RSA_KEYS_LOCATION}
