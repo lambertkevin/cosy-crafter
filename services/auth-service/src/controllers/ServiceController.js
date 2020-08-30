@@ -158,7 +158,7 @@ export const login = async ({ identifier, key }, ip) => {
 
       return calibrate.response(tokens);
     }
-    throw Boom.unauthorized();
+    throw Boom.unauthorized("Service isn't matching ip or key");
   } catch (e) {
     console.log(e);
     if (e.isBoom) {

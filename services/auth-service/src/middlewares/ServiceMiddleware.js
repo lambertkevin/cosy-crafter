@@ -34,7 +34,7 @@ export const checkIpWhiteList = (request, h) => {
 
   if (!privateIp(ip) && !whitelist.includes(ip)) {
     /** @WARNING LOG DAT */
-    throw Boom.unauthorized();
+    throw Boom.unauthorized('Remote not authorized');
   }
   return h.continue;
 };
