@@ -1,12 +1,13 @@
 import fs from 'fs';
 import path from 'path';
 import axios from 'axios';
+import Boom from '@hapi/boom';
 import { makeRsaPublicEncrypter } from './utils/RsaUtils';
 
 const {
   AUTH_SERVICE_NAME,
   AUTH_SERVICE_PORT,
-  STORAGE_SERVICE_NAME
+  PODCAST_SERVICE_NAME
 } = process.env;
 const CREDENTIALS_PATH = path.join(path.resolve('./'), '.credentials');
 const encrypter = makeRsaPublicEncrypter();
@@ -18,7 +19,7 @@ export const tokens = {
 
 export const register = async () => {
   try {
-    const identifier = `${STORAGE_SERVICE_NAME}-alexandra`;
+    const identifier = `${PODCAST_SERVICE_NAME}-jessica`;
     const { data: encryptedKey } = await axios.post(
       `http://${AUTH_SERVICE_NAME}:${AUTH_SERVICE_PORT}/services`,
       {
@@ -53,13 +54,12 @@ export const login = async () => {
     const { identifier, encryptedKey: key } = JSON.parse(
       fs.readFileSync(CREDENTIALS_PATH, 'utf8')
     );
-    const { data: freshTokens } = await axios.post(
-      `http://${AUTH_SERVICE_NAME}:${AUTH_SERVICE_PORT}/services/login`,
-      {
+    const { data: freshTokens } = await axios
+      .post(`http://${AUTH_SERVICE_NAME}:${AUTH_SERVICE_PORT}/services/login`, {
         identifier,
         key
-      }
-    );
+      })
+      .then(({ data }) => data);
 
     tokens.accessToken = freshTokens.accessToken;
     tokens.refreshToken = freshTokens.refreshToken;
@@ -76,4 +76,29 @@ export const auth = async () => {
   } else {
     await login();
   }
+};
+
+export const refresh = async () => {
+  try {
+    const { data: freshTokens } = axios.post(
+      `http://${AUTH_SERVICE_NAME}:${AUTH_SERVICE_PORT}/services/refresh`,
+      tokens
+    );
+
+    tokens.accessToken = freshTokens.accessToken;
+    tokens.refreshToken = freshTokens.refreshToken;
+
+    return tokens;
+  } catch (e) {
+    console.log(e);
+    return Boom.preconditionFailed();
+  }
+};
+
+export default {
+  tokens,
+  register,
+  login,
+  auth,
+  refresh
 };
