@@ -83,7 +83,7 @@ services:
       - RSA_KEYS_NAME=${RSA_KEYS_NAME}
       - SERVICE_JWT_SECRET=${SERVICE_JWT_SECRET}
     command: ./run.sh
-    link:
+    links:
       - auth-service
 
   auth-service:
