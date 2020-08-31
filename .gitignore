@@ -12,3 +12,6 @@ services/mongo-service/db
 # Storage
 services/storage-service/bucket/*
 !services/storage-service/bucket/.gitkeep
+
+# Transcoder
+cache
