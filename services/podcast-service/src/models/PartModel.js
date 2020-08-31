@@ -7,6 +7,7 @@ import mongooseUniqueValidator from 'mongoose-unique-validator';
 import PartSchema, { hiddenProperties } from '../schemas/PartSchema';
 import arrayToProjection from '../utils/arrayToProjection';
 import Podcast from './PodcastModel';
+import { tokens } from '../auth';
 
 export const hiddenFields = [
   ...hiddenProperties,
@@ -63,13 +64,18 @@ schema.pre('deleteMany', async function preDeleteManyMiddelware(next) {
                   storagePath,
                   storageFilename
                 }
+              },
+              {
+                headers: {
+                  authorization: tokens.accessToken
+                }
               }
             )
           : Promise.resolve();
       }
     );
 
-    await Promise.all(deletions);
+    await Promise.allSettled(deletions);
 
     next();
   } catch (e) {
