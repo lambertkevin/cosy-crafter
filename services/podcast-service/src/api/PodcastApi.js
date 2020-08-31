@@ -16,7 +16,19 @@ export default {
       method: 'GET',
       path: '/',
       options: {
-        handler: () => podcastController.find(),
+        auth: {
+          mode: 'optional',
+          strategy: 'service-jwt'
+        },
+        validate: {
+          headers: joi
+            .object({
+              authorization: joi.string().optional()
+            })
+            .unknown()
+        },
+        handler: (request) =>
+          podcastController.find(!request.auth.isAuthenticated),
         tags: ['api', 'podcasts', 'v1'],
         description: 'Get all Podcasts',
         notes: 'Returns all the podcasts',
@@ -42,16 +54,29 @@ export default {
       method: 'GET',
       path: '/{id}',
       options: {
-        handler: (request) => podcastController.findOne(request.params.id),
-        tags: ['api', 'podcasts', 'v1'],
-        description: 'Get a Podcast',
-        notes: 'Returns a specific podcast',
+        auth: {
+          mode: 'optional',
+          strategy: 'service-jwt'
+        },
         validate: {
           failAction: failValidationHandler,
           params: joi.object({
             id: joi.string().length(24).required()
-          })
+          }),
+          headers: joi
+            .object({
+              authorization: joi.string().required()
+            })
+            .unknown()
         },
+        handler: (request) =>
+          podcastController.findOne(
+            request.params.id,
+            !request.auth.isAuthenticated
+          ),
+        tags: ['api', 'podcasts', 'v1'],
+        description: 'Get a Podcast',
+        notes: 'Returns a specific podcast',
         plugins: {
           'hapi-swagger': {
             responses: {
@@ -74,11 +99,24 @@ export default {
       method: 'POST',
       path: '/',
       options: {
-        handler: (request) => podcastController.create(request.payload),
+        auth: {
+          mode: 'required',
+          strategy: 'service-jwt'
+        },
         validate: {
           failAction: failValidationHandler,
-          payload: creationSchema
+          payload: creationSchema,
+          headers: joi
+            .object({
+              authorization: joi.string().required()
+            })
+            .unknown()
         },
+        handler: (request) =>
+          podcastController.create(
+            request.payload,
+            !request.auth.isAuthenticated
+          ),
         tags: ['api', 'podcasts', 'v1'],
         description: 'Create a Podcast',
         notes: 'Creates a podcast and returns it',
@@ -105,8 +143,10 @@ export default {
       method: 'PATCH',
       path: '/{id}',
       options: {
-        handler: (request) =>
-          podcastController.update(request.params.id, request.payload),
+        auth: {
+          mode: 'required',
+          strategy: 'service-jwt'
+        },
         validate: {
           failAction: failValidationHandler,
           params: joi.object({
@@ -114,8 +154,19 @@ export default {
           }),
           payload: creationSchema.fork(schemaKeys(creationSchema), (x) =>
             x.optional()
-          )
+          ),
+          headers: joi
+            .object({
+              authorization: joi.string().required()
+            })
+            .unknown()
         },
+        handler: (request) =>
+          podcastController.update(
+            request.params.id,
+            request.payload,
+            request.auth.isAuthenticated
+          ),
         tags: ['api', 'podcasts', 'v1'],
         description: 'Update a Podcast',
         notes: 'Updates a podcast and returns it',
@@ -141,7 +192,10 @@ export default {
       method: 'DELETE',
       path: '/',
       options: {
-        handler: (request) => podcastController.remove(request.payload.ids),
+        auth: {
+          mode: 'required',
+          strategy: 'service-jwt'
+        },
         validate: {
           failAction: failValidationHandler,
           payload: joi.object({
@@ -154,8 +208,14 @@ export default {
                   .required()
                   .example('5f3ed26ab65f39d0d8b7f360')
               )
-          })
+          }),
+          headers: joi
+            .object({
+              authorization: joi.string().required()
+            })
+            .unknown()
         },
+        handler: (request) => podcastController.remove(request.payload.ids),
         tags: ['api', 'podcasts', 'v1'],
         description: 'Delete Podcasts',
         notes: 'Deletes podcasts and returns their id to confirm',
@@ -195,13 +255,22 @@ export default {
       method: 'DELETE',
       path: '/{id}',
       options: {
-        handler: (request) => podcastController.remove([request.params.id]),
+        auth: {
+          mode: 'required',
+          strategy: 'service-jwt'
+        },
         validate: {
           failAction: failValidationHandler,
           params: joi.object({
             id: joi.string().length(24).required()
-          })
+          }),
+          headers: joi
+            .object({
+              authorization: joi.string().required()
+            })
+            .unknown()
         },
+        handler: (request) => podcastController.remove([request.params.id]),
         tags: ['api', 'podcasts', 'v1'],
         description: 'Delete a Podcast',
         notes: 'Delete a podcast and returns its id to confirm',
