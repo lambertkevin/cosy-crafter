@@ -1,5 +1,10 @@
 .env
 node_modules
+.initialized
+.credentials
+
+#auth
+.keys
 
 # Mongo
 services/mongo-service/db

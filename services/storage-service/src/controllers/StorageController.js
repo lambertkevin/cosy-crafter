@@ -1,11 +1,12 @@
 import _ from 'lodash';
-import axios from 'axios';
 import Boom from '@hapi/boom';
 import calibrate from 'calibrate';
 import { v4 as uuid } from 'uuid';
+import { axiosErrorBoomifier, makeAxiosInstance } from '../utils/axiosUtils';
 import StorageFactory from '../utils/storageFactory';
-import axiosErrorBoomifier from '../utils/axiosErrorBoomifier';
+import { tokens } from '../auth';
 
+const { PODCAST_SERVICE_NAME, PODCAST_SERVICE_PORT } = process.env;
 const storages = StorageFactory();
 
 /**
@@ -39,8 +40,7 @@ export const addPodcastPartFile = async ({
         filename,
         location,
         storageType: storedFile.storageName,
-        publicLink: storedFile.publicLink,
-        prout: null
+        publicLink: storedFile.publicLink
       })
     : Boom.serverUnavailable('All storages options have failed');
 };
@@ -54,8 +54,16 @@ export const addPodcastPartFile = async ({
  * @return {Response}
  */
 export const getPodcastPartFile = async (id, h) => {
-  return axios
-    .get(`http://podcast-service:3000/v1/parts/${id}`)
+  const axiosAsService = makeAxiosInstance();
+  return axiosAsService
+    .get(
+      `http://${PODCAST_SERVICE_NAME}:${PODCAST_SERVICE_PORT}/v1/parts/${id}`,
+      {
+        headers: {
+          authorization: tokens.accessToken
+        }
+      }
+    )
     .then(({ data }) => data)
     .then(async ({ data }) => {
       const stream = await storages.getFileAsReadable(
