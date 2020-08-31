@@ -1,4 +1,4 @@
-import mp3Duration from 'mp3-duration';
+import ffmpeg from 'fluent-ffmpeg';
 
 /**
  * Promise returning the duration of an
@@ -10,11 +10,11 @@ import mp3Duration from 'mp3-duration';
  */
 export const getMp3Duration = (file) =>
   new Promise((resolve, reject) => {
-    mp3Duration(file, (error, duration) => {
-      if (error) {
-        return reject(error);
+    ffmpeg(file).ffprobe((err, data) => {
+      if (err) {
+        return reject();
       }
-      return resolve(duration);
+      return resolve(data.format.duration);
     });
   });
 
@@ -27,7 +27,7 @@ export const getMp3Duration = (file) =>
  * @return {Promise<Number>}
  */
 export const getMp3ListDuration = async (files) => {
-  const durations = Promise.all(files.map((x) => getMp3Duration(x)));
+  const durations = await Promise.all(files.map((x) => getMp3Duration(x)));
 
   return durations.reduce((prev, curr) => {
     return prev + curr;
