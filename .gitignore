@@ -14,4 +14,7 @@ services/storage-service/bucket/*
 !services/storage-service/bucket/.gitkeep
 
 # Transcoder
-cache
+services/transcoder-service/cache/*
+!services/transcoder-service/cache/.gitkeep
+services/transcoder-service/tmp/*
+!services/transcoder-service/tmp/.gitkeep
