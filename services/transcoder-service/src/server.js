@@ -2,6 +2,7 @@ import os from 'os';
 import express from 'express';
 import socket from 'socket.io';
 import { nodeConfig } from './config';
+import apis from './api';
 
 const app = express();
 const server = app.listen(nodeConfig.port, () => {
@@ -11,5 +12,5 @@ const server = app.listen(nodeConfig.port, () => {
 const io = socket.listen(server);
 
 io.on('connection', async (client) => {
-  console.log('connected');
+  apis(client);
 });
