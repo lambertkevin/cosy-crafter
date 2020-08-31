@@ -1,15 +1,15 @@
 import fs from 'fs';
 import _ from 'lodash';
-import axios from 'axios';
 import Boom from '@hapi/boom';
 import FormData from 'form-data';
 import calibrate from 'calibrate';
 import * as PodcastController from './PodcastController';
 import * as SectionController from './SectionController';
-import axiosErrorBoomifier from '../utils/axiosErrorBoomifier';
+import { makeAxiosInstance, axiosErrorBoomifier } from '../utils/axiosUtils';
 import Part, { projection, hiddenFields } from '../models/PartModel';
 import { projection as podcastProjection } from '../models/PodcastModel';
 import { projection as sectionProjection } from '../models/SectionModel';
+import { tokens } from '../auth';
 
 const { STORAGE_SERVICE_NAME, STORAGE_SERVICE_PORT } = process.env;
 
@@ -97,16 +97,24 @@ export const create = async (
   formData.append('file', fs.createReadStream(file.path));
 
   try {
-    const savingFile = await axios.post(
+    const axiosAsService = makeAxiosInstance();
+    const savingFile = await axiosAsService.post(
       `http://${STORAGE_SERVICE_NAME}:${STORAGE_SERVICE_PORT}/v1/podcast-parts`,
       formData,
       {
-        headers: formData.getHeaders(),
+        headers: {
+          ...formData.getHeaders(),
+          authorization: tokens.accessToken
+        },
         maxBodyLength: 200 * 1024 * 1024, // 200MB max part size
         maxContentLength: 200 * 1024 * 1024 // 200MB max part size
       }
     );
     const savedFile = _.get(savingFile, ['data', 'data'], {});
+
+    if (_.isEmpty(savedFile)) {
+      throw new Error('An error occured while saving the file');
+    }
 
     return Part.create({
       name,
@@ -141,19 +149,25 @@ export const create = async (
 
           if (storageType && storagePath && storageFilename) {
             // Delete the saved file since the Part isn't validated
-            axios.delete(
-              `http://${STORAGE_SERVICE_NAME}:${STORAGE_SERVICE_PORT}/v1/podcast-parts`,
-              {
-                data: {
-                  storageType,
-                  storagePath,
-                  storageFilename
+            try {
+              axiosAsService.delete(
+                `http://${STORAGE_SERVICE_NAME}:${STORAGE_SERVICE_PORT}/v1/podcast-parts`,
+                {
+                  data: {
+                    storageType,
+                    storagePath,
+                    storageFilename
+                  },
+                  headers: {
+                    authorization: tokens.accessToken
+                  }
                 }
-              }
-            );
+              );
+              return response;
+            } catch (e) {
+              return response;
+            }
           }
-
-          return response;
         }
 
         return Boom.boomify(error);
@@ -229,18 +243,28 @@ export const update = async (id, payload, sanitized = true) => {
     if (file) {
       // Delete old file
       const { storageType, storagePath, storageFilename } = part;
+      const axiosAsService = makeAxiosInstance();
 
       if (storageType && storagePath && storageFilename) {
-        axios.delete(
-          `http://${STORAGE_SERVICE_NAME}:${STORAGE_SERVICE_PORT}/v1/podcast-parts`,
-          {
-            data: {
-              storageType,
-              storagePath,
-              storageFilename
+        try {
+          axiosAsService.delete(
+            `http://${STORAGE_SERVICE_NAME}:${STORAGE_SERVICE_PORT}/v1/podcast-parts`,
+            {
+              data: {
+                storageType,
+                storagePath,
+                storageFilename
+              }
+            },
+            {
+              headers: {
+                authorization: tokens.accessToken
+              }
             }
-          }
-        );
+          );
+        } catch (e) {
+          // continue
+        }
       }
 
       // Then upload new file
@@ -250,11 +274,14 @@ export const update = async (id, payload, sanitized = true) => {
       formData.append('filename', filename);
       formData.append('file', fs.createReadStream(file.path));
 
-      const { data: savedFile } = await axios.post(
+      const { data: savedFile } = await axiosAsService.post(
         `http://${STORAGE_SERVICE_NAME}:${STORAGE_SERVICE_PORT}/v1/podcast-parts`,
         formData,
         {
-          headers: formData.getHeaders(),
+          headers: {
+            ...formData.getHeaders(),
+            authorization: tokens.accessToken
+          },
           maxBodyLength: 200 * 1024 * 1024, // 200MB max part size
           maxContentLength: 200 * 1024 * 1024 // 200MB max part size
         }
