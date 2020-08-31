@@ -144,6 +144,8 @@ export default {
       method: 'DELETE',
       path: '/',
       options: {
+        // @TODO User Auth needed here
+        pre: [checkIpWhiteList],
         handler: (request) =>
           ServiceController.remove(request.payload.identifiers),
         validate: {
