@@ -6,7 +6,7 @@ import FormData from 'form-data';
 import { v4 as uuid } from 'uuid';
 import ffmpeg from 'fluent-ffmpeg';
 import { makeAxiosInstance, axiosErrorBoomifier } from '../utils/axiosUtils';
-import { getCrossFadeFilters, getFadeFilters } from '../utils/FfmpegUtils';
+import { getCrossFadeFilters } from '../utils/FfmpegUtils';
 import { getMp3ListDuration } from '../utils/Mp3Utils';
 import { tokens } from '../auth';
 
@@ -58,15 +58,17 @@ export const getFile = (file) =>
 /**
  * Join multiple audio files through a ffmpeg pipe
  *
- * @param {Array<String>} paths
+ * @param {Array<Object>} files
  * @param {String} jobId
  * @param {Function} ack
  * @param {socket.Socket} socket
  *
  * @return {Promise<String>} [mergedFilePath]
  */
-export const joinFiles = async (paths, jobId, ack, socket) => {
-  const { values: durationsArray, duration } = await getMp3ListDuration(paths);
+export const joinFiles = async (files, jobId, ack, socket) => {
+  const { values: durationsArray, duration } = await getMp3ListDuration(
+    files.map((x) => x.path)
+  );
 
   return new Promise((resolve, reject) => {
     const mergedFilePath = path.join(
@@ -75,31 +77,6 @@ export const joinFiles = async (paths, jobId, ack, socket) => {
       `${uuid()}.mp3`
     );
     const ff = ffmpeg();
-    const files = paths.map((x, i) => {
-      if (i === 0) {
-        return {
-          path: x,
-          input: `${i}`,
-          fadeIn: 10,
-          fadeOut: 10,
-          seek: {
-            start: 10,
-            end: 30
-          }
-        };
-      }
-      if (i === 1) {
-        return {
-          path: x,
-          input: `${i}`,
-          fadeIn: 5
-        };
-      }
-      return {
-        path: x,
-        input: `${i}`
-      };
-    });
 
     for (let i = 0; i < files.length; i += 1) {
       if (files[i] && fs.existsSync(files[i].path)) {
@@ -117,29 +94,8 @@ export const joinFiles = async (paths, jobId, ack, socket) => {
       }
     }
 
-    // const fadesFilters = getFadeFilters(files, durationsArray);
     const crossFadeFilters = getCrossFadeFilters(files, durationsArray);
-
-    ff.complexFilter([
-      // Either crossfades
-      // ...fadesFilters,
-      ...crossFadeFilters
-      // Or fades + concat
-      // {
-      //   filter: 'concat',
-      //   options: {
-      //     n: files.length,
-      //     a: 1,
-      //     v: 0
-      //   },
-      //   inputs: inputsOuputs.map((x, i) => {
-      //     if (x.length) {
-      //       return x[x.length - 1].output;
-      //     }
-      //     return files[i].input;
-      //   })
-      // }
-    ]);
+    ff.complexFilter(crossFadeFilters);
 
     ff.on('start', () => {
       console.time('merge');
@@ -240,9 +196,15 @@ export const createTranscodeJob = async ({ files }, ack, socket) => {
     console.log('received job', jobId);
     const filesPaths = await Promise.all(files.map((x) => getFile(x)));
     console.log('files downloaded');
+
+    const filesWithPaths = files.map((x, i) => ({
+      ...x,
+      path: filesPaths[i],
+      input: `${i}`
+    }));
     // Will emit progress
     console.log('merging');
-    const mergedFilePath = await joinFiles(filesPaths, jobId, ack, socket);
+    const mergedFilePath = await joinFiles(filesWithPaths, jobId, ack, socket);
     // Finish Job
     busyFlag = false;
 
