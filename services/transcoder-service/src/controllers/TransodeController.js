@@ -2,9 +2,13 @@ import fs from 'fs';
 import _ from 'lodash';
 import path from 'path';
 import axios from 'axios';
+import FormData from 'form-data';
 import { v4 as uuid } from 'uuid';
 import ffmpeg from 'fluent-ffmpeg';
+import { makeAxiosInstance, axiosErrorBoomifier } from '../utils/axiosUtils';
+import { getCrossFadeFilters, getFadeFilters } from '../utils/FfmpegUtils';
 import { getMp3ListDuration } from '../utils/Mp3Utils';
+import { tokens } from '../auth';
 
 const { STORAGE_SERVICE_NAME, STORAGE_SERVICE_PORT } = process.env;
 let busyFlag = false;
@@ -62,7 +66,7 @@ export const getFile = (file) =>
  * @return {Promise<String>} [mergedFilePath]
  */
 export const joinFiles = async (paths, jobId, ack, socket) => {
-  const duration = await getMp3ListDuration(paths);
+  const { values: durationsArray, duration } = await getMp3ListDuration(paths);
 
   return new Promise((resolve, reject) => {
     const mergedFilePath = path.join(
@@ -70,13 +74,72 @@ export const joinFiles = async (paths, jobId, ack, socket) => {
       'tmp',
       `${uuid()}.mp3`
     );
-    const ff = ffmpeg().audioCodec('libmp3lame');
+    const ff = ffmpeg();
+    const files = paths.map((x, i) => {
+      if (i === 0) {
+        return {
+          path: x,
+          input: `${i}`,
+          fadeIn: 10,
+          fadeOut: 10,
+          seek: {
+            start: 10,
+            end: 30
+          }
+        };
+      }
+      if (i === 1) {
+        return {
+          path: x,
+          input: `${i}`,
+          fadeIn: 5
+        };
+      }
+      return {
+        path: x,
+        input: `${i}`
+      };
+    });
 
-    for (let i = 0; i < paths.length; i += 1) {
-      if (paths[i] && fs.existsSync(paths[i])) {
-        ff.input(paths[i]);
+    for (let i = 0; i < files.length; i += 1) {
+      if (files[i] && fs.existsSync(files[i].path)) {
+        const inputOptions = [];
+        if (files[i].seek) {
+          const start = _.get(files, [i, 'seek', 'start']);
+          const end = _.get(files, [i, 'seek', 'end']);
+          const seekStart = start ? `-ss ${start}` : null;
+          const seekEnd = end ? `-to ${end}` : null;
+
+          inputOptions.push(seekStart);
+          inputOptions.push(seekEnd);
+        }
+        ff.input(files[i].path).inputOptions(inputOptions);
       }
     }
+
+    // const fadesFilters = getFadeFilters(files, durationsArray);
+    const crossFadeFilters = getCrossFadeFilters(files, durationsArray);
+
+    ff.complexFilter([
+      // Either crossfades
+      // ...fadesFilters,
+      ...crossFadeFilters
+      // Or fades + concat
+      // {
+      //   filter: 'concat',
+      //   options: {
+      //     n: files.length,
+      //     a: 1,
+      //     v: 0
+      //   },
+      //   inputs: inputsOuputs.map((x, i) => {
+      //     if (x.length) {
+      //       return x[x.length - 1].output;
+      //     }
+      //     return files[i].input;
+      //   })
+      // }
+    ]);
 
     ff.on('start', () => {
       console.time('merge');
@@ -100,12 +163,41 @@ export const joinFiles = async (paths, jobId, ack, socket) => {
         });
         resolve(mergedFilePath);
       })
-      .on('error', (err) => {
-        console.log(`An error occurred: ${err.message}`);
+      .on('error', (err, a, b) => {
+        console.log(`An error occurred: ${err.message}`, b);
         reject(err);
       })
-      .mergeToFile(mergedFilePath);
+      .save(mergedFilePath);
   });
+};
+
+export const upload = async (filepath) => {
+  const formData = new FormData();
+  formData.append('file', fs.createReadStream(filepath));
+
+  try {
+    const axiosAsService = makeAxiosInstance();
+    const savingFile = await axiosAsService.post(
+      `http://${STORAGE_SERVICE_NAME}:${STORAGE_SERVICE_PORT}/v1/crafted`,
+      formData,
+      {
+        headers: {
+          ...formData.getHeaders(),
+          authorization: tokens.accessToken
+        },
+        maxBodyLength: 400 * 1024 * 1024, // 400MB max part size
+        maxContentLength: 400 * 1024 * 1024 // 400MB max part size
+      }
+    );
+    const savedFile = _.get(savingFile, ['data', 'data'], {});
+
+    if (_.isEmpty(savedFile)) {
+      throw new Error('An error occured while saving the file');
+    }
+    return savedFile;
+  } catch (error) {
+    return axiosErrorBoomifier(error);
+  }
 };
 
 /**
