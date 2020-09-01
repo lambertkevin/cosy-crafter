@@ -130,11 +130,12 @@ export const joinFiles = async (files, jobId, ack, socket) => {
 export const upload = async (filepath) => {
   const formData = new FormData();
   formData.append('file', fs.createReadStream(filepath));
+  formData.append('filename', path.basename(filepath));
 
   try {
     const axiosAsService = makeAxiosInstance();
     const savingFile = await axiosAsService.post(
-      `http://${STORAGE_SERVICE_NAME}:${STORAGE_SERVICE_PORT}/v1/crafted`,
+      `http://${STORAGE_SERVICE_NAME}:${STORAGE_SERVICE_PORT}/v1/crafts`,
       formData,
       {
         headers: {
@@ -205,10 +206,13 @@ export const createTranscodeJob = async ({ files }, ack, socket) => {
     // Will emit progress
     console.log('merging');
     const mergedFilePath = await joinFiles(filesWithPaths, jobId, ack, socket);
+    // Upload file
+    const savedFile = await upload(mergedFilePath);
+    console.log(savedFile);
     // Finish Job
     busyFlag = false;
 
-    return mergedFilePath;
+    return savedFile;
   } catch (e) {
     console.log(e);
     return ack({
