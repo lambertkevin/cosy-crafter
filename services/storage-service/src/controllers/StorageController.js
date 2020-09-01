@@ -117,6 +117,33 @@ export const removePodcastPartFile = async ({
   }
 };
 
+/**
+ * Save a craft file
+ *
+ * @param {Object} data
+ * @param {String} data.file
+ * @param {String} data.filename
+ *
+ * @return {Promise<Object>}
+ */
+export const addCraftFile = async ({ file, filename }) => {
+  const location = `crafts/${filename}`;
+  const storageStrategy = ['local'];
+  const storedFile = await storages.setFileFromReadable(
+    storageStrategy,
+    file,
+    location
+  );
+
+  return storedFile
+    ? calibrate.response({
+        location,
+        storageType: storedFile.storageName,
+        publicLink: storedFile.publicLink
+      })
+    : Boom.serverUnavailable('All storages options have failed');
+};
+
 export default {
   addPodcastPartFile,
   getPodcastPartFile
