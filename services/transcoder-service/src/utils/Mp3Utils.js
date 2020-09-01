@@ -27,11 +27,15 @@ export const getMp3Duration = (file) =>
  * @return {Promise<Number>}
  */
 export const getMp3ListDuration = async (files) => {
-  const durations = await Promise.all(files.map((x) => getMp3Duration(x)));
-
-  return durations.reduce((prev, curr) => {
+  const values = await Promise.all(files.map((x) => getMp3Duration(x)));
+  const duration = values.reduce((prev, curr) => {
     return prev + curr;
   }, 0);
+
+  return {
+    values,
+    duration
+  };
 };
 
 export default {
