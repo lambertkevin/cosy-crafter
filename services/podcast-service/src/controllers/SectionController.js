@@ -4,11 +4,11 @@ import calibrate from 'calibrate';
 import Section, { projection, hiddenFields } from '../models/SectionModel';
 
 /**
- * Return a list of all Section
+ * Return a list of all sections
  *
  * @param {Boolean} sanitized
  *
- * @return {Promise<Object[]>} {[Section]}
+ * @return {Promise<Object>} {[Section]}
  */
 export const find = (sanitized = true) =>
   Section.find({}, sanitized ? projection : {})
@@ -17,7 +17,7 @@ export const find = (sanitized = true) =>
     .catch(Boom.boomify);
 
 /**
- * Return a specific Section
+ * Return a specific section
  *
  * @param {String} id
  * @param {Boolean} sanitized
@@ -31,7 +31,7 @@ export const findOne = (id, sanitized = true) =>
     .catch(Boom.boomify);
 
 /**
- * Create a Section
+ * Create a section
  *
  * @param {Object} data
  * @param {String} data.name
@@ -58,14 +58,14 @@ export const create = ({ name }, sanitized = true) =>
     });
 
 /**
- * Update a specific Section
+ * Update a specific section
  *
  * @param {String} id
  * @param {Object} data
  * @param {String} data.name
  * @param {Boolean} sanitized
  *
- * @return {Promise<Object[]>} {Section}
+ * @return {Promise<Object>} {Section}
  */
 export const update = (id, { name }, sanitized = true) =>
   Section.updateOne({ _id: id }, _.omitBy({ name }, _.isUndefined))
@@ -93,9 +93,11 @@ export const update = (id, { name }, sanitized = true) =>
     });
 
 /**
- * Create a Section
+ * Delete sections
+ *
  * @param {Arrays} ids
- * @return {Promise<void>}
+ *
+ * @return {Promise<Object>}
  */
 export const remove = (ids) =>
   Section.deleteMany({ _id: { $in: ids.filter((x) => x) } })
