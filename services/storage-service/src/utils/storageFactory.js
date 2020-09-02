@@ -98,7 +98,7 @@ export default () => {
      * @param {String} filepath
      * @param {String} filename
      *
-     * @return {Promise<ReadableStream>}
+     * @return {Promise<void>}
      */
     const removeFile = (storageType, filepath, filename) => {
       const storage = storages[storageType];
