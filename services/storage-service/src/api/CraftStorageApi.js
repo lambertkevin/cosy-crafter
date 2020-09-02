@@ -6,6 +6,11 @@ import * as StorageController from '../controllers/StorageController';
 export default {
   name: 'craftStorageApi',
   async register(server) {
+    /**
+     * Upload a Craft file
+     *
+     * @method POST
+     */
     server.route({
       method: 'post',
       path: '/',
@@ -45,9 +50,10 @@ export default {
               200: {
                 schema: calibrateSchema(
                   joi.object({
-                    location: joi
+                    storagePath: joi.string().example('path/to/the').required(),
+                    storageFilename: joi
                       .string()
-                      .example('path/to/the/file.mp3')
+                      .example('file.mp3')
                       .required(),
                     storageType: joi
                       .string()
@@ -64,6 +70,105 @@ export default {
               }
             },
             payloadType: 'form'
+          }
+        }
+      }
+    });
+
+    /**
+     * Get a craft
+     *
+     * @method GET
+     * @param {String} id
+     */
+    server.route({
+      method: 'GET',
+      path: '/{id}',
+      options: {
+        handler: async ({ params }, h) =>
+          StorageController.getCraftFile(params.id, h),
+        tags: ['api', 'crafts', 'v1'],
+        description: 'Get a Craft file',
+        notes: 'Returns a craft file',
+        validate: {
+          failAction: failValidationHandler,
+          params: joi.object({
+            id: joi.string().length(24).required()
+          })
+        },
+        plugins: {
+          'hapi-swagger': {
+            responses: {
+              200: {
+                description: 'Returns the file as a readable stream',
+                schema: joi.binary().meta({ swaggerType: 'file' })
+              }
+            }
+          }
+        }
+      }
+    });
+
+    /**
+     * Delete a craft file
+     *
+     * @method DELETE
+     */
+    server.route({
+      method: 'DELETE',
+      path: '/',
+      options: {
+        auth: {
+          strategy: 'service-jwt',
+          mode: 'required'
+        },
+        handler: async ({ payload }) =>
+          StorageController.removeCraftFile(payload),
+        tags: ['api', 'crafts', 'v1'],
+        description: 'Delete a craft file',
+        notes: 'Deletes a specific a craft file',
+        validate: {
+          failAction: failValidationHandler,
+          payload: joi
+            .object({
+              storageType: joi
+                .string()
+                .required()
+                .valid('aws', 'scaleway', 'local')
+                .example('aws'),
+              storagePath: joi.string().required().example('path/to/folder'),
+              storageFilename: joi
+                .string()
+                .required()
+                .example('0d6c46e6-dc6f-46e0-b1e4-3e36e9b62f04.mp3')
+            })
+            .label('CraftDeletionSchema'),
+          headers: joi
+            .object({
+              authorization: joi.string().required()
+            })
+            .unknown()
+        },
+        plugins: {
+          'hapi-swagger': {
+            responses: {
+              200: {
+                schema: calibrateSchema(
+                  joi.object({
+                    deleted: joi
+                      .array()
+                      .items(
+                        joi
+                          .string()
+                          .length(24)
+                          .required()
+                          .example('5f3ed184201d35c0c309aaaa')
+                      )
+                  }),
+                  false
+                )
+              }
+            }
           }
         }
       }
