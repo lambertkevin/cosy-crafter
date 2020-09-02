@@ -13,9 +13,6 @@ export const creationSchema = joi.object({
     .min(1)
     .max(100)
     .required()
-    .meta({
-      _mongoose: { unique: true }
-    })
     .example('La partie qui est rigolote. LOL!'),
   jobId: joi
     .string()
@@ -24,7 +21,7 @@ export const creationSchema = joi.object({
     .meta({
       _mongoose: { unique: true }
     }),
-  user: joi.string().length(24), // .required() // Not required until I add the users to auth service
+  user: joi.string().length(24).allow(null).default(null), // .required() // Not required until I add the users to auth service
   storageType: joi.string().required(),
   storagePath: joi.string().required(),
   storageFilename: joi.string().required()
