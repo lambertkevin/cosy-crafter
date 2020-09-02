@@ -10,7 +10,12 @@ import { getCrossFadeFilters } from '../utils/FfmpegUtils';
 import { getMp3ListDuration } from '../utils/Mp3Utils';
 import { tokens } from '../auth';
 
-const { STORAGE_SERVICE_NAME, STORAGE_SERVICE_PORT } = process.env;
+const {
+  STORAGE_SERVICE_NAME,
+  STORAGE_SERVICE_PORT,
+  PODCAST_SERVICE_NAME,
+  PODCAST_SERVICE_PORT
+} = process.env;
 let busyFlag = false;
 
 /**
@@ -153,7 +158,7 @@ export const upload = async (filepath) => {
     }
     return savedFile;
   } catch (error) {
-    return axiosErrorBoomifier(error);
+    throw axiosErrorBoomifier(error);
   }
 };
 
@@ -168,7 +173,7 @@ export const upload = async (filepath) => {
  *
  * @return {Promise<String|Error>}
  */
-export const createTranscodeJob = async ({ files }, ack, socket) => {
+export const createTranscodeJob = async ({ files, name }, ack, socket) => {
   try {
     if (!_.isArray(files) || _.isEmpty(files)) {
       return ack({
@@ -206,14 +211,45 @@ export const createTranscodeJob = async ({ files }, ack, socket) => {
     // Will emit progress
     console.log('merging');
     const mergedFilePath = await joinFiles(filesWithPaths, jobId, ack, socket);
+    console.log('temp merged file: ', mergedFilePath);
     // Upload file
     const savedFile = await upload(mergedFilePath);
+    // Register the job
     console.log(savedFile);
-    // Finish Job
-    busyFlag = false;
 
-    return savedFile;
+    if (!savedFile || _.isEmpty(savedFile)) {
+      throw new Error('The saved file is incorrect', { mergedFilePath, jobId });
+    }
+
+    const axiosAsService = makeAxiosInstance();
+    const savedCraft = await axiosAsService.post(
+      `http://${PODCAST_SERVICE_NAME}:${PODCAST_SERVICE_PORT}/v1/crafts`,
+      {
+        name,
+        jobId,
+        // user : '' // Add when users are added to auth service
+        storageType: savedFile.storageType,
+        storagePath: savedFile.storagePath,
+        storageFilename: savedFile.storageFilename
+      },
+      {
+        headers: {
+          authorization: tokens.accessToken
+        }
+      }
+    );
+    // Delete old file
+    fs.unlink(mergedFilePath, (err) => {
+      if (err) {
+        console.error('Error while deleting temp merge file', err);
+      }
+    });
+    // Finish job
+    busyFlag = false;
+    console.log('Job finished');
+    return savedCraft;
   } catch (e) {
+    busyFlag = false;
     console.log(e);
     return ack({
       statusCode: 500,
