@@ -9,7 +9,7 @@ import { projection as partProjection } from '../models/PartModel';
  *
  * @param {Boolean} sanitized
  *
- * @return {Promise<Object[]>} {[Podcast]}
+ * @return {Promise<Object>} {[Podcast]}
  */
 export const find = (sanitized = true) =>
   Podcast.find({}, sanitized ? projection : null)
@@ -128,11 +128,11 @@ export const update = (id, { name, edition, parts, tags }, sanitized = true) =>
     });
 
 /**
- * Create a podcast
+ * Delete podcasts
  *
  * @param {Array<String>} ids
  *
- * @return {Promise<void>}
+ * @return {Promise<Object>}
  */
 export const remove = (ids) =>
   Podcast.deleteMany({ _id: { $in: ids.filter((x) => x) } })

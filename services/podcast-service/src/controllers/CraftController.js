@@ -1,49 +1,57 @@
 import _ from 'lodash';
 import Boom from '@hapi/boom';
 import calibrate from 'calibrate';
-import Section, { projection, hiddenFields } from '../models/SectionModel';
+import Craft, { projection, hiddenFields } from '../models/CraftModel';
 
 /**
- * Return a list of all sections
+ * Return a list of all crafts
  *
  * @param {Boolean} sanitized
  *
- * @return {Promise<Object>} {[Section]}
+ * @return {Promise<Object[]>} {[Craft]}
  */
 export const find = (sanitized = true) =>
-  Section.find({}, sanitized ? projection : {})
+  Craft.find({}, sanitized ? projection : {})
     .exec()
     .then(calibrate.response)
     .catch(Boom.boomify);
 
 /**
- * Return a specific section
+ * Return a specific craft
  *
  * @param {String} id
  * @param {Boolean} sanitized
  *
- * @return {Promise<Object>} {Section}
+ * @return {Promise<Object>} {Craft}
  */
 export const findOne = (id, sanitized = true) =>
-  Section.findOne({ _id: id }, sanitized ? projection : {})
+  Craft.findOne({ _id: id }, sanitized ? projection : {})
     .exec()
     .then(calibrate.response)
     .catch(Boom.boomify);
 
 /**
- * Create a section
+ * Create a craft
  *
  * @param {Object} data
  * @param {String} data.name
+ * @param {String} data.jobId
+ * @param {String} data.user
+ * @param {String} data.storageType
+ * @param {String} data.storagePath
+ * @param {String} data.storageFilename
  * @param {Boolean} sanitized
  *
- * @return {Promise<Object>} {Section}
+ * @return {Promise<Object>} {Craft}
  */
-export const create = ({ name }, sanitized = true) =>
-  Section.create({ name })
-    .then((section) =>
+export const create = (
+  { name, jobId, user, storageType, storagePath, storageFilename },
+  sanitized = true
+) =>
+  Craft.create({ name, jobId, user, storageType, storagePath, storageFilename })
+    .then((craft) =>
       calibrate.response(
-        sanitized ? _.omit(section.toObject(), hiddenFields) : section
+        sanitized ? _.omit(craft.toObject(), hiddenFields) : craft
       )
     )
     .catch((error) => {
@@ -58,17 +66,32 @@ export const create = ({ name }, sanitized = true) =>
     });
 
 /**
- * Update a specific section
+ * Update a specific craft
  *
  * @param {String} id
  * @param {Object} data
  * @param {String} data.name
+ * @param {String} data.jobId
+ * @param {String} data.user
+ * @param {String} data.storageType
+ * @param {String} data.storagePath
+ * @param {String} data.storageFilename
  * @param {Boolean} sanitized
  *
- * @return {Promise<Object>} {Section}
+ * @return {Promise<Object>} {Craft}
  */
-export const update = (id, { name }, sanitized = true) =>
-  Section.updateOne({ _id: id }, _.omitBy({ name }, _.isUndefined))
+export const update = (
+  id,
+  { name, jobId, user, storageType, storagePath, storageFilename },
+  sanitized = true
+) =>
+  Craft.updateOne(
+    { _id: id },
+    _.omitBy(
+      { name, jobId, user, storageType, storagePath, storageFilename },
+      _.isUndefined
+    )
+  )
     .exec()
     .then(async (res) => {
       if (!res.n) {
@@ -78,8 +101,8 @@ export const update = (id, { name }, sanitized = true) =>
         return Boom.expectationFailed('No changes required');
       }
 
-      const section = await findOne(id, sanitized);
-      return section;
+      const craft = await findOne(id, sanitized);
+      return craft;
     })
     .catch((error) => {
       if (error.name === 'ValidationError') {
@@ -93,14 +116,14 @@ export const update = (id, { name }, sanitized = true) =>
     });
 
 /**
- * Delete sections
+ * Delete crafts
  *
  * @param {Arrays} ids
  *
- * @return {Promise<Object>}
+ * @return {Promise<Object[]>}
  */
 export const remove = (ids) =>
-  Section.deleteMany({ _id: { $in: ids.filter((x) => x) } })
+  Craft.deleteMany({ _id: { $in: ids.filter((x) => x) } })
     .exec()
     .then((res) => {
       if (!res.deletedCount) {
