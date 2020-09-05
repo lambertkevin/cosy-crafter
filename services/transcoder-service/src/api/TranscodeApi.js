@@ -1,5 +1,5 @@
+import _ from 'lodash';
 import joi from 'joi';
-import { forEach } from 'lodash';
 import { createTranscodeJob } from '../controllers/TransodeController';
 
 const routes = [
@@ -25,7 +25,7 @@ const routes = [
 ];
 
 export default (prefix, socket) => {
-  forEach(routes, (route) => {
+  _.forEach(routes, (route) => {
     const path = `${prefix}${route.path}`;
     const handler = async (data, ack) => {
       try {
