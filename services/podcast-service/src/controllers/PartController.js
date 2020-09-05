@@ -18,7 +18,7 @@ const { STORAGE_SERVICE_NAME, STORAGE_SERVICE_PORT } = process.env;
  *
  * @param {Boolean} sanitized
  *
- * @return {Promise<Object[]>} {[Part]}
+ * @return {Promise<Object>} {[Part]}
  */
 export const find = (sanitized = true) =>
   Part.find({}, sanitized ? projection : {})
@@ -338,9 +338,11 @@ export const update = async (id, payload, sanitized = true) => {
 };
 
 /**
- * Create a part
+ * Delete parts
+ *
  * @param {Array<String>} ids
- * @return {Promise<void>}
+ *
+ * @return {Promise<Object>}
  */
 export const remove = (ids) =>
   Part.deleteMany({ _id: { $in: ids.filter((x) => x) } })
