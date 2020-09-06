@@ -1,3 +1,5 @@
+export const identifier = `${process.env.TRANSCODER_SERVICE_NAME}-lisa`;
+
 /**
  * Config for Node
  * @type {Object}
