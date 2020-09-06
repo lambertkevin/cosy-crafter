@@ -1,0 +1,8 @@
+{
+  "colorize": "chalk.supportsColor",
+  "crlf": true,
+  "errorProps": "*",
+  "messageKey": "message",
+  "timestampKey": "time",
+  "translateTime": true
+}

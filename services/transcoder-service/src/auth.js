@@ -3,12 +3,9 @@ import path from 'path';
 import axios from 'axios';
 import Boom from '@hapi/boom';
 import { makeRsaPublicEncrypter } from './utils/RsaUtils';
+import { identifier } from './config';
 
-const {
-  AUTH_SERVICE_NAME,
-  AUTH_SERVICE_PORT,
-  TRANSCODER_SERVICE_NAME
-} = process.env;
+const { AUTH_SERVICE_NAME, AUTH_SERVICE_PORT } = process.env;
 const CREDENTIALS_PATH = path.join(path.resolve('./'), '.credentials');
 const encrypter = makeRsaPublicEncrypter();
 
@@ -19,7 +16,6 @@ export const tokens = {
 
 export const register = async () => {
   try {
-    const identifier = `${TRANSCODER_SERVICE_NAME}-lisa`;
     const { data: encryptedKey } = await axios.post(
       `http://${AUTH_SERVICE_NAME}:${AUTH_SERVICE_PORT}/services`,
       {
@@ -51,12 +47,12 @@ export const register = async () => {
 
 export const login = async () => {
   try {
-    const { identifier, encryptedKey: key } = JSON.parse(
+    const { identifier: savedIdentifier, encryptedKey: key } = JSON.parse(
       fs.readFileSync(CREDENTIALS_PATH, 'utf8')
     );
     const { data: freshTokens } = await axios
       .post(`http://${AUTH_SERVICE_NAME}:${AUTH_SERVICE_PORT}/services/login`, {
-        identifier,
+        identifier: savedIdentifier,
         key
       })
       .then(({ data }) => data);
