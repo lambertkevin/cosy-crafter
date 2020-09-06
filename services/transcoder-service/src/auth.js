@@ -4,6 +4,7 @@ import axios from 'axios';
 import Boom from '@hapi/boom';
 import { makeRsaPublicEncrypter } from './utils/RsaUtils';
 import { identifier } from './config';
+import { logger } from './utils/logger';
 
 const { AUTH_SERVICE_NAME, AUTH_SERVICE_PORT } = process.env;
 const CREDENTIALS_PATH = path.join(path.resolve('./'), '.credentials');
@@ -40,7 +41,7 @@ export const register = async () => {
     }
     throw new Error("Couldn't get a key");
   } catch (e) {
-    console.log(e);
+    logger.error('Error while registering the service', e);
     process.exit();
   }
 };
@@ -60,7 +61,7 @@ export const login = async () => {
     tokens.accessToken = freshTokens.accessToken;
     tokens.refreshToken = freshTokens.refreshToken;
   } catch (e) {
-    console.log(e);
+    logger.fatal('Error while loging the service', e);
     process.exit();
   }
 };
@@ -91,7 +92,7 @@ export const refresh = async () => {
     }
     throw Boom.serverUnavailable();
   } catch (e) {
-    console.log(e);
+    logger.fatal('Error while refreshing the service', e);
     throw Boom.preconditionFailed();
   }
 };
