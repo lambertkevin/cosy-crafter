@@ -83,6 +83,7 @@ services:
       - RSA_KEYS_LOCATION=${RSA_KEYS_LOCATION}
       - RSA_KEYS_NAME=${RSA_KEYS_NAME}
       - SERVICE_JWT_SECRET=${SERVICE_JWT_SECRET}
+      - SENTRY_DSN_STORAGE_SERVICE=${SENTRY_DSN_STORAGE_SERVICE}
     command: ./run.sh
     links:
       - auth-service
