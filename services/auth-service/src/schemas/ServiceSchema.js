@@ -17,7 +17,7 @@ export const creationSchema = joi
   .label('Service');
 
 export const validationSchema = creationSchema.append({
-  ip: joi.string().ip().required(),
+  ip: joi.string().ip().valid('private').required(),
   key: joi.string().required()
 });
 

@@ -1,9 +1,10 @@
 import _ from 'lodash';
 import Boom from '@hapi/boom';
-import { v4 as uuid } from 'uuid';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import calibrate from 'calibrate';
+import { v4 as uuid } from 'uuid';
+import privateIp from 'private-ip';
 import Service, { projection, hiddenFields } from '../models/ServiceModel';
 import * as TokenController from './TokenController';
 import tokensFactory from '../utils/TokensFactory';
@@ -46,8 +47,12 @@ export const findOne = (identifier, sanitized = true) =>
  *
  * @return {Promise<Object>} {Service}
  */
-export const create = async ({ identifier, key, ip }, sanitized = true) => {
+export const create = async (
+  { identifier, key, ip: _ip },
+  sanitized = true
+) => {
   const hashedKey = await bcrypt.hash(key, 10);
+  const ip = privateIp(_ip) ? 'private' : _ip;
 
   return Service.create({ identifier, key: hashedKey, ip })
     .then((service) =>
@@ -78,8 +83,14 @@ export const create = async ({ identifier, key, ip }, sanitized = true) => {
  *
  * @return {Promise<Object[]>} {Service}
  */
-export const update = async (identifier, { key, ip }, sanitized = true) => {
+export const update = async (
+  identifier,
+  { key, ip: _ip },
+  sanitized = true
+) => {
   const hashedKey = key ? await bcrypt.hash(key, 10) : undefined;
+  const ipPrivatizer = (ip) => (privateIp(ip) ? 'private' : ip);
+  const ip = _ip ? ipPrivatizer(_ip) : undefined;
 
   return Service.updateOne(
     { identifier },
@@ -148,7 +159,11 @@ export const login = async ({ identifier, key }, ip) => {
       throw Boom.notFound();
     }
 
-    if (service.ip === ip && bcrypt.compareSync(key, service.key)) {
+    if (
+      // If ip is matching or ip is from private network and service ip was private on creation
+      (service.ip === ip || (privateIp(ip) && service.ip === 'private')) &&
+      bcrypt.compareSync(key, service.key)
+    ) {
       const tokens = await tokensFactory(
         {
           service: service.identifier
