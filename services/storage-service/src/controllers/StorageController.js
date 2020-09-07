@@ -2,8 +2,9 @@ import _ from 'lodash';
 import Boom from '@hapi/boom';
 import calibrate from 'calibrate';
 import { v4 as uuid } from 'uuid';
-import { axiosErrorBoomifier, makeAxiosInstance } from '../utils/axiosUtils';
-import StorageFactory from '../utils/storageFactory';
+import { axiosErrorBoomifier, makeAxiosInstance } from '../utils/AxiosUtils';
+import StorageFactory from '../utils/StorageFactory';
+import { logger } from '../utils/Logger';
 import { tokens } from '../auth';
 
 const { PODCAST_SERVICE_NAME, PODCAST_SERVICE_PORT } = process.env;
@@ -35,14 +36,25 @@ export const addPodcastPartFile = async ({
     `${location}/${filename}`
   );
 
-  return storedFile
-    ? calibrate.response({
-        filename,
-        location,
-        storageType: storedFile.storageName,
-        publicLink: storedFile.publicLink
-      })
-    : Boom.serverUnavailable('All storages options have failed');
+  if (!storedFile) {
+    logger.error(
+      'Add Podcast Part File Error: All storages options have failed',
+      {
+        file,
+        podcastName,
+        filename
+      }
+    );
+
+    return Boom.serverUnavailable('All storages options have failed');
+  }
+
+  return calibrate.response({
+    filename,
+    location,
+    storageType: storedFile.storageName,
+    publicLink: storedFile.publicLink
+  });
 };
 
 /**
@@ -76,11 +88,18 @@ export const getPodcastPartFile = async (id, h) => {
     })
     .catch((error) => {
       if (error.isAxiosError) {
+        logger.error(
+          "Get Podcast Part File Error: Couldn't get part from podcast service",
+          error
+        );
         return axiosErrorBoomifier(error);
       }
       if (error.code === 'ENOENT' || error.statusCode === 404) {
+        logger.error("Get Podcast Part File Error: Part doesn't exist", error);
         return Boom.resourceGone('File has been deleted in storage');
       }
+      // Any other error
+      logger.error('Get Podcast Part File Error', error);
       if (error.isBoom) {
         return error;
       }
@@ -109,9 +128,10 @@ export const removePodcastPartFile = async ({
   try {
     await storages.removeFile(storageType, storagePath, storageFilename);
     return calibrate.response({ deleted: storageFilename });
-  } catch (e) {
-    if (e.isBoom) {
-      return e;
+  } catch (error) {
+    logger.error('Remove Podcast Part File Error', error);
+    if (error.isBoom) {
+      return error;
     }
     return Boom.badData();
   }
@@ -136,14 +156,20 @@ export const addCraftFile = async ({ file, filename }) => {
     location
   );
 
-  return storedFile
-    ? calibrate.response({
-        storagePath,
-        storageType: storedFile.storageName,
-        storageFilename: filename,
-        publicLink: storedFile.publicLink
-      })
-    : Boom.serverUnavailable('All storages options have failed');
+  if (!storedFile) {
+    logger.error('Add Craft File Error: All storages options have failed', {
+      file,
+      filename
+    });
+    return Boom.serverUnavailable('All storages options have failed');
+  }
+
+  return calibrate.response({
+    storagePath,
+    storageType: storedFile.storageName,
+    storageFilename: filename,
+    publicLink: storedFile.publicLink
+  });
 };
 
 /**
@@ -183,11 +209,19 @@ export const getCraftFile = async (id, h) => {
     })
     .catch((error) => {
       if (error.isAxiosError) {
+        logger.error(
+          "Get Craft File Error: Couldn't get craft from podcast service",
+          error
+        );
         return axiosErrorBoomifier(error);
       }
       if (error.code === 'ENOENT' || error.statusCode === 404) {
+        logger.error("Get Craft File Error: Craft doesn't exist", error);
+
         return Boom.resourceGone('File has been deleted in storage');
       }
+      // Any other error
+      logger.error('Get Craft File Error', error);
       if (error.isBoom) {
         return error;
       }
@@ -216,9 +250,10 @@ export const removeCraftFile = async ({
   try {
     await storages.removeFile(storageType, storagePath, storageFilename);
     return calibrate.response({ deleted: storageFilename });
-  } catch (e) {
-    if (e.isBoom) {
-      return e;
+  } catch (error) {
+    logger.error('Remove Craft File Error', error);
+    if (error.isBoom) {
+      return error;
     }
     return Boom.badData();
   }

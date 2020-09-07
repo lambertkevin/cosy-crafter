@@ -2,6 +2,7 @@ import _ from 'lodash';
 import Boom from '@hapi/boom';
 import calibrate from 'calibrate';
 import Section, { projection, hiddenFields } from '../models/SectionModel';
+import { logger } from '../utils/Logger';
 
 /**
  * Return a list of all sections
@@ -14,7 +15,10 @@ export const find = (sanitized = true) =>
   Section.find({}, sanitized ? projection : {})
     .exec()
     .then(calibrate.response)
-    .catch(Boom.boomify);
+    .catch((error) => {
+      logger.error('Section Find Error', error);
+      return Boom.boomify(error);
+    });
 
 /**
  * Return a specific section
@@ -28,7 +32,10 @@ export const findOne = (id, sanitized = true) =>
   Section.findOne({ _id: id }, sanitized ? projection : {})
     .exec()
     .then(calibrate.response)
-    .catch(Boom.boomify);
+    .catch((error) => {
+      logger.error('Section FindOne Error', error);
+      return Boom.boomify(error);
+    });
 
 /**
  * Create a section
@@ -48,12 +55,14 @@ export const create = ({ name }, sanitized = true) =>
     )
     .catch((error) => {
       if (error.name === 'ValidationError') {
+        logger.error('Section Create Validation Error', error);
         const response = Boom.boomify(error, { statusCode: 409 });
         response.output.payload.data = error.errors;
 
         return response;
       }
 
+      logger.error('Section Create Error', error);
       return Boom.boomify(error);
     });
 
@@ -83,12 +92,14 @@ export const update = (id, { name }, sanitized = true) =>
     })
     .catch((error) => {
       if (error.name === 'ValidationError') {
+        logger.error('Section Update Validation Error', error);
         const response = Boom.boomify(error, { statusCode: 409 });
         response.output.payload.data = error.errors;
 
         return response;
       }
 
+      logger.error('Section Update Error', error);
       return Boom.boomify(error);
     });
 
@@ -111,7 +122,10 @@ export const remove = (ids) =>
         deleted: ids
       });
     })
-    .catch(Boom.boomify);
+    .catch((error) => {
+      logger.error('Section Remove Error', error);
+      return Boom.boomify(error);
+    });
 
 export default {
   find,

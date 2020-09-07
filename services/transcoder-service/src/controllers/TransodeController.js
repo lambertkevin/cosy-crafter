@@ -5,9 +5,10 @@ import axios from 'axios';
 import FormData from 'form-data';
 import { v4 as uuid } from 'uuid';
 import ffmpeg from 'fluent-ffmpeg';
-import { makeAxiosInstance, axiosErrorBoomifier } from '../utils/axiosUtils';
+import { makeAxiosInstance, axiosErrorBoomifier } from '../utils/AxiosUtils';
 import { getCrossFadeFilters } from '../utils/FfmpegUtils';
 import { getMp3ListDuration } from '../utils/Mp3Utils';
+import { sentry, logger } from '../utils/Logger';
 import { tokens } from '../auth';
 
 const {
@@ -49,13 +50,13 @@ export const getFile = (file) =>
             resolve(filepath);
           })
           .catch((e) => {
-            console.log(e);
+            logger.error('Error while getting files to transcode', e);
             reject(e);
           });
       }
       return reject(new Error('File Type Error'));
     } catch (e) {
-      console.log(e);
+      logger.error('Error while getting files to transcode', e);
       return reject(e);
     }
   });
@@ -124,15 +125,15 @@ export const joinFiles = async (files, jobId, ack, socket) => {
         });
         resolve(mergedFilePath);
       })
-      .on('error', (err, a, b) => {
-        console.log(`An error occurred: ${err.message}`, b);
+      .on('error', (err) => {
+        logger.error(`[${jobId}] Error while transcoding`, err);
         reject(err);
       })
       .save(mergedFilePath);
   });
 };
 
-export const upload = async (filepath) => {
+export const upload = async (filepath, jobId) => {
   const formData = new FormData();
   formData.append('file', fs.createReadStream(filepath));
   formData.append('filename', path.basename(filepath));
@@ -158,6 +159,10 @@ export const upload = async (filepath) => {
     }
     return savedFile;
   } catch (error) {
+    logger.error(`[${jobId}]Error while uploading a craft`, {
+      error,
+      filepath
+    });
     throw axiosErrorBoomifier(error);
   }
 };
@@ -174,6 +179,8 @@ export const upload = async (filepath) => {
  * @return {Promise<String|Error>}
  */
 export const createTranscodeJob = async ({ files, name }, ack, socket) => {
+  const jobId = uuid();
+
   try {
     if (!_.isArray(files) || _.isEmpty(files)) {
       return ack({
@@ -189,9 +196,16 @@ export const createTranscodeJob = async ({ files, name }, ack, socket) => {
       });
     }
 
+    sentry.setTag('jobId', jobId);
+    const transaction = sentry.startTransaction({
+      name: 'Transcoding Job'
+    });
+    sentry.configureScope((scope) => {
+      scope.setSpan(transaction);
+    });
     busyFlag = true;
-    const jobId = uuid();
 
+    logger.info(`Received Job`, { jobId, files, name });
     ack({
       statusCode: 200,
       data: {
@@ -199,61 +213,105 @@ export const createTranscodeJob = async ({ files, name }, ack, socket) => {
       }
     });
 
-    console.log('received job', jobId);
+    // --- Start Download Files
+    const downloadFilesSpan = transaction.startChild({
+      data: {
+        files
+      },
+      op: 'Download Files',
+      description: 'Download all the files necessary to the transcoding'
+    });
     const filesPaths = await Promise.all(files.map((x) => getFile(x)));
-    console.log('files downloaded');
+    downloadFilesSpan.finish();
+    logger.info(`Files Downloaded`, { jobId, filesPaths });
+    // --- End Download Files
 
     const filesWithPaths = files.map((x, i) => ({
       ...x,
       path: filesPaths[i],
       input: `${i}`
     }));
+
+    // --- Start Transcoding
+    const transcodingSpan = transaction.startChild({
+      data: {
+        filesWithPaths
+      },
+      op: 'Transcoding',
+      description: 'Joining and crossfading files into a single audio file'
+    });
     // Will emit progress
-    console.log('merging');
+    logger.info(`Start Transcoding`, { jobId, filesWithPaths });
     const mergedFilePath = await joinFiles(filesWithPaths, jobId, ack, socket);
-    console.log('temp merged file: ', mergedFilePath);
+    transcodingSpan.finish();
+    // --- End Transcoding
+
+    // --- Start Uploading
+    const uploadingSpan = transaction.startChild({
+      data: {
+        mergedFilePath
+      },
+      op: 'Uploading',
+      description: 'Uploading the joined audio file'
+    });
+    logger.info(`Start Uploading`, { jobId, mergedFilePath });
     // Upload file
-    const savedFile = await upload(mergedFilePath);
-    // Register the job
-    console.log(savedFile);
+    const savedFile = await upload(mergedFilePath, jobId);
+    logger.info(`File Uploaded`, { jobId, savedFile });
+    uploadingSpan.finish();
+    // --- End Uploading
 
     if (!savedFile || _.isEmpty(savedFile)) {
       throw new Error('The saved file is incorrect', { mergedFilePath, jobId });
     }
 
+    // --- Start Saving Craft
+    const payload = {
+      name,
+      jobId,
+      // user : '' // Add when users are added to auth service
+      storageType: savedFile.storageType,
+      storagePath: savedFile.storagePath,
+      storageFilename: savedFile.storageFilename
+    };
+    const savingCraftSpan = transaction.startChild({
+      data: payload,
+      op: 'Saving Craft',
+      description: 'Saving the craft in the podcast service'
+    });
     const axiosAsService = makeAxiosInstance();
     const savedCraft = await axiosAsService.post(
       `http://${PODCAST_SERVICE_NAME}:${PODCAST_SERVICE_PORT}/v1/crafts`,
-      {
-        name,
-        jobId,
-        // user : '' // Add when users are added to auth service
-        storageType: savedFile.storageType,
-        storagePath: savedFile.storagePath,
-        storageFilename: savedFile.storageFilename
-      },
+      payload,
       {
         headers: {
           authorization: tokens.accessToken
         }
       }
     );
+    savingCraftSpan.finish();
+    // --- End Saving Craft
+
     // Delete old file
-    fs.unlink(mergedFilePath, (err) => {
-      if (err) {
-        console.error('Error while deleting temp merge file', err);
+    fs.unlink(mergedFilePath, (error) => {
+      if (error) {
+        logger.error(`Error while deleting temp merge file`, {
+          error,
+          jobId,
+          mergedFilePath
+        });
       }
     });
+    transaction.finish();
     // Finish job
-    busyFlag = false;
-    console.log('Job finished');
     return savedCraft;
   } catch (e) {
-    busyFlag = false;
-    console.log(e);
+    logger.error(`Error in createTranscodeJob`, e);
     return ack({
       statusCode: 500,
       message: 'An error has occured'
     });
+  } finally {
+    busyFlag = false;
   }
 };

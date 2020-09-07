@@ -5,10 +5,11 @@ import FormData from 'form-data';
 import calibrate from 'calibrate';
 import * as PodcastController from './PodcastController';
 import * as SectionController from './SectionController';
-import { makeAxiosInstance, axiosErrorBoomifier } from '../utils/axiosUtils';
-import Part, { projection, hiddenFields } from '../models/PartModel';
+import { makeAxiosInstance, axiosErrorBoomifier } from '../utils/AxiosUtils';
 import { projection as podcastProjection } from '../models/PodcastModel';
 import { projection as sectionProjection } from '../models/SectionModel';
+import Part, { projection, hiddenFields } from '../models/PartModel';
+import { logger } from '../utils/Logger';
 import { tokens } from '../auth';
 
 const { STORAGE_SERVICE_NAME, STORAGE_SERVICE_PORT } = process.env;
@@ -26,7 +27,10 @@ export const find = (sanitized = true) =>
     .populate('section', sectionProjection)
     .exec()
     .then(calibrate.response)
-    .catch(Boom.boomify);
+    .catch((error) => {
+      logger.error('Part Find Error', error);
+      return Boom.boomify(error);
+    });
 
 /**
  * Return a specific part
@@ -42,7 +46,10 @@ export const findOne = (id, sanitized = true) =>
     .populate('section', sectionProjection)
     .exec()
     .then(calibrate.response)
-    .catch(Boom.boomify);
+    .catch((error) => {
+      logger.error('Part FindOne Error', error);
+      return Boom.boomify(error);
+    });
 
 /**
  * Create a part
@@ -75,6 +82,7 @@ export const create = async (
       return Boom.notAcceptable("At least one dependency doesn't exist");
     }
   } catch (error) {
+    logger.error('Part Create Dependencies Error', error);
     return error;
   }
 
@@ -134,11 +142,8 @@ export const create = async (
         )
       )
       .catch((error) => {
-        if (error.isAxiosError) {
-          return axiosErrorBoomifier(error);
-        }
-
         if (error.name === 'ValidationError') {
+          logger.error('Part Create Validation Error', error);
           const response = Boom.boomify(error, { statusCode: 409 });
           response.output.payload.data = error.errors;
           const {
@@ -149,8 +154,8 @@ export const create = async (
 
           if (storageType && storagePath && storageFilename) {
             // Delete the saved file since the Part isn't validated
-            try {
-              axiosAsService.delete(
+            axiosAsService
+              .delete(
                 `http://${STORAGE_SERVICE_NAME}:${STORAGE_SERVICE_PORT}/v1/podcast-parts`,
                 {
                   data: {
@@ -162,18 +167,25 @@ export const create = async (
                     authorization: tokens.accessToken
                   }
                 }
-              );
-              return response;
-            } catch (e) {
-              return response;
-            }
+              )
+              .catch((err) => {
+                logger.error("Couln't delete podcast parts in storage", err);
+              });
           }
+
+          return response;
         }
 
+        logger.error('Part Create Error', error);
         return Boom.boomify(error);
       });
   } catch (error) {
-    return axiosErrorBoomifier(error);
+    logger.error('Part Create Upload In Storage Error', error);
+    if (error.isAxiosError) {
+      return axiosErrorBoomifier(error);
+    }
+
+    return Boom.boomify(error);
   }
 };
 
@@ -196,11 +208,14 @@ export const update = async (id, payload, sanitized = true) => {
   let part;
   try {
     part = await Part.findById(id);
+
     if (!part) {
+      logger.error("Part Update Error: Part doesn't exist", { payload });
       return Boom.notFound();
     }
-  } catch (e) {
-    return Boom.boomify(e);
+  } catch (error) {
+    logger.error("Part Update Error: Couldn't get part", { payload, error });
+    return Boom.boomify(error);
   }
 
   // Then test dependencies existence
@@ -208,72 +223,85 @@ export const update = async (id, payload, sanitized = true) => {
   // We get the new or old podcast (we'll need its name later on)
   try {
     const { data } = await PodcastController.findOne(podcastId || part.podcast);
-    // eslint-disable-next-line prefer-destructuring
     podcast = data;
+
+    if (!podcast) {
+      logger.error("Part Update Error: Podcast doesn't exist", { payload });
+      return Boom.notFound();
+    }
   } catch (error) {
+    logger.error("Part Update Error: Couldn't get podcast", { payload, error });
     return Boom.notAcceptable("At least one dependency doesn't exist");
   }
+
   if (section) {
     try {
       await SectionController.findOne(section);
     } catch (error) {
+      logger.error("Part Update Error: Section Doesn't exist", {
+        payload,
+        error
+      });
       return Boom.notAcceptable("At least one dependency doesn't exist");
     }
   }
 
   // Process update
-  try {
-    let tags;
-    if (typeof _tags === 'string' || _.isArray(_tags)) {
-      // Transform tags as array if string
-      tags =
-        typeof _tags === 'string'
-          ? Array.from(
-              new Set(
-                _tags
-                  .split(',')
-                  .map((x) => x.trim())
-                  .filter((x) => x)
-              )
+  let tags;
+  if (typeof _tags === 'string' || _.isArray(_tags)) {
+    // Transform tags as array if string
+    tags =
+      typeof _tags === 'string'
+        ? Array.from(
+            new Set(
+              _tags
+                .split(',')
+                .map((x) => x.trim())
+                .filter((x) => x)
             )
-          : Array.from(new Set(_tags));
+          )
+        : Array.from(new Set(_tags));
+  }
+
+  let fileInfos = {};
+  if (file) {
+    // Delete old file
+    const { storageType, storagePath, storageFilename } = part;
+    const axiosAsService = makeAxiosInstance();
+
+    if (storageType && storagePath && storageFilename) {
+      axiosAsService
+        .delete(
+          `http://${STORAGE_SERVICE_NAME}:${STORAGE_SERVICE_PORT}/v1/podcast-parts`,
+          {
+            data: {
+              storageType,
+              storagePath,
+              storageFilename
+            }
+          },
+          {
+            headers: {
+              authorization: tokens.accessToken
+            }
+          }
+        )
+        .catch((error) => {
+          logger.error(
+            "Part Update Error: Couldn't delete old files from storage",
+            { payload, error }
+          );
+        });
     }
 
-    let fileInfos = {};
-    if (file) {
-      // Delete old file
-      const { storageType, storagePath, storageFilename } = part;
-      const axiosAsService = makeAxiosInstance();
+    // Then upload new file
+    const { headers, filename } = file;
+    const formData = new FormData();
+    formData.append('podcastName', podcast.name);
+    formData.append('filename', filename);
+    formData.append('file', fs.createReadStream(file.path));
 
-      if (storageType && storagePath && storageFilename) {
-        try {
-          axiosAsService.delete(
-            `http://${STORAGE_SERVICE_NAME}:${STORAGE_SERVICE_PORT}/v1/podcast-parts`,
-            {
-              data: {
-                storageType,
-                storagePath,
-                storageFilename
-              }
-            },
-            {
-              headers: {
-                authorization: tokens.accessToken
-              }
-            }
-          );
-        } catch (e) {
-          // continue
-        }
-      }
-
-      // Then upload new file
-      const { headers, filename } = file;
-      const formData = new FormData();
-      formData.append('podcastName', podcast.name);
-      formData.append('filename', filename);
-      formData.append('file', fs.createReadStream(file.path));
-
+    try {
       const { data: savedFile } = await axiosAsService.post(
         `http://${STORAGE_SERVICE_NAME}:${STORAGE_SERVICE_PORT}/v1/podcast-parts`,
         formData,
@@ -295,46 +323,48 @@ export const update = async (id, payload, sanitized = true) => {
         publicLink: savedFile.publicLinkfilename,
         contentType: headers['content-type']
       };
+    } catch (error) {
+      logger.error('Part Upload In Storage Error', error);
+      return Boom.boomify(error);
     }
-
-    return Part.updateOne(
-      { _id: id },
-      _.omitBy(
-        {
-          name,
-          section,
-          podcast: podcastId,
-          tags,
-          ...fileInfos
-        },
-        _.isUndefined
-      )
-    )
-      .exec()
-      .then(async (res) => {
-        if (!res.n) {
-          return Boom.notFound();
-        }
-        if (!res.nModified) {
-          return Boom.expectationFailed('No changes required');
-        }
-
-        const updatedPart = await findOne(id, sanitized);
-        return updatedPart;
-      })
-      .catch((error) => {
-        if (error.name === 'ValidationError') {
-          const response = Boom.boomify(error, { statusCode: 409 });
-          response.output.payload.data = error.errors;
-
-          return response;
-        }
-
-        return Boom.boomify(error);
-      });
-  } catch (e) {
-    return Boom.boomify(e);
   }
+
+  return Part.updateOne(
+    { _id: id },
+    _.omitBy(
+      {
+        name,
+        section,
+        podcast: podcastId,
+        tags,
+        ...fileInfos
+      },
+      _.isUndefined
+    )
+  )
+    .exec()
+    .then(async (res) => {
+      if (!res.n) {
+        return Boom.notFound();
+      }
+      if (!res.nModified) {
+        return Boom.expectationFailed('No changes required');
+      }
+
+      const updatedPart = await findOne(id, sanitized);
+      return updatedPart;
+    })
+    .catch((error) => {
+      if (error.name === 'ValidationError') {
+        logger.error('Part Update Validation Error', error);
+        const response = Boom.boomify(error, { statusCode: 409 });
+        response.output.payload.data = error.errors;
+
+        return response;
+      }
+      logger.error('Part Update Error', error);
+      return Boom.boomify(error);
+    });
 };
 
 /**
@@ -356,7 +386,10 @@ export const remove = (ids) =>
         deleted: ids
       });
     })
-    .catch(Boom.boomify);
+    .catch((error) => {
+      logger.error('Part Remove Error', error);
+      return Boom.boomify(error);
+    });
 
 export default {
   find,

@@ -39,7 +39,6 @@ export const legacyMakeAxiosInstance = () => {
         await refresh();
         request.retried = true;
         _.set(request, ['headers', 'authorization'], tokens.accessToken);
-        console.log(request.data);
         return axiosInstance.request(request);
       } catch (e) {
         return error;
