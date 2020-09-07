@@ -1,10 +1,10 @@
 import _ from 'lodash';
-import Boom from '@hapi/boom';
 import joigoose from 'joigoose';
 import mongoose from 'mongoose';
 import mongooseUniqueValidator from 'mongoose-unique-validator';
 import SectionSchema, { hiddenProperties } from '../schemas/SectionSchema';
 import arrayToProjection from '../utils/ArrayToProjection';
+import { logger } from '../utils/Logger';
 
 export const hiddenFields = [
   ...hiddenProperties,
@@ -32,10 +32,10 @@ schema.pre('deleteMany', async function preDeleteManyMiddelware(next) {
     await Part.deleteMany({
       _id: { $in: parts.map((x) => x._id) }
     }).exec();
-
+  } catch (error) {
+    logger.warn('Section Cascade Delete Error', error);
+  } finally {
     next();
-  } catch (e) {
-    next(Boom.boomify(e));
   }
 });
 
