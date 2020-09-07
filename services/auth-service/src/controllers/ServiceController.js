@@ -6,7 +6,7 @@ import jwt from 'jsonwebtoken';
 import calibrate from 'calibrate';
 import Service, { projection, hiddenFields } from '../models/ServiceModel';
 import * as TokenController from './TokenController';
-import tokensFactory from '../utils/tokensFactory';
+import tokensFactory from '../utils/TokensFactory';
 
 /**
  * Return a list of all Services

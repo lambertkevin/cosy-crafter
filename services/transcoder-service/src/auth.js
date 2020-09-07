@@ -4,7 +4,7 @@ import axios from 'axios';
 import Boom from '@hapi/boom';
 import { makeRsaPublicEncrypter } from './utils/RsaUtils';
 import { identifier } from './config';
-import { logger } from './utils/logger';
+import { logger } from './utils/Logger';
 
 const { AUTH_SERVICE_NAME, AUTH_SERVICE_PORT } = process.env;
 const CREDENTIALS_PATH = path.join(path.resolve('./'), '.credentials');

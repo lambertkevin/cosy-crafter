@@ -4,7 +4,7 @@ import mongoose from 'mongoose';
 import joigoose from 'joigoose';
 import mongooseUniqueValidator from 'mongoose-unique-validator';
 import PodcastSchema, { hiddenProperties } from '../schemas/PodcastSchema';
-import arrayToProjection from '../utils/arrayToProjection';
+import arrayToProjection from '../utils/ArrayToProjection';
 
 export const hiddenFields = [
   ...hiddenProperties,

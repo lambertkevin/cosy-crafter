@@ -4,7 +4,7 @@ import joigoose from 'joigoose';
 import mongoose from 'mongoose';
 import mongooseUniqueValidator from 'mongoose-unique-validator';
 import SectionSchema, { hiddenProperties } from '../schemas/SectionSchema';
-import arrayToProjection from '../utils/arrayToProjection';
+import arrayToProjection from '../utils/ArrayToProjection';
 
 export const hiddenFields = [
   ...hiddenProperties,

@@ -1,7 +1,7 @@
 import joi from 'joi';
 import * as StorageController from '../controllers/StorageController';
-import failValidationHandler from '../utils/failValidationHandler';
-import { calibrateSchema } from '../utils/schemasUtils';
+import failValidationHandler from '../utils/FailValidationHandler';
+import { calibrateSchema } from '../utils/SchemasUtils';
 
 export default {
   name: 'podcastStorageApi',

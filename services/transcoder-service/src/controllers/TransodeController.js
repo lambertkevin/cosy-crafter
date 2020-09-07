@@ -5,10 +5,10 @@ import axios from 'axios';
 import FormData from 'form-data';
 import { v4 as uuid } from 'uuid';
 import ffmpeg from 'fluent-ffmpeg';
-import { makeAxiosInstance, axiosErrorBoomifier } from '../utils/axiosUtils';
+import { makeAxiosInstance, axiosErrorBoomifier } from '../utils/AxiosUtils';
 import { getCrossFadeFilters } from '../utils/FfmpegUtils';
 import { getMp3ListDuration } from '../utils/Mp3Utils';
-import { sentry, logger } from '../utils/logger';
+import { sentry, logger } from '../utils/Logger';
 import { tokens } from '../auth';
 
 const {

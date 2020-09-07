@@ -2,8 +2,8 @@ import _ from 'lodash';
 import Boom from '@hapi/boom';
 import calibrate from 'calibrate';
 import { v4 as uuid } from 'uuid';
-import { axiosErrorBoomifier, makeAxiosInstance } from '../utils/axiosUtils';
-import StorageFactory from '../utils/storageFactory';
+import { axiosErrorBoomifier, makeAxiosInstance } from '../utils/AxiosUtils';
+import StorageFactory from '../utils/StorageFactory';
 import { tokens } from '../auth';
 
 const { PODCAST_SERVICE_NAME, PODCAST_SERVICE_PORT } = process.env;

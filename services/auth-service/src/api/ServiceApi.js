@@ -3,9 +3,9 @@ import Boom from '@hapi/boom';
 import generatePassword from 'generate-password';
 import { responseSchema, creationSchema } from '../schemas/ServiceSchema';
 import * as ServiceController from '../controllers/ServiceController';
-import failValidationHandler from '../utils/failValidationHandler';
-import axiosErrorBoomifier from '../utils/axiosErrorBoomifier';
-import { calibrateSchema } from '../utils/schemasUtils';
+import failValidationHandler from '../utils/FailValidationHandler';
+import axiosErrorBoomifier from '../utils/AxiosErrorBoomifier';
+import { calibrateSchema } from '../utils/SchemasUtils';
 import {
   makeRsaPrivateEncrypter,
   makeRsaPrivateDecrypter
