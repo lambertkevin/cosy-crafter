@@ -8,6 +8,7 @@ import privateIp from 'private-ip';
 import Service, { projection, hiddenFields } from '../models/ServiceModel';
 import * as TokenController from './TokenController';
 import tokensFactory from '../utils/TokensFactory';
+import logger from '../utils/Logger';
 
 /**
  * Return a list of all Services
@@ -20,7 +21,10 @@ export const find = (sanitized = true) =>
   Service.find({}, sanitized ? projection : {})
     .exec()
     .then(calibrate.response)
-    .catch(Boom.boomify);
+    .catch((error) => {
+      logger.error('Service Find Error', error);
+      return Boom.boomify(error);
+    });
 
 /**
  * Return a specific Service
@@ -34,7 +38,10 @@ export const findOne = (identifier, sanitized = true) =>
   Service.findOne({ identifier }, sanitized ? projection : {})
     .exec()
     .then(calibrate.response)
-    .catch(Boom.boomify);
+    .catch((error) => {
+      logger.error('Service FindOne Error', error);
+      return Boom.boomify(error);
+    });
 
 /**
  * Create a Service
@@ -62,12 +69,14 @@ export const create = async (
     )
     .catch((error) => {
       if (error.toString().includes('ValidationError')) {
+        logger.error('Service Create Validation Error', error);
         const response = Boom.boomify(error, { statusCode: 409 });
         response.output.payload.data = error.errors;
 
         return response;
       }
 
+      logger.error('Service Create Error', error);
       return Boom.boomify(error);
     });
 };
@@ -110,12 +119,14 @@ export const update = async (
     })
     .catch((error) => {
       if (error.identifier === 'ValidationError') {
+        logger.error('Service Update Validation Error', error);
         const response = Boom.boomify(error, { statusCode: 409 });
         response.output.payload.data = error.errors;
 
         return response;
       }
 
+      logger.error('Service Update Error', error);
       return Boom.boomify(error);
     });
 };
@@ -139,7 +150,10 @@ export const remove = (identifiers = []) =>
         deleted: identifiers
       });
     })
-    .catch(Boom.boomify);
+    .catch((error) => {
+      logger.error('Service Remove Error', error);
+      return Boom.boomify(error);
+    });
 
 /**
  * Log a service to obtain tokens
@@ -174,12 +188,12 @@ export const login = async ({ identifier, key }, ip) => {
       return calibrate.response(tokens);
     }
     throw Boom.unauthorized("Service isn't matching ip or key");
-  } catch (e) {
-    console.log(e);
-    if (e.isBoom) {
-      return e;
+  } catch (error) {
+    logger.error('Service Login Error', error);
+    if (error.isBoom) {
+      return error;
     }
-    return Boom.boomify(e);
+    return Boom.boomify(error);
   }
 };
 
@@ -230,14 +244,23 @@ export const refresh = async ({ accessToken, refreshToken }) => {
         }
         // if blacklisting or not found, go to catch
         throw new Error();
-      } catch (e) {
+      } catch (error) {
+        logger.error('Service Token Refresh Error', error);
         return Boom.unauthorized(
           'Token is blacklisted or service is not existing'
         );
       }
     }
+    logger.error('Service Token Refresh Error: Using wrong tokens', {
+      accessToken,
+      refreshToken
+    });
     return Boom.unauthorized('Tokens are not matching');
-  } catch (e) {
+  } catch (error) {
+    logger.error(
+      'Service Token Refresh Error: Tokens verification failed',
+      error
+    );
     return Boom.unauthorized();
   }
 };

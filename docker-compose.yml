@@ -116,6 +116,7 @@ services:
       - MONGO_INITDB_ROOT_PASSWORD=${MONGO_INITDB_ROOT_PASSWORD}
       - RSA_KEYS_LOCATION=${RSA_KEYS_LOCATION}
       - RSA_KEYS_NAME=${RSA_KEYS_NAME}
+      - SENTRY_DSN_AUTH_SERVICE=${SENTRY_DSN_AUTH_SERVICE}
     command: ./run.sh
     links:
       - mongo-service

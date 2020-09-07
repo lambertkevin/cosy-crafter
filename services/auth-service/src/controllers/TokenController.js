@@ -2,6 +2,7 @@ import _ from 'lodash';
 import Boom from '@hapi/boom';
 import calibrate from 'calibrate';
 import Token, { projection, hiddenFields } from '../models/TokenModel';
+import { logger } from '../utils/Logger';
 
 /**
  * Return a list of all Token
@@ -14,7 +15,10 @@ export const find = (sanitized = true) =>
   Token.find({}, sanitized ? projection : {})
     .exec()
     .then(calibrate.response)
-    .catch(Boom.boomify);
+    .catch((error) => {
+      logger.error('Token Find Error', error);
+      return Boom.boomify(error);
+    });
 
 /**
  * Return a specific Token
@@ -28,7 +32,10 @@ export const findOne = (jwtid, sanitized = true) =>
   Token.findOne({ jwtid }, sanitized ? projection : {})
     .exec()
     .then(calibrate.response)
-    .catch(Boom.boomify);
+    .catch((error) => {
+      logger.error('Token FindOne Error', error);
+      return Boom.boomify(error);
+    });
 
 /**
  * Create a Token
@@ -49,12 +56,14 @@ export const create = ({ jwtid, type }, sanitized = true) =>
     )
     .catch((error) => {
       if (error.name === 'ValidationError') {
+        logger.error('Token Create Validation Error', error);
         const response = Boom.boomify(error, { statusCode: 409 });
         response.output.payload.data = error.errors;
 
         return response;
       }
 
+      logger.error('Token Create Error', error);
       return Boom.boomify(error);
     });
 
@@ -85,12 +94,14 @@ export const update = (id, { jwtid, type }, sanitized = true) =>
     })
     .catch((error) => {
       if (error.name === 'ValidationError') {
+        logger.error('Token Update Validation Error', error);
         const response = Boom.boomify(error, { statusCode: 409 });
         response.output.payload.data = error.errors;
 
         return response;
       }
 
+      logger.error('Token Update Error', error);
       return Boom.boomify(error);
     });
 
@@ -113,7 +124,10 @@ export const remove = (jwtids) =>
         deleted: jwtids
       });
     })
-    .catch(Boom.boomify);
+    .catch((error) => {
+      logger.error('Token Remove Error', error);
+      return Boom.boomify(error);
+    });
 
 export default {
   find,

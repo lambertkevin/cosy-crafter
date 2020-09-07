@@ -6,6 +6,7 @@ import * as ServiceController from '../controllers/ServiceController';
 import failValidationHandler from '../utils/FailValidationHandler';
 import axiosErrorBoomifier from '../utils/AxiosErrorBoomifier';
 import { calibrateSchema } from '../utils/SchemasUtils';
+import { logger } from '../utils/Logger';
 import {
   makeRsaPrivateEncrypter,
   makeRsaPrivateDecrypter
@@ -104,12 +105,17 @@ export default {
             });
 
             if (service.isBoom) {
+              logger.error(
+                'Service Creation Handler Error: Service creation failed',
+                service
+              );
               return axiosErrorBoomifier(service);
             }
             const encryptor = makeRsaPrivateEncrypter();
             return encryptor(password);
-          } catch (e) {
-            return Boom.boomify(e);
+          } catch (error) {
+            logger.error('Service Creation Handler Error', error);
+            return Boom.boomify(error);
           }
         },
         payload: {
@@ -206,7 +212,8 @@ export default {
               },
               request.info.remoteAddress
             );
-          } catch (e) {
+          } catch (error) {
+            logger.error('Service Login Handler Error,', error);
             return Boom.unauthorized();
           }
         },
