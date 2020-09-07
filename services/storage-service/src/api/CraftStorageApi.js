@@ -1,6 +1,6 @@
 import joi from 'joi';
-import { calibrateSchema } from '../utils/schemasUtils';
-import failValidationHandler from '../utils/failValidationHandler';
+import { calibrateSchema } from '../utils/SchemasUtils';
+import failValidationHandler from '../utils/FailValidationHandler';
 import * as StorageController from '../controllers/StorageController';
 
 export default {

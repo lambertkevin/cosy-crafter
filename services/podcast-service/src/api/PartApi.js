@@ -1,7 +1,7 @@
 import joi from 'joi';
 import { creationSchema, responseSchema } from '../schemas/PartSchema';
-import { calibrateSchema, schemaKeys } from '../utils/schemasUtils';
-import failValidationHandler from '../utils/failValidationHandler';
+import { calibrateSchema, schemaKeys } from '../utils/SchemasUtils';
+import failValidationHandler from '../utils/FailValidationHandler';
 import * as partController from '../controllers/PartController';
 
 export default {

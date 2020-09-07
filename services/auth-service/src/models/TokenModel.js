@@ -2,7 +2,7 @@ import mongoose from 'mongoose';
 import joigoose from 'joigoose';
 import mongooseUniqueValidator from 'mongoose-unique-validator';
 import TokenSchema, { hiddenProperties } from '../schemas/TokenSchema';
-import arrayToProjection from '../utils/arrayToProjection';
+import arrayToProjection from '../utils/ArrayToProjection';
 
 export const hiddenFields = [...hiddenProperties, 'updatedAt', '__v'];
 

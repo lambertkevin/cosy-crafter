@@ -5,7 +5,7 @@ import FormData from 'form-data';
 import calibrate from 'calibrate';
 import * as PodcastController from './PodcastController';
 import * as SectionController from './SectionController';
-import { makeAxiosInstance, axiosErrorBoomifier } from '../utils/axiosUtils';
+import { makeAxiosInstance, axiosErrorBoomifier } from '../utils/AxiosUtils';
 import Part, { projection, hiddenFields } from '../models/PartModel';
 import { projection as podcastProjection } from '../models/PodcastModel';
 import { projection as sectionProjection } from '../models/SectionModel';

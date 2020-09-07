@@ -5,7 +5,7 @@ import mongoose from 'mongoose';
 import joigoose from 'joigoose';
 import mongooseUniqueValidator from 'mongoose-unique-validator';
 import PartSchema, { hiddenProperties } from '../schemas/PartSchema';
-import arrayToProjection from '../utils/arrayToProjection';
+import arrayToProjection from '../utils/ArrayToProjection';
 import Podcast from './PodcastModel';
 import { tokens } from '../auth';
 
