@@ -1,8 +1,8 @@
 import joi from 'joi';
 import { responseSchema, creationSchema } from '../schemas/PodcastSchema';
 import * as podcastController from '../controllers/PodcastController';
-import failValidationHandler from '../utils/failValidationHandler';
-import { calibrateSchema, schemaKeys } from '../utils/schemasUtils';
+import failValidationHandler from '../utils/FailValidationHandler';
+import { calibrateSchema, schemaKeys } from '../utils/SchemasUtils';
 
 export default {
   name: 'podcastApi',

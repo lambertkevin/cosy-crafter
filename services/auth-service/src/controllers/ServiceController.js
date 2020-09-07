@@ -1,12 +1,14 @@
 import _ from 'lodash';
 import Boom from '@hapi/boom';
-import { v4 as uuid } from 'uuid';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import calibrate from 'calibrate';
+import { v4 as uuid } from 'uuid';
+import privateIp from 'private-ip';
 import Service, { projection, hiddenFields } from '../models/ServiceModel';
 import * as TokenController from './TokenController';
-import tokensFactory from '../utils/tokensFactory';
+import tokensFactory from '../utils/TokensFactory';
+import logger from '../utils/Logger';
 
 /**
  * Return a list of all Services
@@ -19,7 +21,10 @@ export const find = (sanitized = true) =>
   Service.find({}, sanitized ? projection : {})
     .exec()
     .then(calibrate.response)
-    .catch(Boom.boomify);
+    .catch((error) => {
+      logger.error('Service Find Error', error);
+      return Boom.boomify(error);
+    });
 
 /**
  * Return a specific Service
@@ -33,7 +38,10 @@ export const findOne = (identifier, sanitized = true) =>
   Service.findOne({ identifier }, sanitized ? projection : {})
     .exec()
     .then(calibrate.response)
-    .catch(Boom.boomify);
+    .catch((error) => {
+      logger.error('Service FindOne Error', error);
+      return Boom.boomify(error);
+    });
 
 /**
  * Create a Service
@@ -46,8 +54,12 @@ export const findOne = (identifier, sanitized = true) =>
  *
  * @return {Promise<Object>} {Service}
  */
-export const create = async ({ identifier, key, ip }, sanitized = true) => {
+export const create = async (
+  { identifier, key, ip: _ip },
+  sanitized = true
+) => {
   const hashedKey = await bcrypt.hash(key, 10);
+  const ip = privateIp(_ip) ? 'private' : _ip;
 
   return Service.create({ identifier, key: hashedKey, ip })
     .then((service) =>
@@ -57,12 +69,14 @@ export const create = async ({ identifier, key, ip }, sanitized = true) => {
     )
     .catch((error) => {
       if (error.toString().includes('ValidationError')) {
+        logger.error('Service Create Validation Error', error);
         const response = Boom.boomify(error, { statusCode: 409 });
         response.output.payload.data = error.errors;
 
         return response;
       }
 
+      logger.error('Service Create Error', error);
       return Boom.boomify(error);
     });
 };
@@ -78,8 +92,14 @@ export const create = async ({ identifier, key, ip }, sanitized = true) => {
  *
  * @return {Promise<Object[]>} {Service}
  */
-export const update = async (identifier, { key, ip }, sanitized = true) => {
+export const update = async (
+  identifier,
+  { key, ip: _ip },
+  sanitized = true
+) => {
   const hashedKey = key ? await bcrypt.hash(key, 10) : undefined;
+  const ipPrivatizer = (ip) => (privateIp(ip) ? 'private' : ip);
+  const ip = _ip ? ipPrivatizer(_ip) : undefined;
 
   return Service.updateOne(
     { identifier },
@@ -99,12 +119,14 @@ export const update = async (identifier, { key, ip }, sanitized = true) => {
     })
     .catch((error) => {
       if (error.identifier === 'ValidationError') {
+        logger.error('Service Update Validation Error', error);
         const response = Boom.boomify(error, { statusCode: 409 });
         response.output.payload.data = error.errors;
 
         return response;
       }
 
+      logger.error('Service Update Error', error);
       return Boom.boomify(error);
     });
 };
@@ -128,7 +150,10 @@ export const remove = (identifiers = []) =>
         deleted: identifiers
       });
     })
-    .catch(Boom.boomify);
+    .catch((error) => {
+      logger.error('Service Remove Error', error);
+      return Boom.boomify(error);
+    });
 
 /**
  * Log a service to obtain tokens
@@ -148,7 +173,11 @@ export const login = async ({ identifier, key }, ip) => {
       throw Boom.notFound();
     }
 
-    if (service.ip === ip && bcrypt.compareSync(key, service.key)) {
+    if (
+      // If ip is matching or ip is from private network and service ip was private on creation
+      (service.ip === ip || (privateIp(ip) && service.ip === 'private')) &&
+      bcrypt.compareSync(key, service.key)
+    ) {
       const tokens = await tokensFactory(
         {
           service: service.identifier
@@ -159,12 +188,12 @@ export const login = async ({ identifier, key }, ip) => {
       return calibrate.response(tokens);
     }
     throw Boom.unauthorized("Service isn't matching ip or key");
-  } catch (e) {
-    console.log(e);
-    if (e.isBoom) {
-      return e;
+  } catch (error) {
+    logger.error('Service Login Error', error);
+    if (error.isBoom) {
+      return error;
     }
-    return Boom.boomify(e);
+    return Boom.boomify(error);
   }
 };
 
@@ -215,14 +244,23 @@ export const refresh = async ({ accessToken, refreshToken }) => {
         }
         // if blacklisting or not found, go to catch
         throw new Error();
-      } catch (e) {
+      } catch (error) {
+        logger.error('Service Token Refresh Error', error);
         return Boom.unauthorized(
           'Token is blacklisted or service is not existing'
         );
       }
     }
+    logger.error('Service Token Refresh Error: Using wrong tokens', {
+      accessToken,
+      refreshToken
+    });
     return Boom.unauthorized('Tokens are not matching');
-  } catch (e) {
+  } catch (error) {
+    logger.error(
+      'Service Token Refresh Error: Tokens verification failed',
+      error
+    );
     return Boom.unauthorized();
   }
 };

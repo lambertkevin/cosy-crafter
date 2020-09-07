@@ -3,12 +3,10 @@ import path from 'path';
 import axios from 'axios';
 import Boom from '@hapi/boom';
 import { makeRsaPublicEncrypter } from './utils/RsaUtils';
+import { identifier } from './config';
+import { logger } from './utils/Logger';
 
-const {
-  AUTH_SERVICE_NAME,
-  AUTH_SERVICE_PORT,
-  TRANSCODER_SERVICE_NAME
-} = process.env;
+const { AUTH_SERVICE_NAME, AUTH_SERVICE_PORT } = process.env;
 const CREDENTIALS_PATH = path.join(path.resolve('./'), '.credentials');
 const encrypter = makeRsaPublicEncrypter();
 
@@ -19,7 +17,6 @@ export const tokens = {
 
 export const register = async () => {
   try {
-    const identifier = `${TRANSCODER_SERVICE_NAME}-lisa`;
     const { data: encryptedKey } = await axios.post(
       `http://${AUTH_SERVICE_NAME}:${AUTH_SERVICE_PORT}/services`,
       {
@@ -44,19 +41,19 @@ export const register = async () => {
     }
     throw new Error("Couldn't get a key");
   } catch (e) {
-    console.log(e);
+    logger.error('Error while registering the service', e);
     process.exit();
   }
 };
 
 export const login = async () => {
   try {
-    const { identifier, encryptedKey: key } = JSON.parse(
+    const { identifier: savedIdentifier, encryptedKey: key } = JSON.parse(
       fs.readFileSync(CREDENTIALS_PATH, 'utf8')
     );
     const { data: freshTokens } = await axios
       .post(`http://${AUTH_SERVICE_NAME}:${AUTH_SERVICE_PORT}/services/login`, {
-        identifier,
+        identifier: savedIdentifier,
         key
       })
       .then(({ data }) => data);
@@ -64,7 +61,8 @@ export const login = async () => {
     tokens.accessToken = freshTokens.accessToken;
     tokens.refreshToken = freshTokens.refreshToken;
   } catch (e) {
-    console.log(e);
+    /** @WARNING Change this to fatal when feature available in winston + sentry */
+    logger.error('Error while loging the service', e);
     process.exit();
   }
 };
@@ -95,7 +93,8 @@ export const refresh = async () => {
     }
     throw Boom.serverUnavailable();
   } catch (e) {
-    console.log(e);
+    /** @WARNING Change this to fatal when feature available in winston + sentry */
+    logger.error('Error while refreshing the service', e);
     throw Boom.preconditionFailed();
   }
 };

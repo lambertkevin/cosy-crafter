@@ -46,6 +46,7 @@ services:
       - RSA_KEYS_LOCATION=${RSA_KEYS_LOCATION}
       - RSA_KEYS_NAME=${RSA_KEYS_NAME}
       - SERVICE_JWT_SECRET=${SERVICE_JWT_SECRET}
+      - SENTRY_DSN_PODCAST_SERVICE=${SENTRY_DSN_PODCAST_SERVICE}
     command: ./run.sh
     links:
       - mongo-service
@@ -82,6 +83,7 @@ services:
       - RSA_KEYS_LOCATION=${RSA_KEYS_LOCATION}
       - RSA_KEYS_NAME=${RSA_KEYS_NAME}
       - SERVICE_JWT_SECRET=${SERVICE_JWT_SECRET}
+      - SENTRY_DSN_STORAGE_SERVICE=${SENTRY_DSN_STORAGE_SERVICE}
     command: ./run.sh
     links:
       - auth-service
@@ -114,6 +116,7 @@ services:
       - MONGO_INITDB_ROOT_PASSWORD=${MONGO_INITDB_ROOT_PASSWORD}
       - RSA_KEYS_LOCATION=${RSA_KEYS_LOCATION}
       - RSA_KEYS_NAME=${RSA_KEYS_NAME}
+      - SENTRY_DSN_AUTH_SERVICE=${SENTRY_DSN_AUTH_SERVICE}
     command: ./run.sh
     links:
       - mongo-service
@@ -139,4 +142,5 @@ services:
       - NODE_ENV=${NODE_ENV}
       - RSA_KEYS_LOCATION=${RSA_KEYS_LOCATION}
       - RSA_KEYS_NAME=${RSA_KEYS_NAME}
+      - SENTRY_DSN_TRANSCODER_SERVICE=${SENTRY_DSN_TRANSCODER_SERVICE}
     entrypoint: ./run.sh

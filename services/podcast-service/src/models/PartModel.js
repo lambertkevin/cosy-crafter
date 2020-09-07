@@ -5,7 +5,8 @@ import mongoose from 'mongoose';
 import joigoose from 'joigoose';
 import mongooseUniqueValidator from 'mongoose-unique-validator';
 import PartSchema, { hiddenProperties } from '../schemas/PartSchema';
-import arrayToProjection from '../utils/arrayToProjection';
+import arrayToProjection from '../utils/ArrayToProjection';
+import { logger } from '../utils/Logger';
 import Podcast from './PodcastModel';
 import { tokens } from '../auth';
 
@@ -41,6 +42,9 @@ schema.post('validate', async (part, next) => {
 
     next();
   } catch (e) {
+    logger.error(
+      'Part Cascade Update Error: Error while adding part to podcast'
+    );
     next(Boom.resourceGone('Error while updating the podcast'));
   }
 });
@@ -76,19 +80,13 @@ schema.pre('deleteMany', async function preDeleteManyMiddelware(next) {
     );
 
     await Promise.allSettled(deletions);
-
+  } catch (error) {
+    logger.warn(
+      "Part Cascade Delete Error: Error while deleting parts' files from storage",
+      error
+    );
+  } finally {
     next();
-  } catch (e) {
-    if (e.isAxiosError) {
-      next(
-        Boom.failedDependency(
-          'An error occured while deleting the parts files from storage',
-          e
-        )
-      );
-    } else {
-      next(Boom.boomify(e));
-    }
   }
 });
 

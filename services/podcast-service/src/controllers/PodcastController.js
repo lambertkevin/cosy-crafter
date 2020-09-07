@@ -3,6 +3,7 @@ import Boom from '@hapi/boom';
 import calibrate from 'calibrate';
 import Podcast, { projection, hiddenFields } from '../models/PodcastModel';
 import { projection as partProjection } from '../models/PartModel';
+import { logger } from '../utils/Logger';
 
 /**
  * Return a list of all podcasts
@@ -19,7 +20,10 @@ export const find = (sanitized = true) =>
     )
     .exec()
     .then(calibrate.response)
-    .catch(Boom.boomify);
+    .catch((error) => {
+      logger.error('Podcast Find Error', error);
+      return Boom.boomify(error);
+    });
 /**
  * Return a specific podcast
  *
@@ -36,7 +40,10 @@ export const findOne = (id, sanitized = true) =>
     )
     .exec()
     .then(calibrate.response)
-    .catch(Boom.boomify);
+    .catch((error) => {
+      logger.error('Podcast FindOne', error);
+      return Boom.boomify(error);
+    });
 
 /**
  * Create a podcast
@@ -67,12 +74,14 @@ export const create = (
     )
     .catch((error) => {
       if (error.name === 'ValidationError') {
+        logger.error('Podcast Create Validation Error', error);
         const response = Boom.boomify(error, { statusCode: 409 });
         response.output.payload.data = error.errors;
 
         return response;
       }
 
+      logger.error('Podcast Create Error', error);
       return Boom.boomify(error);
     });
 
@@ -91,9 +100,7 @@ export const create = (
  */
 export const update = (id, { name, edition, parts, tags }, sanitized = true) =>
   Podcast.updateOne(
-    {
-      _id: id
-    },
+    { _id: id },
     _.omitBy(
       {
         name,
@@ -118,12 +125,14 @@ export const update = (id, { name, edition, parts, tags }, sanitized = true) =>
     })
     .catch((error) => {
       if (error.name === 'ValidationError') {
+        logger.error('Podcast Update Validation Error', error);
         const response = Boom.boomify(error, { statusCode: 409 });
         response.output.payload.data = error.errors;
 
         return response;
       }
 
+      logger.error('Podcast Update Error', error);
       return Boom.boomify(error);
     });
 
@@ -146,7 +155,10 @@ export const remove = (ids) =>
         deleted: ids
       });
     })
-    .catch(Boom.boomify);
+    .catch((error) => {
+      logger.error('Podcast Remove Error', error);
+      return Boom.boomify(error);
+    });
 
 export default {
   find,

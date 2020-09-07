@@ -3,8 +3,9 @@ import Inert from '@hapi/inert';
 import Vision from '@hapi/vision';
 import HapiSwagger from 'hapi-swagger';
 import { nodeConfig, swaggerConfig } from './config';
-import apis from './api';
+import { logger } from './utils/Logger';
 import db from './database';
+import apis from './api';
 
 const init = async () => {
   try {
@@ -20,15 +21,16 @@ const init = async () => {
     ]);
     await server.register(apis);
     await server.start();
-
     console.log('Server running on %s', server.info.uri);
-  } catch (e) {
-    console.log(e);
+  } catch (err) {
+    /** @WARNING Change this to fatal when feature available in winston + sentry */
+    logger.error('Fatal Error while starting the service', err);
+    process.exit(0);
   }
 };
 
 process.on('unhandledRejection', (err) => {
-  console.log(err);
+  logger.error('unhandledRejection', err);
   process.exit(1);
 });
 

@@ -1,6 +1,7 @@
-import _ from 'lodash';
 import joi from 'joi';
+import _ from 'lodash';
 import { createTranscodeJob } from '../controllers/TransodeController';
+import { logger } from '../utils/logger';
 
 const routes = [
   {
@@ -34,6 +35,7 @@ export default (prefix, socket) => {
         }
         return route.handler.apply(null, [data, ack, socket]);
       } catch (e) {
+        logger.warn('Socket payload validation error', e);
         return ack({
           statusCode: 409,
           message: 'Bad Request'

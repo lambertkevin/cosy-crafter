@@ -1,8 +1,8 @@
 import joi from 'joi';
 import { responseSchema, creationSchema } from '../schemas/SectionSchema';
 import * as sectionController from '../controllers/SectionController';
-import { calibrateSchema, schemaKeys } from '../utils/schemasUtils';
-import failValidationHandler from '../utils/failValidationHandler';
+import { calibrateSchema, schemaKeys } from '../utils/SchemasUtils';
+import failValidationHandler from '../utils/FailValidationHandler';
 
 export default {
   name: 'sectionApi',

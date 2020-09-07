@@ -1,8 +1,8 @@
 import joi from 'joi';
 import { responseSchema, creationSchema } from '../schemas/TokenSchema';
 import * as tokenController from '../controllers/TokenController';
-import { calibrateSchema } from '../utils/schemasUtils';
-import failValidationHandler from '../utils/failValidationHandler';
+import { calibrateSchema } from '../utils/SchemasUtils';
+import failValidationHandler from '../utils/FailValidationHandler';
 
 export default {
   name: 'tokenApi',

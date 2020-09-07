@@ -1,5 +1,7 @@
 import Package from '../package.json';
 
+export const identifier = `${process.env.PODCAST_SERVICE_NAME}-jessica`;
+
 /**
  * Config for Node
  * @type {Object}

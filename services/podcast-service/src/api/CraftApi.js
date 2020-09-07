@@ -1,8 +1,8 @@
 import joi from 'joi';
 import { responseSchema, creationSchema } from '../schemas/CraftSchema';
 import * as craftController from '../controllers/CraftController';
-import { calibrateSchema, schemaKeys } from '../utils/schemasUtils';
-import failValidationHandler from '../utils/failValidationHandler';
+import { calibrateSchema, schemaKeys } from '../utils/SchemasUtils';
+import failValidationHandler from '../utils/FailValidationHandler';
 
 export default {
   name: 'craftApi',
