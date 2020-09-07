@@ -18,8 +18,6 @@ const raw = format((info) => {
   return info;
 });
 
-console.log(process.env.SENTRY_DSN_PODCAST_SERVICE);
-
 const sentryTransport = new SentryTransport({
   sentry: {
     dsn: process.env.SENTRY_DSN_PODCAST_SERVICE,
