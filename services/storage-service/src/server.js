@@ -29,7 +29,7 @@ const init = async () => {
         decoded.service ? { isValid: true } : { isValid: false },
       errorFunc: (error, request) => {
         logger.error(
-          'Podcast Service Request JWT Error',
+          'Storage Service Request JWT Error',
           _.pick(request, ['info', 'auth'])
         );
 
@@ -39,6 +39,7 @@ const init = async () => {
 
     await server.register(apis);
     await server.start();
+    console.log('Server running on %s', server.info.uri);
   } catch (err) {
     /** @WARNING Change this to fatal when feature available in winston + sentry */
     logger.error('Fatal Error while starting the service', err);
