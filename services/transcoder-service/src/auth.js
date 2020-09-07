@@ -61,7 +61,8 @@ export const login = async () => {
     tokens.accessToken = freshTokens.accessToken;
     tokens.refreshToken = freshTokens.refreshToken;
   } catch (e) {
-    logger.fatal('Error while loging the service', e);
+    /** @WARNING Change this to fatal when feature available in winston + sentry */
+    logger.error('Error while loging the service', e);
     process.exit();
   }
 };
@@ -92,7 +93,8 @@ export const refresh = async () => {
     }
     throw Boom.serverUnavailable();
   } catch (e) {
-    logger.fatal('Error while refreshing the service', e);
+    /** @WARNING Change this to fatal when feature available in winston + sentry */
+    logger.error('Error while refreshing the service', e);
     throw Boom.preconditionFailed();
   }
 };

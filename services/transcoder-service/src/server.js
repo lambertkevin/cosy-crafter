@@ -22,7 +22,8 @@ const init = async () => {
       apis(client);
     });
   } catch (err) {
-    logger.fatal('Fatal Error while starting the service', err);
+    /** @WARNING Change this to fatal when feature available in winston + sentry */
+    logger.error('Fatal Error while starting the service', err);
     process.exit(0);
   }
 };
