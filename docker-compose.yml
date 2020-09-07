@@ -144,3 +144,30 @@ services:
       - RSA_KEYS_NAME=${RSA_KEYS_NAME}
       - SENTRY_DSN_TRANSCODER_SERVICE=${SENTRY_DSN_TRANSCODER_SERVICE}
     entrypoint: ./run.sh
+
+  pool-service:
+    container_name: pool-service
+    image: 'node:12.18'
+    user: 'node'
+    working_dir: /home/node/app
+    volumes:
+      - ./services/pool-service:/home/node/app
+      - type: bind
+        source: .keys/auth.pem
+        target: /.keys/auth.pem
+        read_only: true
+    expose:
+      - ${POOL_SERVICE_PORT}
+    ports:
+      - '${POOL_SERVICE_PORT}:${POOL_SERVICE_PORT}'
+    env_file:
+      - services.env
+    environment:
+      - NODE_ENV=${NODE_ENV}
+      - RSA_KEYS_LOCATION=${RSA_KEYS_LOCATION}
+      - RSA_KEYS_NAME=${RSA_KEYS_NAME}
+      - SERVICE_JWT_SECRET=${SERVICE_JWT_SECRET}
+      - SENTRY_DSN_POOL_SERVICE=${SENTRY_DSN_POOL_SERVICE}
+    command: ./run.sh
+    links:
+      - auth-service
