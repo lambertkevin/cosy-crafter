@@ -1,5 +1,7 @@
 import Package from '../package.json';
 
+export const identifier = `${process.env.AUTH_SERVICE_NAME}-kathlene`;
+
 /**
  * Config for Node
  * @type {Object}
