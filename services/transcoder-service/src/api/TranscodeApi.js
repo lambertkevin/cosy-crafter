@@ -1,13 +1,14 @@
 import joi from 'joi';
 import _ from 'lodash';
 import { createTranscodeJob } from '../controllers/TransodeController';
-import { logger } from '../utils/logger';
+import { logger } from '../utils/Logger';
 
 const routes = [
   {
     path: '/join',
     handler: createTranscodeJob,
     validation: joi.object({
+      jobId: joi.string().length(36).required(),
       files: joi.array().items(
         joi.object({
           id: joi.string().length(24).required(),
@@ -35,7 +36,7 @@ export default (prefix, socket) => {
         }
         return route.handler.apply(null, [data, ack, socket]);
       } catch (e) {
-        logger.warn('Socket payload validation error', e);
+        logger.error('Socket payload validation error', e);
         return ack({
           statusCode: 409,
           message: 'Bad Request'
