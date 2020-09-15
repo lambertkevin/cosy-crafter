@@ -1,5 +1,6 @@
-import humanizeDuration from 'humanize-duration';
 import { v4 as uuid } from 'uuid';
+import { EventEmitter } from 'events';
+import humanizeDuration from 'humanize-duration';
 import {
   JOB_STATUS_WAITING,
   JOB_STATUS_DONE,
@@ -9,57 +10,84 @@ import {
 } from '../types/JobTypes';
 
 export const makeJob = (asyncAction, opts) => {
-  const id = uuid();
-  const priority = (opts && opts.priority) || JOB_PRIORITY_MEDIUM;
-  let status = JOB_STATUS_WAITING;
-  let startTimestamp = 0;
-  let finishTimestamp = 0;
-  let progress = 0;
+  const freezeProps = ['id', 'addedAt'];
+  let priority = (opts && opts.priority) || JOB_PRIORITY_MEDIUM;
+  let progress = (opts && opts.progress) || 0;
+  let status =
+    opts && opts.status && opts.status !== JOB_STATUS_ONGOING
+      ? opts.status
+      : JOB_STATUS_WAITING;
 
-  const getId = () => id;
-  const getStatus = () => status;
-  const getProgress = () => progress;
-  const setProgress = (_progress) => {
-    progress = _progress;
-    console.log('in progress', progress);
-  };
-  const setStatus = (_status) => {
-    status = _status;
-    console.log('job status changed', status);
+  const job = {
+    id: (opts && opts.id) || uuid(),
+    events: new EventEmitter(),
+    addedAt: (opts && opts.addedAt) || Date.now(),
+    startedAt: (opts && opts.startedAt) || undefined,
+    finishedAt: (opts && opts.finishedAt) || undefined,
+    asyncAction:
+      // eslint-disable-next-line no-eval
+      (opts && opts.asyncAction && eval(`(${opts.asyncAction})`)) ||
+      asyncAction,
+    get status() {
+      return status;
+    },
+    set status(_status) {
+      status = _status.toString();
+      this.events.emit('job-status-changed', _status);
+    },
+    get priority() {
+      return priority;
+    },
+    set priority(_priority) {
+      priority = Number(_priority);
+      this.events.emit('job-priority-changed', priority);
+    },
+    get progress() {
+      return progress;
+    },
+    set progress(_progress) {
+      progress = Number(_progress);
+      this.events.emit('job-progress-changed', _progress);
+    },
+    get duration() {
+      if (this.startedAt) {
+        return this.finishedAt
+          ? humanizeDuration(this.finishedAt - this.startedAt)
+          : humanizeDuration(Date.now() - this.startedAt);
+      }
+      return undefined;
+    },
+    process(socket) {
+      this.startedAt = Date.now();
+      this.status = JOB_STATUS_ONGOING;
+      return this.asyncAction(socket, this)
+        .then(() => {
+          this.finishedAt = Date.now();
+          this.status = JOB_STATUS_DONE;
+        })
+        .catch(() => {
+          this.finishedAt = Date.now();
+          this.status = JOB_STATUS_FAILED;
+        });
+    },
+    kill() {
+      this.finishedAt = Date.now();
+      this.status = JOB_STATUS_FAILED;
+    }
   };
 
-  const getDetails = () => ({
-    id: getId(),
-    priority,
-    status: getStatus(),
-    progress: getProgress(),
-    duration: humanizeDuration((finishTimestamp || Date.now()) - startTimestamp)
+  freezeProps.forEach((freezeProp) => {
+    Object.defineProperty(job, freezeProp, {
+      writable: false,
+      configurable: false
+    });
   });
 
-  const process = (socket) => {
-    setStatus(JOB_STATUS_ONGOING);
-    startTimestamp = Date.now();
-    return asyncAction(socket, id, setProgress)
-      .then(() => {
-        finishTimestamp = Date.now();
-        setStatus(JOB_STATUS_DONE);
-      })
-      .catch(() => {
-        finishTimestamp = Date.now();
-        setStatus(JOB_STATUS_FAILED);
-      });
-  };
+  job.events.on('job-status-changed', () => {
+    console.log('changed in job fac');
+  });
 
-  return {
-    priority,
-    getId,
-    getStatus,
-    getProgress,
-    setProgress,
-    setStatus,
-    getDetails,
-    process
-  };
+  return job;
 };
 
 export default makeJob;
