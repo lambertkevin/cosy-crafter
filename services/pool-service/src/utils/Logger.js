@@ -30,7 +30,7 @@ const sentryTransport = new SentryTransport({
     normalizeDepth: 11
   },
   format: raw(),
-  level: 'info'
+  level: 'error'
 });
 
 export const { sentry } = sentryTransport;
