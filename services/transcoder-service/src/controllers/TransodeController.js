@@ -101,10 +101,18 @@ export const joinFiles = async (files, jobId, ack, socket) => {
     }
 
     const crossFadeFilters = getCrossFadeFilters(files, durationsArray);
-    ff.complexFilter(crossFadeFilters);
+    if (crossFadeFilters) {
+      ff.complexFilter(crossFadeFilters);
+    }
 
     ff.on('start', () => {
       console.time('merge');
+      const killProcess = () => {
+        ff.kill('SIGSTOP');
+        reject(new Error('Stopped by worker'));
+      };
+      socket.on(`kill-job-${jobId}`, killProcess);
+      socket.on(`disconnect`, killProcess);
     })
       .on('progress', ({ timemark }) => {
         const percent =
