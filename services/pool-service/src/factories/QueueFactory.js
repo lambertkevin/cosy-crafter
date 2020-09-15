@@ -1,98 +1,167 @@
+import fs from 'fs';
+import path from 'path';
 import _ from 'lodash';
 import { EventEmitter } from 'events';
-import { AVAILABLE } from '../types/WorkerTypes';
-import { JOB_STATUS_WAITING } from '../types/JobTypes';
+import stringify from 'fast-safe-stringify';
+import { logger } from '../utils/Logger';
+import { makeJob } from './JobFactory';
+import {
+  WORKER_STATUS_AVAILABLE,
+  WORKER_STATUS_BUSY
+} from '../types/WorkerTypes';
+import {
+  JOB_STATUS_WAITING,
+  JOB_STATUS_FAILED,
+  JOB_STATUS_ONGOING
+} from '../types/JobTypes';
+
+const JOB_LIST_SAVE_FILE = path.join(path.resolve('./'), '.job-save.json');
+
+const prioritizeArray = (arr) => _.orderBy(arr, ['priority'], ['desc']);
 
 export const makeQueue = () => {
-  let jobList = [];
-  const emitter = new EventEmitter();
+  const freezeProps = ['events'];
   const workers = [];
-
-  const addJob = (job) => {
-    jobList.push(job);
-    emitter.emit('jobs-updated', { jobs: jobList.length });
-  };
-
-  const removeJob = (job) => {
-    _.pull(jobList, job);
-    emitter.emit('jobs-updated', { jobs: jobList.length });
-  };
-
-  const addWorker = (worker) => {
-    workers.push(worker);
-    emitter.emit('workers-updated', { workers });
-  };
-
-  const removeWorker = (worker) => {
-    _.pull(workers, worker);
-    emitter.emit('workers-updated', { workers });
-  };
-
-  const getAvailableSlots = () => {
-    return workers.filter((worker) => worker.getStatus() === AVAILABLE).length;
-  };
-
-  const getJobs = () => jobList.map((x) => ({ ...x, ...x.getDetails() }));
-
-  const getWaitingJobs = () =>
-    getJobs().filter(({ status }) => status === JOB_STATUS_WAITING);
-
-  const getDetails = () => {
-    return {
-      workers: workers.map((x) => x.getDetails()),
-      jobList: _.orderBy(getJobs(), ['priority'], ['desc'])
-    };
-  };
-
-  const next = async () => {
-    const waitingJobs = getWaitingJobs();
-
-    if (getAvailableSlots() && waitingJobs.length) {
-      const availableWorker = workers.find(
-        (worker) => worker.getStatus() === AVAILABLE
-      );
-      const job = waitingJobs[0];
-
-      try {
-        await availableWorker.execute(job);
-        console.log('Job finished in queue');
-      } catch (e) {
-        console.log('Job failed in queue');
+  let jobs = (() => {
+    try {
+      if (!fs.existsSync(JOB_LIST_SAVE_FILE)) {
+        return [];
       }
 
-      process.nextTick(() => {
-        next();
+      const savedFileContent = fs.readFileSync(JOB_LIST_SAVE_FILE);
+      const { jobs: savedJobs } = JSON.parse(savedFileContent);
+      return Array.isArray(savedJobs)
+        ? prioritizeArray(savedJobs.map((x) => makeJob(null, x)))
+        : [];
+    } catch (error) {
+      logger.error('Error while getting job list save', error);
+      return [];
+    }
+  })();
+
+  const queue = {
+    events: new EventEmitter(),
+
+    get length() {
+      return jobs.length;
+    },
+
+    get availableWorkers() {
+      return workers.filter(
+        (worker) => worker.status === WORKER_STATUS_AVAILABLE
+      );
+    },
+
+    get busyWorkers() {
+      return workers.filter((worker) => worker.status === WORKER_STATUS_BUSY);
+    },
+
+    get waitingJobs() {
+      return jobs.filter(({ status }) => status === JOB_STATUS_WAITING);
+    },
+
+    get failedJobs() {
+      return jobs.filter(({ status }) => status === JOB_STATUS_FAILED);
+    },
+
+    get ongoingJobs() {
+      return jobs.filter(({ status }) => status === JOB_STATUS_ONGOING);
+    },
+
+    addJob(job) {
+      jobs = prioritizeArray([...jobs, job]);
+      this.events.emit('jobs-updated', { jobs: jobs.length });
+    },
+
+    removeJob(job) {
+      _.pull(jobs, job);
+      this.events.emit('jobs-updated', { jobs: jobs.length });
+    },
+
+    addWorker(worker) {
+      workers.push(worker);
+      this.events.emit('workers-updated', { workers });
+    },
+
+    removeWorker(worker) {
+      _.pull(this.failedJobsworkers, worker);
+      this.events.emit('workers-updated', { workers });
+    },
+
+    async next() {
+      if (this.availableWorkers.length && this.waitingJobs.length) {
+        const availableWorker = this.availableWorkers[0];
+        const job = this.waitingJobs[0];
+        job.events.on('job-status-changed', () => {
+          this.events.emit('jobs-updated');
+        });
+
+        try {
+          await availableWorker.execute(job);
+          console.log('Job finished in queue');
+        } catch (e) {
+          console.log('Job failed in queue');
+        }
+
+        process.nextTick(_.throttle(this.next.bind(this), 1000));
+      }
+    },
+
+    onJobsUpdated() {
+      fs.writeFileSync(
+        JOB_LIST_SAVE_FILE,
+        stringify({ jobs }, (key, val) => {
+          return typeof val === 'function' ? val.toString() : val;
+        })
+      );
+
+      if (this.availableWorkers.length && this.waitingJobs.length) {
+        this.next();
+      }
+    },
+
+    onWorkersUpdated() {
+      console.log('workers: ', workers.length);
+      if (this.availableWorkers.length && this.waitingJobs.length) {
+        this.next();
+      }
+    },
+
+    registerEvents() {
+      this.events.on('jobs-updated', () => {
+        console.log('Job List Updated', jobs.length);
+        fs.writeFileSync(
+          JOB_LIST_SAVE_FILE,
+          stringify({ jobs }, (key, val) => {
+            return typeof val === 'function' ? val.toString() : val;
+          })
+        );
+
+        if (this.availableWorkers.length && this.waitingJobs.length) {
+          this.next();
+        }
+      });
+
+      this.events.on('workers-updated', () => {
+        console.log('workers: ', workers.length);
+        if (this.availableWorkers.length && this.waitingJobs.length) {
+          this.next();
+        }
       });
     }
   };
 
-  emitter.on('jobs-updated', () => {
-    jobList = _.sortBy(jobList, ['priority']);
-    console.log('Job List Updated', jobList);
-
-    if (getAvailableSlots() && getWaitingJobs().length) {
-      next();
-    }
+  freezeProps.forEach((freezeProp) => {
+    Object.defineProperty(queue, freezeProp, {
+      writable: false,
+      configurable: false
+    });
   });
 
-  emitter.on('workers-updated', () => {
-    console.log('workers: ', workers.length);
-    if (getAvailableSlots() && getWaitingJobs().length) {
-      next();
-    }
-  });
+  queue.registerEvents();
+  queue.next();
 
-  next();
-
-  return {
-    next,
-    addJob,
-    removeJob,
-    addWorker,
-    removeWorker,
-    getAvailableSlots,
-    getDetails
-  };
+  return queue;
 };
 
 export default makeQueue;

@@ -1,7 +1,7 @@
-export const AVAILABLE = 'available';
-export const BUSY = 'busy';
+export const WORKER_STATUS_AVAILABLE = 'available';
+export const WORKER_STATUS_BUSY = 'busy';
 
 export default {
-  AVAILABLE,
-  BUSY
+  WORKER_STATUS_AVAILABLE,
+  WORKER_STATUS_BUSY
 };
