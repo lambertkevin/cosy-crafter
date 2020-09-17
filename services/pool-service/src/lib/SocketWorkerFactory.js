@@ -3,7 +3,7 @@ import { EventEmitter } from 'events';
 import {
   WORKER_STATUS_AVAILABLE,
   WORKER_STATUS_BUSY
-} from '../types/WorkerTypes';
+} from './types/WorkerTypes';
 import { logger } from '../utils/Logger';
 
 export const makeSocketWorker = (socket) => {
