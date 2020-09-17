@@ -7,7 +7,6 @@ import {
 import { logger } from '../utils/Logger';
 
 export const makeSocketWorker = (socket) => {
-  const freezeProps = ['id', 'handshake'];
   const { id } = socket;
   const { handshake } = socket;
   let status = WORKER_STATUS_AVAILABLE;
@@ -17,13 +16,25 @@ export const makeSocketWorker = (socket) => {
     handshake,
     events: new EventEmitter(),
     currentJob: undefined,
+
     get status() {
       return status;
     },
+
     set status(_status) {
-      status = _status;
-      this.events.emit('worker-status-changed', status);
+      if (status !== _status) {
+        status = _status;
+        this.events.emit('worker-status-changed', status);
+      }
     },
+
+    /**
+     * Execute a job in the worker
+     *
+     * @param {Object} job
+     *
+     * @return {Promise}
+     */
     execute(job) {
       logger.info('Executing job in worker', {
         job: job.id,
@@ -47,6 +58,12 @@ export const makeSocketWorker = (socket) => {
           });
       });
     },
+
+    /**
+     * Send a stop signal to the current job before removing a worker
+     *
+     * @return {void}
+     */
     kill() {
       if (this.currentJob) {
         this.currentJob.kill();
@@ -55,6 +72,7 @@ export const makeSocketWorker = (socket) => {
     }
   };
 
+  const freezeProps = ['id', 'handshake'];
   freezeProps.forEach((freezeProp) => {
     Object.defineProperty(worker, freezeProp, {
       writable: false,
