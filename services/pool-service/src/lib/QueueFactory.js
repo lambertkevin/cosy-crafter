@@ -8,12 +8,12 @@ import { makeJob } from './JobFactory';
 import {
   WORKER_STATUS_AVAILABLE,
   WORKER_STATUS_BUSY
-} from '../types/WorkerTypes';
+} from './types/WorkerTypes';
 import {
   JOB_STATUS_WAITING,
   JOB_STATUS_FAILED,
   JOB_STATUS_ONGOING
-} from '../types/JobTypes';
+} from './types/JobTypes';
 
 const JOB_LIST_SAVE_FILE = path.join(path.resolve('./'), '.job-save.json');
 

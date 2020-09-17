@@ -7,7 +7,7 @@ import {
   JOB_STATUS_ONGOING,
   JOB_STATUS_FAILED,
   JOB_PRIORITY_MEDIUM
-} from '../types/JobTypes';
+} from './types/JobTypes';
 import { logger } from '../utils/Logger';
 
 export const makeJob = (asyncAction, opts) => {
