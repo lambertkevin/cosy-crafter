@@ -30,8 +30,25 @@ const sentryTransport = new SentryTransport({
     normalizeDepth: 11
   },
   format: raw(),
-  level: 'info'
+  level: 'error'
 });
+
+const consoleTransport = new transports.Console({
+  colorize: true,
+  format: format.combine(
+    format.simple(),
+    format.printf((log) => {
+      return `${colorizer.colorize(log.level, `${log.level}: ${log.message}`)}${
+        log[SPLAT] ? `\n${safeStringify(log[SPLAT], null, 2)}` : ''
+      }`;
+    })
+  )
+});
+
+const transportsBasedOnEnv = [
+  process.env.NODE_ENV === 'production' ? sentryTransport : null,
+  process.env.NODE_ENV === 'development' ? consoleTransport : null
+].filter((x) => x);
 
 export const { sentry } = sentryTransport;
 
@@ -43,7 +60,6 @@ export const logger = createLogger({
     format.json()
   ),
   transports: [
-    sentryTransport,
     new DailyRotateFile({
       filename: path.join(ROOT_DIR, 'logs', '%DATE%-errors.log'),
       level: 'error',
@@ -57,20 +73,7 @@ export const logger = createLogger({
       zippedArchive: true,
       maxSize: '20m'
     }),
-    process.env.NODE_ENV === 'development'
-      ? new transports.Console({
-          colorize: true,
-          format: format.combine(
-            format.simple(),
-            format.printf((log) => {
-              return `${colorizer.colorize(
-                log.level,
-                `${log.level}: ${log.message}`
-              )}${log[SPLAT] ? `\n${safeStringify(log[SPLAT], null, 2)}` : ''}`;
-            })
-          )
-        })
-      : null
+    ...transportsBasedOnEnv
   ]
 });
 

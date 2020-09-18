@@ -18,22 +18,42 @@ const raw = format((info) => {
   return info;
 });
 
-const sentryTransport = new SentryTransport({
-  sentry: {
-    dsn: process.env.SENTRY_DSN_PODCAST_SERVICE,
-    environment: process.env.NODE_ENV,
-    serverName: identifier,
-    attachStacktrace: true,
-    tracesSampleRate: process.env.NODE_ENV === 'development' ? 1.0 : 0.25,
-    release: pkg.version,
-    integrations: [new ExtraErrorData({ depth: 10 })],
-    normalizeDepth: 11
-  },
-  format: raw(),
-  level: 'info'
+const sentryTransport =
+  process.env.NODE_ENV === 'production'
+    ? new SentryTransport({
+        sentry: {
+          dsn: process.env.SENTRY_DSN_AUTH_SERVICE,
+          environment: process.env.NODE_ENV,
+          serverName: identifier,
+          attachStacktrace: true,
+          tracesSampleRate: 1.0,
+          release: pkg.version,
+          integrations: [new ExtraErrorData({ depth: 10 })],
+          normalizeDepth: 11
+        },
+        format: raw(),
+        level: 'error'
+      })
+    : null;
+
+const consoleTransport = new transports.Console({
+  colorize: true,
+  format: format.combine(
+    format.simple(),
+    format.printf((log) => {
+      return `${colorizer.colorize(log.level, `${log.level}: ${log.message}`)}${
+        log[SPLAT] ? `\n${safeStringify(log[SPLAT], null, 2)}` : ''
+      }`;
+    })
+  )
 });
 
-export const { sentry } = sentryTransport;
+const transportsBasedOnEnv = [
+  process.env.NODE_ENV === 'production' ? sentryTransport : null,
+  process.env.NODE_ENV === 'development' ? consoleTransport : null
+].filter((x) => x);
+
+export const { sentry } = sentryTransport || {};
 
 export const logger = createLogger({
   // Using timestamp with format Date.now() instead of toISOString because of performances. See https://github.com/mcollina/the-cost-of-logging
@@ -43,7 +63,6 @@ export const logger = createLogger({
     format.json()
   ),
   transports: [
-    sentryTransport,
     new DailyRotateFile({
       filename: path.join(ROOT_DIR, 'logs', '%DATE%-errors.log'),
       level: 'error',
@@ -57,20 +76,7 @@ export const logger = createLogger({
       zippedArchive: true,
       maxSize: '20m'
     }),
-    process.env.NODE_ENV === 'development'
-      ? new transports.Console({
-          colorize: true,
-          format: format.combine(
-            format.simple(),
-            format.printf((log) => {
-              return `${colorizer.colorize(
-                log.level,
-                `${log.level}: ${log.message}`
-              )}${log[SPLAT] ? `\n${safeStringify(log[SPLAT], null, 2)}` : ''}`;
-            })
-          )
-        })
-      : null
+    ...transportsBasedOnEnv
   ]
 });
 

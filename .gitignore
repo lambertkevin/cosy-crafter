@@ -20,3 +20,6 @@ services/transcoder-service/cache/*
 !services/transcoder-service/cache/.gitkeep
 services/transcoder-service/tmp/*
 !services/transcoder-service/tmp/.gitkeep
+
+# Pool
+services/pool-service/.job-save.json
