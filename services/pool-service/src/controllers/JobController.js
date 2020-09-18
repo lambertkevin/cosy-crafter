@@ -50,6 +50,8 @@ export const createTranscodingJob = ({ name, files }, ack) => {
     );
 
     transcodingQueue.addJob(transcodingJob);
+
+    return transcodingJob;
   } catch (error) {
     logger.error('Error while creating transcoding job', error);
     return ack({
