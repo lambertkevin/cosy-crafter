@@ -67,7 +67,7 @@ export const makeSocketWorker = (socket) => {
     kill() {
       if (this.currentJob) {
         this.currentJob.kill();
-        socket.emit(`kill-job-${this.currentJobjob.id}`);
+        socket.emit(`kill-job-${this.currentJob.id}`);
       }
     }
   };
