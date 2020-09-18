@@ -3,6 +3,7 @@ import express from 'express';
 import socket from 'socket.io';
 import { logger } from './utils/Logger';
 import { nodeConfig } from './config';
+import { workerHandler, transcodingQueue } from './queue';
 import { auth } from './auth';
 import apis from './api';
 
@@ -10,16 +11,29 @@ const init = async () => {
   try {
     await auth();
     const app = express();
-    const server = app.listen(nodeConfig.port, () => {
+    const apiServer = app.listen(nodeConfig.apiPort, () => {
       console.log(
-        `Server running on http://${os.hostname()}:${nodeConfig.port}`
+        `Api running on http://${os.hostname()}:${nodeConfig.apiPort}`
+      );
+    });
+    const workerServer = app.listen(nodeConfig.workerPort, () => {
+      console.log(
+        `Workers running on htt://${os.hostname()}:${nodeConfig.workerPort}`
       );
     });
 
-    const io = socket.listen(server);
+    const ioApi = socket.listen(apiServer);
+    const ioWorkers = socket.listen(workerServer);
 
-    io.on('connection', async (client) => {
+    ioApi.on('connection', async (client) => {
       apis(client);
+    });
+    ioWorkers.on('connection', async (worker) => {
+      workerHandler(worker);
+    });
+
+    app.get('/details', (req, res) => {
+      res.send(transcodingQueue);
     });
   } catch (err) {
     /** @WARNING Change this to fatal when feature available in winston + sentry */

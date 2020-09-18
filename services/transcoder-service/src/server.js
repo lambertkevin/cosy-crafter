@@ -7,9 +7,12 @@ const init = async () => {
   try {
     await auth();
     const pool = socketClient(
-      `http://${process.env.POOL_SERVICE_NAME}:${process.env.POOL_SERVICE_PORT}`
+      `http://${process.env.POOL_SERVICE_NAME}:${process.env.POOL_SERVICE_WORKER_PORT}`
     );
     pool.once('connect', () => {
+      console.log(
+        `Connected to pool at: http://${process.env.POOL_SERVICE_NAME}:${process.env.POOL_SERVICE_WORKER_PORT}`
+      );
       apis(pool);
     });
   } catch (err) {

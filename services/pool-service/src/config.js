@@ -5,5 +5,6 @@ export const identifier = `${process.env.POOL_SERVICE_NAME}-leia`;
  * @type {Object}
  */
 export const nodeConfig = {
-  port: process.env.POOL_SERVICE_PORT || 3004
+  apiPort: process.env.POOL_SERVICE_PORT || 3004,
+  workerPort: process.env.POOL_SERVICE_WORKER_PORT || 3005
 };
