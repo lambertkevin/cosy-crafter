@@ -1,4 +1,4 @@
-version: '3.8'
+version: "2.4"
 
 services:
   mongo-service:
@@ -16,15 +16,15 @@ services:
       - PODCAST_DB_USER=${PODCAST_DB_USER}
       - PODCAST_DB_PASSWORD=${PODCAST_DB_PASSWORD}
     healthcheck:
-      test: ['CMD', 'curl', '-f', 'http://localhost:27017']
+      test: ["CMD", "curl", "-f", "http://localhost:27017"]
       interval: 10s
       timeout: 10s
       retries: 5
 
   podcast-service:
     container_name: podcast-service
-    image: 'node:12.18'
-    user: 'node'
+    image: "node:12.18"
+    user: "node"
     working_dir: /home/node/app
     volumes:
       - ./services/podcast-service:/home/node/app
@@ -35,7 +35,7 @@ services:
     expose:
       - ${PODCAST_SERVICE_PORT}
     ports:
-      - '${PODCAST_SERVICE_PORT}:${PODCAST_SERVICE_PORT}'
+      - "${PODCAST_SERVICE_PORT}:${PODCAST_SERVICE_PORT}"
     env_file:
       - services.env
     environment:
@@ -54,8 +54,8 @@ services:
 
   storage-service:
     container_name: storage-service
-    image: 'node:12.18'
-    user: 'node'
+    image: "node:12.18"
+    user: "node"
     working_dir: /home/node/app
     volumes:
       - ./services/storage-service:/home/node/app
@@ -66,7 +66,7 @@ services:
     expose:
       - ${STORAGE_SERVICE_PORT}
     ports:
-      - '${STORAGE_SERVICE_PORT}:${STORAGE_SERVICE_PORT}'
+      - "${STORAGE_SERVICE_PORT}:${STORAGE_SERVICE_PORT}"
     env_file:
       - services.env
     environment:
@@ -90,8 +90,8 @@ services:
 
   auth-service:
     container_name: auth-service
-    image: 'node:12.18'
-    user: 'root'
+    image: "node:12.18"
+    user: "root"
     working_dir: /home/node/app
     volumes:
       - ./services/auth-service:/home/node/app
@@ -102,7 +102,7 @@ services:
     expose:
       - ${AUTH_SERVICE_PORT}
     ports:
-      - '${AUTH_SERVICE_PORT}:${AUTH_SERVICE_PORT}'
+      - "${AUTH_SERVICE_PORT}:${AUTH_SERVICE_PORT}"
     env_file:
       - services.env
     environment:
@@ -123,6 +123,7 @@ services:
 
   transcoder-service:
     container_name: transcoder-service
+    cpuset: "0"
     build:
       context: ./services/transcoder-service
     working_dir: /home/node/app
@@ -132,10 +133,6 @@ services:
         source: .keys/auth.pem
         target: /.keys/auth.pem
         read_only: true
-    expose:
-      - ${TRANSCODER_SERVICE_PORT}
-    ports:
-      - '${TRANSCODER_SERVICE_PORT}:${TRANSCODER_SERVICE_PORT}'
     env_file:
       - services.env
     environment:
@@ -144,3 +141,30 @@ services:
       - RSA_KEYS_NAME=${RSA_KEYS_NAME}
       - SENTRY_DSN_TRANSCODER_SERVICE=${SENTRY_DSN_TRANSCODER_SERVICE}
     entrypoint: ./run.sh
+
+  pool-service:
+    container_name: pool-service
+    image: "node:12.18"
+    user: "node"
+    working_dir: /home/node/app
+    volumes:
+      - ./services/pool-service:/home/node/app
+      - type: bind
+        source: .keys/auth.pem
+        target: /.keys/auth.pem
+        read_only: true
+    expose:
+      - ${POOL_SERVICE_PORT}
+    ports:
+      - "${POOL_SERVICE_PORT}:${POOL_SERVICE_PORT}"
+    env_file:
+      - services.env
+    environment:
+      - NODE_ENV=${NODE_ENV}
+      - RSA_KEYS_LOCATION=${RSA_KEYS_LOCATION}
+      - RSA_KEYS_NAME=${RSA_KEYS_NAME}
+      - SERVICE_JWT_SECRET=${SERVICE_JWT_SECRET}
+      - SENTRY_DSN_POOL_SERVICE=${SENTRY_DSN_POOL_SERVICE}
+    command: ./run.sh
+    links:
+      - auth-service

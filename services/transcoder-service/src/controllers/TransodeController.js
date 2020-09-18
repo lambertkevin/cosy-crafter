@@ -101,10 +101,18 @@ export const joinFiles = async (files, jobId, ack, socket) => {
     }
 
     const crossFadeFilters = getCrossFadeFilters(files, durationsArray);
-    ff.complexFilter(crossFadeFilters);
+    if (crossFadeFilters) {
+      ff.complexFilter(crossFadeFilters);
+    }
 
     ff.on('start', () => {
       console.time('merge');
+      const killProcess = () => {
+        ff.kill('SIGSTOP');
+        reject(new Error('Stopped by worker'));
+      };
+      socket.on(`kill-job-${jobId}`, killProcess);
+      socket.on(`disconnect`, killProcess);
     })
       .on('progress', ({ timemark }) => {
         const percent =
@@ -129,6 +137,7 @@ export const joinFiles = async (files, jobId, ack, socket) => {
         logger.error(`[${jobId}] Error while transcoding`, err);
         reject(err);
       })
+      // .audioQuality(5) /** @WARNING Try different qualities to optimize transcoding time */
       .save(mergedFilePath);
   });
 };
@@ -178,9 +187,11 @@ export const upload = async (filepath, jobId) => {
  *
  * @return {Promise<String|Error>}
  */
-export const createTranscodeJob = async ({ files, name }, ack, socket) => {
-  const jobId = uuid();
-
+export const createTranscodeJob = async (
+  { files, name, jobId },
+  ack,
+  socket
+) => {
   try {
     if (!_.isArray(files) || _.isEmpty(files)) {
       return ack({
@@ -206,13 +217,6 @@ export const createTranscodeJob = async ({ files, name }, ack, socket) => {
     busyFlag = true;
 
     logger.info(`Received Job`, { jobId, files, name });
-    ack({
-      statusCode: 200,
-      data: {
-        jobId
-      }
-    });
-
     // --- Start Download Files
     const downloadFilesSpan = transaction.startChild({
       data: {
@@ -280,7 +284,7 @@ export const createTranscodeJob = async ({ files, name }, ack, socket) => {
       description: 'Saving the craft in the podcast service'
     });
     const axiosAsService = makeAxiosInstance();
-    const savedCraft = await axiosAsService.post(
+    const { data: savedCraft } = await axiosAsService.post(
       `http://${PODCAST_SERVICE_NAME}:${PODCAST_SERVICE_PORT}/v1/crafts`,
       payload,
       {
@@ -304,6 +308,10 @@ export const createTranscodeJob = async ({ files, name }, ack, socket) => {
     });
     transaction.finish();
     // Finish job
+    ack({
+      statusCode: 200,
+      savedCraft
+    });
     return savedCraft;
   } catch (e) {
     logger.error(`Error in createTranscodeJob`, e);

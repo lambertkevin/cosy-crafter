@@ -35,9 +35,11 @@ export const getCrossFadeFilters = (files) => {
     })
     .filter((x) => x);
 
-  delete crossFadeFilters[crossFadeFilters.length - 1].outputs;
+  if (crossFadeFilters.length) {
+    delete crossFadeFilters[crossFadeFilters.length - 1].outputs;
+  }
 
-  return crossFadeFilters;
+  return crossFadeFilters.length ? crossFadeFilters : null;
 };
 
 export default {

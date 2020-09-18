@@ -1,25 +1,19 @@
-import os from 'os';
-import express from 'express';
-import socket from 'socket.io';
+import socketClient from 'socket.io-client';
 import { logger } from './utils/Logger';
-import { nodeConfig } from './config';
 import { auth } from './auth';
 import apis from './api';
 
 const init = async () => {
   try {
     await auth();
-    const app = express();
-    const server = app.listen(nodeConfig.port, () => {
+    const pool = socketClient(
+      `http://${process.env.POOL_SERVICE_NAME}:${process.env.POOL_SERVICE_WORKER_PORT}`
+    );
+    pool.once('connect', () => {
       console.log(
-        `Server running on http://${os.hostname()}:${nodeConfig.port}`
+        `Connected to pool at: http://${process.env.POOL_SERVICE_NAME}:${process.env.POOL_SERVICE_WORKER_PORT}`
       );
-    });
-
-    const io = socket.listen(server);
-
-    io.on('connection', async (client) => {
-      apis(client);
+      apis(pool);
     });
   } catch (err) {
     /** @WARNING Change this to fatal when feature available in winston + sentry */
