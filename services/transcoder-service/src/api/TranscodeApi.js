@@ -34,13 +34,23 @@ export default (prefix, socket) => {
         if (route.validation) {
           await route.validation.validateAsync(data);
         }
+        if (typeof ack !== 'function') {
+          const error = new Error('ack is not a function');
+          error.name = 'AckError';
+
+          throw error;
+        }
         return route.handler.apply(null, [data, ack, socket]);
       } catch (e) {
         logger.error('Socket payload validation error', e);
-        return ack({
-          statusCode: 409,
-          message: 'Bad Request'
-        });
+
+        if (e.name !== 'AckError') {
+          return ack({
+            statusCode: 409,
+            message: 'Bad Request'
+          });
+        }
+        return null;
       }
     };
 
