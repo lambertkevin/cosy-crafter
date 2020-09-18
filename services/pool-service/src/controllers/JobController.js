@@ -1,3 +1,4 @@
+import _ from 'lodash';
 import { makeJob } from '../lib/JobFactory';
 import { logger } from '../utils/Logger';
 import { transcodingQueue } from '../queue';
@@ -20,12 +21,20 @@ export const createTranscodingJob = ({ name, files }, ack) => {
                   'Transcode/Join in job controller failed',
                   response
                 );
+                ack({
+                  statusCode: 500,
+                  message: 'Transcode/Join failed'
+                });
                 return reject(new Error('Transcode Failed'));
               }
               logger.info(
                 'Transcode/Join in job controller finished',
                 response
               );
+              ack({
+                statusCode: 200,
+                response: _.get(response, ['savedCraft', 'data'])
+              });
               return resolve(response);
             }
           );
@@ -41,10 +50,6 @@ export const createTranscodingJob = ({ name, files }, ack) => {
     );
 
     transcodingQueue.addJob(transcodingJob);
-    return ack({
-      statusCode: 200,
-      message: 'Job added'
-    });
   } catch (error) {
     logger.error('Error while creating transcoding job', error);
     return ack({
