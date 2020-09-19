@@ -133,12 +133,17 @@ services:
         source: .keys/auth.pem
         target: /.keys/auth.pem
         read_only: true
+      - type: bind
+        source: .keys/pool.pem
+        target: /.keys/pool.pem
+        read_only: true
     env_file:
       - services.env
     environment:
       - NODE_ENV=${NODE_ENV}
       - RSA_KEYS_LOCATION=${RSA_KEYS_LOCATION}
       - AUTH_RSA_KEYS_NAME=${AUTH_RSA_KEYS_NAME}
+      - POOL_RSA_KEYS_NAME=${POOL_RSA_KEYS_NAME}
       - SENTRY_DSN_TRANSCODER_SERVICE=${SENTRY_DSN_TRANSCODER_SERVICE}
     entrypoint: ./run.sh
 
@@ -153,6 +158,14 @@ services:
         source: .keys/auth.pem
         target: /.keys/auth.pem
         read_only: true
+      - type: bind
+        source: .keys/pool
+        target: /.keys/pool
+        read_only: true
+      - type: bind
+        source: .keys/pool.pem
+        target: /.keys/pool.pem
+        read_only: true
     expose:
       - ${POOL_SERVICE_PORT}
     ports:
@@ -163,6 +176,7 @@ services:
       - NODE_ENV=${NODE_ENV}
       - RSA_KEYS_LOCATION=${RSA_KEYS_LOCATION}
       - AUTH_RSA_KEYS_NAME=${AUTH_RSA_KEYS_NAME}
+      - POOL_RSA_KEYS_NAME=${POOL_RSA_KEYS_NAME}
       - SERVICE_JWT_SECRET=${SERVICE_JWT_SECRET}
       - SENTRY_DSN_POOL_SERVICE=${SENTRY_DSN_POOL_SERVICE}
     command: ./run.sh
