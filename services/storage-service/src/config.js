@@ -1,6 +1,6 @@
 import Package from '../package.json';
 
-export const identifier = `${process.env.STORAGE_SERVICE_NAME}-jessica`;
+export const identifier = `${process.env.STORAGE_SERVICE_NAME}-florence`;
 
 /**
  * Config for Node

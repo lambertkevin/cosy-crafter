@@ -8,7 +8,7 @@ import privateIp from 'private-ip';
 import Service, { projection, hiddenFields } from '../models/ServiceModel';
 import * as TokenController from './TokenController';
 import tokensFactory from '../utils/TokensFactory';
-import logger from '../utils/Logger';
+import { logger } from '../utils/Logger';
 
 /**
  * Return a list of all Services

@@ -2,13 +2,15 @@ import fs from 'fs';
 import path from 'path';
 import axios from 'axios';
 import Boom from '@hapi/boom';
-import { makeRsaPublicEncrypter } from './utils/RsaUtils';
-import { logger } from './utils/Logger';
+import {
+  makeRsaPublicEncrypter,
+  makeRsaPublicDecrypter
+} from './utils/RsaUtils';
 import { identifier } from './config';
+import { logger } from './utils/Logger';
 
 const { AUTH_SERVICE_NAME, AUTH_SERVICE_PORT } = process.env;
 const CREDENTIALS_PATH = path.join(path.resolve('./'), '.credentials');
-const encrypter = makeRsaPublicEncrypter();
 
 export const tokens = {
   accessToken: null,
@@ -17,6 +19,8 @@ export const tokens = {
 
 export const register = async () => {
   try {
+    const publicEncrypter = makeRsaPublicEncrypter('auth');
+    const publicDecrypter = makeRsaPublicDecrypter('auth');
     const { data: encryptedKey } = await axios.post(
       `http://${AUTH_SERVICE_NAME}:${AUTH_SERVICE_PORT}/services`,
       {
@@ -24,17 +28,18 @@ export const register = async () => {
       },
       {
         headers: {
-          'X-Authorization': encrypter(Date.now(), 'base64')
+          'X-Authorization': publicEncrypter(Date.now(), 'base64')
         }
       }
     );
+    const key = publicDecrypter(encryptedKey);
 
     if (encryptedKey) {
       fs.writeFileSync(
         CREDENTIALS_PATH,
         JSON.stringify({
           identifier,
-          encryptedKey
+          key
         })
       );
       return;
@@ -48,13 +53,14 @@ export const register = async () => {
 
 export const login = async () => {
   try {
-    const { identifier: savedIdentifier, encryptedKey: key } = JSON.parse(
+    const publicEncrypter = makeRsaPublicEncrypter('auth');
+    const { identifier: savedIdentifier, key } = JSON.parse(
       fs.readFileSync(CREDENTIALS_PATH, 'utf8')
     );
     const { data: freshTokens } = await axios
       .post(`http://${AUTH_SERVICE_NAME}:${AUTH_SERVICE_PORT}/services/login`, {
         identifier: savedIdentifier,
-        key
+        key: publicEncrypter(key, 'base64')
       })
       .then(({ data }) => data);
 
