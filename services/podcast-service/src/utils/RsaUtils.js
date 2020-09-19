@@ -16,10 +16,10 @@ export const makeRsaPublicDecrypter = () => {
         `${process.env.AUTH_RSA_KEYS_NAME}.pem`
       )
     ),
-    'pkcs1-public-pem'
+    'pkcs8-public-pem'
   );
 
-  return (data, format = 'utf8') => publicKey.decrypt(data, format);
+  return (data, format = 'utf8') => publicKey.decryptPublic(data, format);
 };
 
 /**
@@ -36,7 +36,7 @@ export const makeRsaPublicEncrypter = () => {
         `${process.env.AUTH_RSA_KEYS_NAME}.pem`
       )
     ),
-    'pkcs1-public-pem'
+    'pkcs8-public-pem'
   );
 
   return (data, format = 'utf8') => publicKey.encrypt(data, format);
