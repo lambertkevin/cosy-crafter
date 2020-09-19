@@ -33,7 +33,7 @@ export const makeRsaPrivateEncrypter = () => {
     'pkcs1-private-pem'
   );
 
-  return (data, format = 'base64') => privateKey.encrypt(data, format);
+  return (data, format = 'base64') => privateKey.encryptPrivate(data, format);
 };
 
 /**
