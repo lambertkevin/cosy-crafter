@@ -33,7 +33,7 @@ export const makeRsaPrivateEncrypter = () => {
     'pkcs1-private-pem'
   );
 
-  return (data, format = 'base64') => privateKey.encrypt(data, format);
+  return (data, format = 'base64') => privateKey.encryptPrivate(data, format);
 };
 
 /**
@@ -50,10 +50,10 @@ export const makeRsaPublicDecrypter = () => {
         `${process.env.AUTH_RSA_KEYS_NAME}.pem`
       )
     ),
-    'pkcs1-public-pem'
+    'pkcs8-public-pem'
   );
 
-  return (data, format = 'utf8') => publicKey.decrypt(data, format);
+  return (data, format = 'utf8') => publicKey.decryptPublic(data, format);
 };
 
 /**
@@ -70,7 +70,7 @@ export const makeRsaPublicEncrypter = () => {
         `${process.env.AUTH_RSA_KEYS_NAME}.pem`
       )
     ),
-    'pkcs1-public-pem'
+    'pkcs8-public-pem'
   );
 
   return (data, format = 'utf8') => publicKey.encrypt(data, format);
