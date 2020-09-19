@@ -1,6 +1,7 @@
 import os from 'os';
 import express from 'express';
 import socket from 'socket.io';
+import socketioJwt from 'socketio-jwt';
 import { logger } from './utils/Logger';
 import { nodeConfig } from './config';
 import { workerHandler, transcodingQueue } from './queue';
@@ -28,9 +29,20 @@ const init = async () => {
     ioApi.on('connection', async (client) => {
       apis(client);
     });
-    ioWorkers.on('connection', async (worker) => {
-      workerHandler(worker);
-    });
+
+    ioWorkers
+      .use(
+        socketioJwt.authorize({
+          secret: process.env.SERVICE_JWT_SECRET,
+          handshake: true,
+          auth_header_required: true
+        })
+      )
+      .on('connection', (worker) => {
+        if (worker.decoded_token.service) {
+          workerHandler(worker);
+        }
+      });
 
     app.get('/details', (req, res) => {
       res.send(transcodingQueue);

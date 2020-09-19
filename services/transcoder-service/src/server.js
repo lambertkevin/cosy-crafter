@@ -1,20 +1,32 @@
-import socketClient from 'socket.io-client';
+import io from 'socket.io-client';
 import { logger } from './utils/Logger';
-import { auth } from './auth';
+import { auth, tokens } from './auth';
 import apis from './api';
 
 const init = async () => {
   try {
     await auth();
-    const pool = socketClient(
-      `http://${process.env.POOL_SERVICE_NAME}:${process.env.POOL_SERVICE_WORKER_PORT}`
+    const pool = io.connect(
+      `http://${process.env.POOL_SERVICE_NAME}:${process.env.POOL_SERVICE_WORKER_PORT}`,
+      {
+        extraHeaders: { Authorization: `Bearer ${tokens.accessToken}` }
+      }
     );
-    pool.once('connect', () => {
-      console.log(
-        `Connected to pool at: http://${process.env.POOL_SERVICE_NAME}:${process.env.POOL_SERVICE_WORKER_PORT}`
-      );
-      apis(pool);
-    });
+    pool
+      .once('connect', () => {
+        console.log(
+          `Connected to pool at: http://${process.env.POOL_SERVICE_NAME}:${process.env.POOL_SERVICE_WORKER_PORT}`
+        );
+        apis(pool);
+      })
+      .on('unauthorized', (error) => {
+        if (
+          error.data.type === 'UnauthorizedError' ||
+          error.data.code === 'invalid_token'
+        ) {
+          throw new Error('Invalid Token');
+        }
+      });
   } catch (err) {
     /** @WARNING Change this to fatal when feature available in winston + sentry */
     logger.error('Fatal Error while starting the service', err);
