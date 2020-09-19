@@ -11,7 +11,7 @@ import NodeRsa from 'node-rsa';
 export const makeRsaPrivateDecrypter = () => {
   const privateKey = new NodeRsa(
     fs.readFileSync(
-      path.join(process.env.RSA_KEYS_LOCATION, process.env.RSA_KEYS_NAME)
+      path.join(process.env.RSA_KEYS_LOCATION, process.env.AUTH_RSA_KEYS_NAME)
     ),
     'pkcs1-private-pem'
   );
@@ -28,7 +28,7 @@ export const makeRsaPrivateDecrypter = () => {
 export const makeRsaPrivateEncrypter = () => {
   const privateKey = new NodeRsa(
     fs.readFileSync(
-      path.join(process.env.RSA_KEYS_LOCATION, process.env.RSA_KEYS_NAME)
+      path.join(process.env.RSA_KEYS_LOCATION, process.env.AUTH_RSA_KEYS_NAME)
     ),
     'pkcs1-private-pem'
   );
@@ -47,7 +47,7 @@ export const makeRsaPublicDecrypter = () => {
     fs.readFileSync(
       path.join(
         process.env.RSA_KEYS_LOCATION,
-        `${process.env.RSA_KEYS_NAME}.pem`
+        `${process.env.AUTH_RSA_KEYS_NAME}.pem`
       )
     ),
     'pkcs1-public-pem'
@@ -67,7 +67,7 @@ export const makeRsaPublicEncrypter = () => {
     fs.readFileSync(
       path.join(
         process.env.RSA_KEYS_LOCATION,
-        `${process.env.RSA_KEYS_NAME}.pem`
+        `${process.env.AUTH_RSA_KEYS_NAME}.pem`
       )
     ),
     'pkcs1-public-pem'
