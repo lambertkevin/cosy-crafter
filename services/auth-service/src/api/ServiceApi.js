@@ -8,8 +8,8 @@ import axiosErrorBoomifier from '../utils/AxiosErrorBoomifier';
 import { calibrateSchema } from '../utils/SchemasUtils';
 import { logger } from '../utils/Logger';
 import {
-  makeRsaPrivateEncrypter,
-  makeRsaPrivateDecrypter
+  makeRsaPrivateDecrypter,
+  makeRsaPrivateEncrypter
 } from '../utils/RsaUtils';
 import {
   checkSignature,
@@ -202,8 +202,8 @@ export default {
       options: {
         handler: (request) => {
           try {
-            const decryptor = makeRsaPrivateDecrypter();
-            const key = decryptor(request.payload.key);
+            const privateDecrypter = makeRsaPrivateDecrypter();
+            const key = privateDecrypter(request.payload.key);
 
             return ServiceController.login(
               {
