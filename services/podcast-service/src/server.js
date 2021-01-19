@@ -10,7 +10,7 @@ import { auth } from './auth';
 import apis from './api';
 import db from './database';
 
-const init = async () => {
+export default async () => {
   try {
     const server = Hapi.server(nodeConfig);
     await auth();
@@ -42,10 +42,12 @@ const init = async () => {
     await server.register(apis);
     await server.start();
     console.log('Server running on %s', server.info.uri);
+
+    return server;
   } catch (err) {
     /** @WARNING Change this to fatal when feature available in winston + sentry */
     logger.error('Fatal Error while starting the service', err);
-    process.exit(0);
+    return process.exit(1);
   }
 };
 
@@ -53,5 +55,3 @@ process.on('unhandledRejection', (err) => {
   logger.error('unhandledRejection', err);
   process.exit(1);
 });
-
-init();
