@@ -69,7 +69,7 @@ export const login = async () => {
   } catch (e) {
     /** @WARNING Change this to fatal when feature available in winston + sentry */
     logger.error('Error while loging the service', e);
-    process.exit();
+    process.exit(1);
   }
 };
 
