@@ -50,9 +50,7 @@ const consoleTransport = new transports.Console({
 
 const transportsBasedOnEnv = [
   process.env.NODE_ENV === 'production' ? sentryTransport : null,
-  ['development', 'test'].includes(process.env.NODE_ENV)
-    ? consoleTransport
-    : null
+  process.env.NODE_ENV === 'development' ? consoleTransport : null
 ].filter((x) => x);
 
 export const { sentry } = sentryTransport || {};
