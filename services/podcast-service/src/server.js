@@ -30,10 +30,10 @@ export default async () => {
       validate: async (decoded) =>
         decoded.service ? { isValid: true } : { isValid: false },
       errorFunc: (error, request) => {
-        logger.error(
-          'Podcast Service Request JWT Error',
-          _.pick(request, ['info', 'auth'])
-        );
+        logger.error('Podcast Service Request JWT Error', {
+          error,
+          request: _.pick(request, ['info', 'auth'])
+        });
 
         return error;
       }
