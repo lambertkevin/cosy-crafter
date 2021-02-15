@@ -31,7 +31,7 @@ Transcoding workers and Pool service have their own set of `RSA` keys also gener
 
 ## Origin
 
-This idea comes from the creators of le [Cosy Corner](https://soundcloud.com/lecosycorner) and has been implemented with the help of my FFmpeg expert [Jean Noel Duquesne](github.com/JNoDuq) during the prototyping phase.
+This idea comes from the creators of le [Cosy Corner](https://soundcloud.com/lecosycorner) and has been implemented with the help of my FFmpeg expert [Jean Noel Duquesne](https://github.com/JNoDuq) during the prototyping phase.
 
 ## To Do
 
