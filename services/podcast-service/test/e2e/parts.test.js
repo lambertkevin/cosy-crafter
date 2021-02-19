@@ -1,7 +1,12 @@
-import getStream from 'get-stream';
-import FormData from 'form-data';
-import jwt from 'jsonwebtoken';
+import fs from 'fs';
+import path from 'path';
 import { expect } from 'chai';
+import jwt from 'jsonwebtoken';
+import FormData from 'form-data';
+import getStream from 'get-stream';
+import * as SectionController from '../../src/controllers/SectionController';
+import * as PodcastController from '../../src/controllers/PodcastController';
+import * as PartController from '../../src/controllers/PartController';
 import init from '../../src/server';
 
 const objectToFormData = (obj) => {
@@ -43,27 +48,50 @@ describe('Parts API tests', () => {
   });
 
   describe('Parts Creation', () => {
-    let fakePartCreationPayloadFormData;
-    let fakePartCreationPayloadString;
+    let fakePartPayloadFormData;
+    let fakePartPayloadString;
+    let partPayloadFormData;
+    let partPayloadString;
+    let section;
+    let podcast;
+    let part;
 
     before(async () => {
-      // Create Section here
-      // Create Podcast here
+      section = await SectionController.create({
+        name: `e2e-test`
+      });
+      podcast = await PodcastController.create({
+        name: `e2e-podcast`,
+        edition: 1
+      });
 
-      const fakePartCreationPayload = {
-        name: 'part',
+      const fakePartPayload = {
+        name: `part`,
         section: '1234-1234-1234-1234-1234',
         podcast: '1234-1234-1234-1234-1234',
         tags: 'tag1',
-        file: Buffer.alloc(1)
+        file: Buffer.alloc(0)
       };
 
-      fakePartCreationPayloadFormData = objectToFormData(
-        fakePartCreationPayload
-      );
-      fakePartCreationPayloadString = await getStream(
-        fakePartCreationPayloadFormData
-      );
+      fakePartPayloadFormData = objectToFormData(fakePartPayload);
+      fakePartPayloadString = await getStream(fakePartPayloadFormData);
+
+      partPayloadFormData = objectToFormData({
+        ...fakePartPayload,
+        section: section.data._id.toString(),
+        podcast: podcast.data._id.toString(),
+        file: fs.createReadStream(
+          path.join(path.resolve('./'), 'test', 'files', 'blank.mp3')
+        )
+      });
+
+      partPayloadString = await getStream(partPayloadFormData);
+    });
+
+    after(async () => {
+      await PartController.remove([part?.data?._id]);
+      await SectionController.remove([section?.data?._id]);
+      await PodcastController.remove([podcast?.data?._id]);
     });
 
     it('should fail trying to create part without jwt', () => {
@@ -71,9 +99,9 @@ describe('Parts API tests', () => {
         .inject({
           method: 'POST',
           url: '/v1/parts',
-          payload: fakePartCreationPayloadString,
+          payload: fakePartPayloadString,
           headers: {
-            ...fakePartCreationPayloadFormData.getHeaders(),
+            ...fakePartPayloadFormData.getHeaders(),
             maxBodyLength: 200 * 1024 * 1024, // 200MB max part size
             maxContentLength: 200 * 1024 * 1024 // 200MB max part size
           }
@@ -94,7 +122,7 @@ describe('Parts API tests', () => {
         .inject({
           method: 'POST',
           url: '/v1/parts',
-          payload: fakePartCreationPayloadString,
+          payload: fakePartPayloadString,
           headers: {
             // No content-type is set so 'application/json' is set as default
             authorization: accessToken
@@ -116,9 +144,9 @@ describe('Parts API tests', () => {
         .inject({
           method: 'POST',
           url: '/v1/parts',
-          payload: fakePartCreationPayloadString,
+          payload: fakePartPayloadString,
           headers: {
-            ...fakePartCreationPayloadFormData.getHeaders(),
+            ...fakePartPayloadFormData.getHeaders(),
             authorization: accessToken
           }
         })
@@ -133,25 +161,89 @@ describe('Parts API tests', () => {
         });
     });
 
-    /**  @TODO Add creation of dependencies before creation */
-    it.skip('should succeed creating part', () => {
+    it('should succeed creating part', () => {
       return server
         .inject({
           method: 'POST',
           url: '/v1/parts',
-          // payload: fakePartCreationPayloadString,
+          payload: partPayloadString,
           headers: {
-            // ...fakePartCreationPayloadFormData.getHeaders(),
+            ...partPayloadFormData.getHeaders(),
             authorization: accessToken
           }
         })
         .then((response) => {
-          console.log(response.result);
+          part = response.result;
           expect(response).to.be.a('object');
           expect(response).to.include({ statusCode: 200 });
-          expect(response.result).to.deep.include({
+          expect(response?.result).to.include({
             statusCode: 200
           });
+          expect(response?.result?.data).to.include({
+            originalFilename: 'blank.mp3',
+            contentType: 'audio/mpeg'
+          });
+          expect(response?.result?.data?.section?.toString()).to.be.equal(
+            section?.data?._id?.toString()
+          );
+          expect(response?.result?.data?.podcast?.toString()).to.be.equal(
+            podcast?.data?._id?.toString()
+          );
+        });
+    });
+
+    it('should succeed deleting part', () => {
+      return server
+        .inject({
+          method: 'DELETE',
+          url: '/v1/parts',
+          payload: { ids: [part?.data?._id?.toString()] },
+          headers: {
+            authorization: accessToken
+          }
+        })
+        .then((response) => {
+          expect(response).to.be.a('object');
+          expect(response).to.include({ statusCode: 200 });
+          expect(response?.result).to.include({
+            statusCode: 200
+          });
+          expect(response?.result?.data?.deleted[0]).to.be.equal(
+            part?.data?._id?.toString()
+          );
+        });
+    });
+
+    it('should cascade delete part when deleting podcast', async () => {
+      const part2 = await PartController.create({
+        name: `part2`,
+        section: section?.data?._id?.toString(),
+        podcast: podcast?.data?._id?.toString(),
+        tags: 'tag1',
+        file: {
+          path: path.join(path.resolve('./'), 'test', 'files', 'blank.mp3'),
+          bytes: 61637,
+          filename: 'blank.mp3',
+          headers: {
+            'content-disposition':
+              'form-data; name="file"; filename="blank.mp3"',
+            'content-type': 'audio/mpeg'
+          }
+        }
+      });
+      await PodcastController.remove([podcast.data._id]);
+
+      return server
+        .inject({
+          method: 'GET',
+          url: `/v1/parts/${part2.data._id.toString()}`,
+          headers: {
+            authorization: accessToken
+          }
+        })
+        .then((response) => {
+          expect(response).to.be.a('object');
+          expect(response).to.include({ statusCode: 404 });
         });
     });
   });

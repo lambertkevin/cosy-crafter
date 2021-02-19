@@ -51,7 +51,10 @@ export default async () => {
   }
 };
 
-process.on('unhandledRejection', (err) => {
-  logger.error('unhandledRejection', err);
-  process.exit(1);
-});
+if (process.env.NODE_ENV !== 'test') {
+  process.on('unhandledRejection', (err) => {
+    /** @WARNING Change this to fatal when feature available in winston + sentry */
+    logger.error('unhandledRejection', err);
+    process.exit(1);
+  });
+}

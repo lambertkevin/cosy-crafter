@@ -25,5 +25,5 @@ else
         }
 EOF
         echo 'AUTH DB INITIALIZED'
-        touch .initialized 
+        touch .initialized
 fi

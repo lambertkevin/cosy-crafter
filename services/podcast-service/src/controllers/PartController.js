@@ -59,7 +59,7 @@ export const findOne = (id, sanitized = true) =>
  * @param {String} data.type
  * @param {String} data.podcast
  * @param {Array<String>|String} data.tags
- * @param {ReadableStream} data.file
+ * @param {Object} data.file [Result of file upload]
  * @param {Boolean} sanitized
  *
  * @return {Promise<Object>} {Part}
@@ -106,19 +106,30 @@ export const create = async (
 
   try {
     const axiosAsService = makeAxiosInstance();
-    const savingFile = await axiosAsService.post(
-      `http://${STORAGE_SERVICE_NAME}:${STORAGE_SERVICE_PORT}/v1/podcast-parts`,
-      formData,
-      {
-        headers: {
-          ...formData.getHeaders(),
-          authorization: tokens.accessToken
-        },
-        maxBodyLength: 200 * 1024 * 1024, // 200MB max part size
-        maxContentLength: 200 * 1024 * 1024 // 200MB max part size
-      }
-    );
-    const savedFile = _.get(savingFile, ['data', 'data'], {});
+
+    let savedFile;
+    if (process.env.NODE_ENV === 'test') {
+      savedFile = {
+        storageType: 'local',
+        location: 'e2e-test',
+        filename: 'e2e-test.mp3',
+        publicLink: 'e2e-test'
+      };
+    } else {
+      const savingFile = await axiosAsService.post(
+        `http://${STORAGE_SERVICE_NAME}:${STORAGE_SERVICE_PORT}/v1/podcast-parts`,
+        formData,
+        {
+          headers: {
+            ...formData.getHeaders(),
+            authorization: tokens.accessToken
+          },
+          maxBodyLength: 200 * 1024 * 1024, // 200MB max part size
+          maxContentLength: 200 * 1024 * 1024 // 200MB max part size
+        }
+      );
+      savedFile = _.get(savingFile, ['data', 'data'], {});
+    }
 
     if (_.isEmpty(savedFile)) {
       throw new Error('An error occured while saving the file');
