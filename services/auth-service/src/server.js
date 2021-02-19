@@ -2,6 +2,7 @@ import Hapi from '@hapi/hapi';
 import Inert from '@hapi/inert';
 import Vision from '@hapi/vision';
 import HapiSwagger from 'hapi-swagger';
+import killPort from 'kill-port';
 import { nodeConfig, swaggerConfig } from './config';
 import { logger } from './utils/Logger';
 import db from './database';
@@ -20,6 +21,7 @@ export default async () => {
       }
     ]);
     await server.register(apis);
+    await killPort(nodeConfig.port);
     await server.start();
     console.log('Server running on %s', server.info.uri);
   } catch (err) {
