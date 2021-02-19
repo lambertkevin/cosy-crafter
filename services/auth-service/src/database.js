@@ -16,6 +16,8 @@ export default async () => {
 
   return mongoose
     .connect(mongoURL, {
+      useCreateIndex: true,
+      useFindAndModify: false,
       useNewUrlParser: true,
       useUnifiedTopology: true
     })
