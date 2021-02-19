@@ -4,10 +4,23 @@ import { expect } from 'chai';
 import jwt from 'jsonwebtoken';
 import FormData from 'form-data';
 import getStream from 'get-stream';
+import { spawn } from 'child_process';
 import * as SectionController from '../../src/controllers/SectionController';
 import * as PodcastController from '../../src/controllers/PodcastController';
 import * as PartController from '../../src/controllers/PartController';
 import init from '../../src/server';
+
+const authServerExec = new Promise((resolve, reject) => {
+  const child = spawn('npm', ['run', 'test'], {
+    cwd: path.join(path.resolve('./'), '..', 'auth-service')
+  });
+
+  child.stdout.on('data', (data) => {
+    if (data.toString().includes('Server running')) {
+      resolve(child);
+    }
+  });
+});
 
 const objectToFormData = (obj) => {
   const fd = new FormData();
@@ -17,19 +30,21 @@ const objectToFormData = (obj) => {
   return fd;
 };
 
+const accessToken = jwt.sign(
+  {
+    service: 'e2e-service'
+  },
+  process.env.SERVICE_JWT_SECRET,
+  {
+    expiresIn: '10m'
+  }
+);
+
 describe('Parts API tests', () => {
-  const accessToken = jwt.sign(
-    {
-      service: 'e2e-service'
-    },
-    process.env.SERVICE_JWT_SECRET,
-    {
-      expiresIn: '10m'
-    }
-  );
   let server;
 
   before(async () => {
+    await authServerExec;
     server = await init();
   });
 
