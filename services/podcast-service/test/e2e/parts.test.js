@@ -4,25 +4,11 @@ import { expect } from 'chai';
 import jwt from 'jsonwebtoken';
 import FormData from 'form-data';
 import getStream from 'get-stream';
-import { spawn } from 'child_process';
 import * as SectionController from '../../src/controllers/SectionController';
 import * as PodcastController from '../../src/controllers/PodcastController';
 import * as PartController from '../../src/controllers/PartController';
+import startAuthService from '../utils/authServiceUtils';
 import init from '../../src/server';
-
-// Promise starting the auth-service locally
-const authServerExec = new Promise((resolve) => {
-  const child = spawn('npm', ['run', 'test'], {
-    cwd: path.join(path.resolve('./'), '..', 'auth-service')
-  });
-
-  child.stdout.on('data', (data) => {
-    // Service is ready when it logs 'Server running'
-    if (data.toString().includes('Server running')) {
-      resolve(child);
-    }
-  });
-});
 
 const objectToFormData = (obj) => {
   const fd = new FormData();
@@ -46,7 +32,7 @@ describe('Parts API tests', () => {
   let server;
 
   before(async () => {
-    await authServerExec;
+    await startAuthService();
     server = await init();
   });
 
