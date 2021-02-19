@@ -10,12 +10,14 @@ import * as PodcastController from '../../src/controllers/PodcastController';
 import * as PartController from '../../src/controllers/PartController';
 import init from '../../src/server';
 
-const authServerExec = new Promise((resolve, reject) => {
+// Promise starting the auth-service locally
+const authServerExec = new Promise((resolve) => {
   const child = spawn('npm', ['run', 'test'], {
     cwd: path.join(path.resolve('./'), '..', 'auth-service')
   });
 
   child.stdout.on('data', (data) => {
+    // Service is ready when it logs 'Server running'
     if (data.toString().includes('Server running')) {
       resolve(child);
     }
