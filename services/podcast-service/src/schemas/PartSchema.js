@@ -44,7 +44,10 @@ export const creationSchema = joi.object({
   tags: joi
     .string()
     .allow('')
-    .regex(/^[a-zA-Z0-9, ]*$/, 'Alphanumerics, space and comma characters')
+    .regex(
+      /^[a-zA-Z0-9, -]*$/,
+      'Alphanumerics, space, dash and comma characters'
+    )
     .min(0)
     .max(200),
   file: joi.any().required().meta({ swaggerType: 'file' })

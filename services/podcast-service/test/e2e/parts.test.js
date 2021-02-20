@@ -9,7 +9,9 @@ import { startAuthService, accessToken } from '../utils/authUtils';
 import { objectToFormData } from '../utils/formUtils';
 import init from '../../src/server';
 
-describe('Parts API tests', () => {
+describe('Parts API V1 tests', () => {
+  let section;
+  let podcast;
   let server;
   let pid;
 
@@ -17,6 +19,13 @@ describe('Parts API tests', () => {
     const authServiceChild = await startAuthService();
     pid = authServiceChild.pid;
     server = await init();
+    section = await SectionController.create({
+      name: `e2e-test`
+    });
+    podcast = await PodcastController.create({
+      name: `e2e-podcast`,
+      edition: 1
+    });
   });
 
   after(() => {
@@ -39,45 +48,25 @@ describe('Parts API tests', () => {
   });
 
   describe('Parts Creation and Deletion', () => {
-    let fakePartPayloadFormData;
-    let fakePartPayloadString;
     let partPayloadFormData;
-    let partPayloadString;
-    let fakePartPayload;
-    let section;
-    let podcast;
+    let partPayloadStream;
+    let partPayload;
     let part;
 
     before(async () => {
-      fakePartPayload = {
-        name: `part`,
-        section: '1234-1234-1234-1234-1234',
-        podcast: '1234-1234-1234-1234-1234',
-        tags: 'tag1',
-        file: Buffer.alloc(0)
-      };
-
-      section = await SectionController.create({
-        name: `e2e-test`
-      });
-      podcast = await PodcastController.create({
-        name: `e2e-podcast`,
-        edition: 1
-      });
-
-      fakePartPayloadFormData = objectToFormData(fakePartPayload);
-      fakePartPayloadString = await getStream(fakePartPayloadFormData);
-
-      partPayloadFormData = objectToFormData({
-        ...fakePartPayload,
+      partPayload = {
+        name: 'part',
         section: section.data._id.toString(),
         podcast: podcast.data._id.toString(),
+        // Be carefull, you can't spread this stream after it being consumed.
+        // You'll have to have to manually add this property again.
         file: fs.createReadStream(
           path.join(path.resolve('./'), 'test', 'files', 'blank.mp3')
-        )
-      });
-
-      partPayloadString = await getStream(partPayloadFormData);
+        ),
+        tags: 'tag1'
+      };
+      partPayloadFormData = objectToFormData(partPayload);
+      partPayloadStream = await getStream(partPayloadFormData);
     });
 
     describe('Fails', () => {
@@ -86,9 +75,9 @@ describe('Parts API tests', () => {
           .inject({
             method: 'POST',
             url: '/v1/parts',
-            payload: fakePartPayloadString,
+            payload: partPayloadStream,
             headers: {
-              ...fakePartPayloadFormData.getHeaders(),
+              ...partPayloadFormData.getHeaders(),
               maxBodyLength: 200 * 1024 * 1024, // 200MB max part size
               maxContentLength: 200 * 1024 * 1024 // 200MB max part size
             }
@@ -109,7 +98,7 @@ describe('Parts API tests', () => {
           .inject({
             method: 'POST',
             url: '/v1/parts',
-            payload: fakePartPayloadString,
+            payload: partPayloadStream,
             headers: {
               contentType: 'application/json',
               authorization: accessToken
@@ -126,14 +115,56 @@ describe('Parts API tests', () => {
           });
       });
 
-      it("should fail if part dependencies doesn't exist. HTTP 406", () => {
+      it("should fail if part dependencies doesn't exist (no podcast). HTTP 406", async () => {
+        const partPayloadFormDataNoPodcast = objectToFormData({
+          ...partPayload,
+          // Redundancy because the stream of partPayload has already been consumed
+          file: Buffer.alloc(0),
+          section: '1234-1234-1234-1234-1234'
+        });
+        const partPayloadStreamNoPodcast = await getStream(
+          partPayloadFormDataNoPodcast
+        );
+
         return server
           .inject({
             method: 'POST',
             url: '/v1/parts',
-            payload: fakePartPayloadString,
+            payload: partPayloadStreamNoPodcast,
             headers: {
-              ...fakePartPayloadFormData.getHeaders(),
+              ...partPayloadFormDataNoPodcast.getHeaders(),
+              authorization: accessToken
+            }
+          })
+          .then((response) => {
+            expect(response).to.be.a('object');
+            expect(response).to.include({ statusCode: 406 });
+            expect(response.result).to.deep.include({
+              statusCode: 406,
+              error: 'Not Acceptable',
+              message: "At least one dependency doesn't exist"
+            });
+          });
+      });
+
+      it("should fail if part dependencies doesn't exist (no section). HTTP 406", async () => {
+        const partPayloadFormDataNoSection = objectToFormData({
+          ...partPayload,
+          // Redundancy because the stream has already been consumed before
+          file: Buffer.alloc(0),
+          section: '1234-1234-1234-1234-1234'
+        });
+        const partPayloadStreamNoSection = await getStream(
+          partPayloadFormDataNoSection
+        );
+
+        return server
+          .inject({
+            method: 'POST',
+            url: '/v1/parts',
+            payload: partPayloadStreamNoSection,
+            headers: {
+              ...partPayloadFormDataNoSection.getHeaders(),
               authorization: accessToken
             }
           })
@@ -151,16 +182,17 @@ describe('Parts API tests', () => {
       describe('Required fields', () => {
         it('should fail if missing name', async () => {
           const payloadFormData = objectToFormData({
-            ...fakePartPayload,
+            ...partPayload,
+            file: Buffer.alloc(0),
             name: null
           });
-          const payloadString = await getStream(payloadFormData);
+          const payloadStream = await getStream(payloadFormData);
 
           return server
             .inject({
               method: 'POST',
               url: '/v1/parts',
-              payload: payloadString,
+              payload: payloadStream,
               headers: {
                 ...payloadFormData.getHeaders(),
                 maxBodyLength: 200 * 1024 * 1024, // 200MB max part size
@@ -181,16 +213,17 @@ describe('Parts API tests', () => {
 
         it('should fail if missing section', async () => {
           const payloadFormData = objectToFormData({
-            ...fakePartPayload,
+            ...partPayload,
+            file: Buffer.alloc(0),
             section: null
           });
-          const payloadString = await getStream(payloadFormData);
+          const payloadStream = await getStream(payloadFormData);
 
           return server
             .inject({
               method: 'POST',
               url: '/v1/parts',
-              payload: payloadString,
+              payload: payloadStream,
               headers: {
                 ...payloadFormData.getHeaders(),
                 maxBodyLength: 200 * 1024 * 1024, // 200MB max part size
@@ -211,16 +244,17 @@ describe('Parts API tests', () => {
 
         it('should fail if missing podcast', async () => {
           const payloadFormData = objectToFormData({
-            ...fakePartPayload,
+            ...partPayload,
+            file: Buffer.alloc(0),
             podcast: null
           });
-          const payloadString = await getStream(payloadFormData);
+          const payloadStream = await getStream(payloadFormData);
 
           return server
             .inject({
               method: 'POST',
               url: '/v1/parts',
-              payload: payloadString,
+              payload: payloadStream,
               headers: {
                 ...payloadFormData.getHeaders(),
                 maxBodyLength: 200 * 1024 * 1024, // 200MB max part size
@@ -243,16 +277,16 @@ describe('Parts API tests', () => {
 
         it('should fail if missing file', async () => {
           const payloadFormData = objectToFormData({
-            ...fakePartPayload,
+            ...partPayload,
             file: null
           });
-          const payloadString = await getStream(payloadFormData);
+          const payloadStream = await getStream(payloadFormData);
 
           return server
             .inject({
               method: 'POST',
               url: '/v1/parts',
-              payload: payloadString,
+              payload: payloadStream,
               headers: {
                 ...payloadFormData.getHeaders(),
                 maxBodyLength: 200 * 1024 * 1024, // 200MB max part size
@@ -279,7 +313,7 @@ describe('Parts API tests', () => {
           .inject({
             method: 'POST',
             url: '/v1/parts',
-            payload: partPayloadString,
+            payload: partPayloadStream,
             headers: {
               ...partPayloadFormData.getHeaders(),
               authorization: accessToken
@@ -363,6 +397,259 @@ describe('Parts API tests', () => {
   });
 
   describe('Parts Update', () => {
-    it('has to be implemented');
+    let part;
+
+    before(async () => {
+      podcast = await PodcastController.create({
+        name: `e2e-podcast-2`,
+        edition: 2
+      });
+
+      part = await PartController.create({
+        name: 'partToUpdate',
+        section: section.data._id.toString(),
+        podcast: podcast.data._id.toString(),
+        tags: 'tag1',
+        file: {
+          path: path.join(path.resolve('./'), 'test', 'files', 'blank.mp3'),
+          bytes: 61637,
+          filename: 'blank.mp3',
+          headers: {
+            'content-disposition':
+              'form-data; name="file"; filename="blank.mp3"',
+            'content-type': 'audio/mpeg'
+          }
+        }
+      });
+    });
+
+    describe('Fails', () => {
+      it('should fail trying to create part without jwt. HTTP 401', () => {
+        return server
+          .inject({
+            method: 'PATCH',
+            url: `/v1/parts/${part?.data?._id}`,
+            payload: {
+              name: 'partToUpdateRename'
+            }
+          })
+          .then((response) => {
+            expect(response).to.be.a('object');
+            expect(response).to.include({ statusCode: 401 });
+            expect(response.result).to.deep.include({
+              statusCode: 401,
+              error: 'Unauthorized',
+              message: 'Missing authentication'
+            });
+          });
+      });
+
+      it('should fail if creation content-type is not multipart. HTTP 415', () => {
+        return server
+          .inject({
+            method: 'PATCH',
+            url: `/v1/parts/${part?.data?._id}`,
+            payload: {
+              name: 'partToUpdateRename'
+            },
+            headers: {
+              contentType: 'application/json',
+              authorization: accessToken
+            }
+          })
+          .then((response) => {
+            expect(response).to.be.a('object');
+            expect(response).to.include({ statusCode: 415 });
+            expect(response.result).to.deep.include({
+              statusCode: 415,
+              error: 'Unsupported Media Type',
+              message: 'Unsupported Media Type'
+            });
+          });
+      });
+
+      it('should fail updating a non existent part', () => {
+        const payloadUpdateFormData = objectToFormData({
+          name: 'update'
+        });
+
+        return server
+          .inject({
+            method: 'PATCH',
+            url: `/v1/parts/1234a1234b1234c1234d1234`,
+            payload: payloadUpdateFormData.getBuffer(),
+            headers: {
+              ...payloadUpdateFormData.getHeaders(),
+              authorization: accessToken
+            }
+          })
+          .then((response) => {
+            expect(response).to.be.a('object');
+            expect(response).to.include({ statusCode: 404 });
+            expect(response.result).to.deep.include({
+              statusCode: 404,
+              error: 'Not Found',
+              message: 'Not Found'
+            });
+          });
+      });
+
+      it("should fail if part dependencies doesn't exist (wrong podcast). HTTP 406", () => {
+        const payloadUpdateFormData = objectToFormData({
+          podcast: '1234-1234-1234-1234-1234'
+        });
+
+        return server
+          .inject({
+            method: 'PATCH',
+            url: `/v1/parts/${part?.data?._id}`,
+            payload: payloadUpdateFormData.getBuffer(),
+            headers: {
+              ...payloadUpdateFormData.getHeaders(),
+              authorization: accessToken
+            }
+          })
+          .then((response) => {
+            expect(response).to.be.a('object');
+            expect(response).to.include({ statusCode: 406 });
+            expect(response.result).to.deep.include({
+              statusCode: 406,
+              error: 'Not Acceptable',
+              message: "At least one dependency doesn't exist"
+            });
+          });
+      });
+
+      it("should fail if part dependencies doesn't exist (wrong section). HTTP 406", () => {
+        const payloadUpdateFormData = objectToFormData({
+          section: '1234-1234-1234-1234-1234'
+        });
+
+        return server
+          .inject({
+            method: 'PATCH',
+            url: `/v1/parts/${part?.data?._id}`,
+            payload: payloadUpdateFormData.getBuffer(),
+            headers: {
+              ...payloadUpdateFormData.getHeaders(),
+              authorization: accessToken
+            }
+          })
+          .then((response) => {
+            expect(response).to.be.a('object');
+            expect(response).to.include({ statusCode: 406 });
+            expect(response.result).to.deep.include({
+              statusCode: 406,
+              error: 'Not Acceptable',
+              message: "At least one dependency doesn't exist"
+            });
+          });
+      });
+    });
+
+    describe('Success', () => {
+      it('should succeed updating basic fields', () => {
+        const payloadFormData = objectToFormData({
+          name: 'partNameUpdated',
+          tags: 'new-tag, new-tag-2'
+        });
+
+        return server
+          .inject({
+            method: 'PATCH',
+            url: `/v1/parts/${part?.data?._id}`,
+            payload: payloadFormData.getBuffer(),
+            headers: {
+              ...payloadFormData.getHeaders(),
+              authorization: accessToken
+            }
+          })
+          .then((response) => {
+            expect(response).to.be.a('object');
+            expect(response).to.include({ statusCode: 200 });
+            expect(response?.result).to.include({
+              statusCode: 200
+            });
+            expect(response?.result?.data).to.include({
+              name: 'partNameUpdated'
+            });
+            expect(response?.result?.data?.tags).to.include.members([
+              'new-tag',
+              'new-tag-2'
+            ]);
+          });
+      });
+
+      it('should succeed updating dependencies', async () => {
+        const newSection = await SectionController.create({
+          name: `e2e-test-2`
+        });
+        const newPodcast = await PodcastController.create({
+          name: `e2e-podcast-3`,
+          edition: 3
+        });
+        const payloadFormData = objectToFormData({
+          section: newSection.data._id.toString(),
+          podcast: newPodcast.data._id.toString()
+        });
+
+        return server
+          .inject({
+            method: 'PATCH',
+            url: `/v1/parts/${part?.data?._id}`,
+            payload: payloadFormData.getBuffer(),
+            headers: {
+              ...payloadFormData.getHeaders(),
+              authorization: accessToken
+            }
+          })
+          .then((response) => {
+            expect(response).to.be.a('object');
+            expect(response).to.include({ statusCode: 200 });
+            expect(response?.result).to.include({
+              statusCode: 200
+            });
+            expect(response?.result?.data).to.include({
+              name: 'partNameUpdated'
+            });
+            expect(response?.result?.data?.section?._id.toString()).to.equal(
+              newSection.data._id.toString()
+            );
+            expect(response?.result?.data?.podcast?._id.toString()).to.equal(
+              newPodcast.data._id.toString()
+            );
+          });
+      });
+
+      it('should succeed updating part file', async () => {
+        const payloadUpdateFormData = objectToFormData({
+          file: fs.createReadStream(
+            path.join(path.resolve('./'), 'test', 'files', 'blank2.mp3')
+          )
+        });
+        const payloadUpdateStream = await getStream(payloadUpdateFormData);
+
+        return server
+          .inject({
+            method: 'PATCH',
+            url: `/v1/parts/${part?.data?._id}`,
+            payload: payloadUpdateStream,
+            headers: {
+              ...payloadUpdateFormData.getHeaders(),
+              authorization: accessToken
+            }
+          })
+          .then((response) => {
+            expect(response).to.be.a('object');
+            expect(response).to.include({ statusCode: 200 });
+            expect(response?.result).to.include({
+              statusCode: 200
+            });
+            expect(response?.result?.data).to.include({
+              originalFilename: 'blank2.mp3'
+            });
+          });
+      });
+    });
   });
 });

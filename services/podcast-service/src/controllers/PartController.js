@@ -215,21 +215,20 @@ export const update = async (id, payload, sanitized = true) => {
   }
 
   const { name, section, podcast: podcastId, tags: _tags, file } = payload;
-  // First test part existence
+  // Test part existence
   let part;
   try {
     part = await Part.findById(id);
 
     if (!part) {
-      logger.error("Part Update Error: Part doesn't exist", { payload });
       return Boom.notFound();
     }
   } catch (error) {
-    logger.error("Part Update Error: Couldn't get part", { payload, error });
+    logger.error("Part Update Error: Part doesn't exist", { payload, error });
     return Boom.boomify(error);
   }
 
-  // Then test dependencies existence
+  // Test dependencies existence
   let podcast;
   // We get the new or old podcast (we'll need its name later on)
   try {
@@ -237,19 +236,25 @@ export const update = async (id, payload, sanitized = true) => {
     podcast = data;
 
     if (!podcast) {
-      logger.error("Part Update Error: Podcast doesn't exist", { payload });
-      return Boom.notFound();
+      throw Boom.notFound();
     }
   } catch (error) {
-    logger.error("Part Update Error: Couldn't get podcast", { payload, error });
+    logger.error("Part Update Error: Podcast doesn't exist", {
+      payload,
+      error
+    });
     return Boom.notAcceptable("At least one dependency doesn't exist");
   }
 
   if (section) {
     try {
-      await SectionController.findOne(section);
+      const { data: sectionExists } = await SectionController.findOne(section);
+
+      if (!sectionExists) {
+        throw Boom.notFound();
+      }
     } catch (error) {
-      logger.error("Part Update Error: Section Doesn't exist", {
+      logger.error("Part Update Error: Section doesn't exist", {
         payload,
         error
       });
@@ -280,7 +285,12 @@ export const update = async (id, payload, sanitized = true) => {
     const { storageType, storagePath, storageFilename } = part;
     const axiosAsService = makeAxiosInstance();
 
-    if (storageType && storagePath && storageFilename) {
+    if (
+      storageType &&
+      storagePath &&
+      storageFilename &&
+      process.env.NODE_ENV !== 'test'
+    ) {
       axiosAsService
         .delete(
           `http://${STORAGE_SERVICE_NAME}:${STORAGE_SERVICE_PORT}/v1/podcast-parts`,
@@ -313,18 +323,29 @@ export const update = async (id, payload, sanitized = true) => {
     formData.append('file', fs.createReadStream(file.path));
 
     try {
-      const { data: savedFile } = await axiosAsService.post(
-        `http://${STORAGE_SERVICE_NAME}:${STORAGE_SERVICE_PORT}/v1/podcast-parts`,
-        formData,
-        {
-          headers: {
-            ...formData.getHeaders(),
-            authorization: tokens.accessToken
-          },
-          maxBodyLength: 200 * 1024 * 1024, // 200MB max part size
-          maxContentLength: 200 * 1024 * 1024 // 200MB max part size
-        }
-      );
+      let savedFile;
+      if (process.env.NODE_ENV === 'test') {
+        savedFile = {
+          storageType: 'local',
+          location: 'e2e-test',
+          filename: 'e2e-test.mp3',
+          publicLink: 'e2e-test'
+        };
+      } else {
+        const storageRequest = await axiosAsService.post(
+          `http://${STORAGE_SERVICE_NAME}:${STORAGE_SERVICE_PORT}/v1/podcast-parts`,
+          formData,
+          {
+            headers: {
+              ...formData.getHeaders(),
+              authorization: tokens.accessToken
+            },
+            maxBodyLength: 200 * 1024 * 1024, // 200MB max part size
+            maxContentLength: 200 * 1024 * 1024 // 200MB max part size
+          }
+        );
+        savedFile = storageRequest.data;
+      }
 
       fileInfos = {
         originalFilename: filename,
