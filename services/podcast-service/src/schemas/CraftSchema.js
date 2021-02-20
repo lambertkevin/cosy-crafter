@@ -21,7 +21,8 @@ export const creationSchema = joi.object({
     .meta({
       _mongoose: { unique: true }
     }),
-  user: joi.string().length(24).allow(null).default(null), // .required() // Not required until I add the users to auth service
+  /** @WARNING Not required until I add the users to auth service */
+  user: joi.string().length(24).allow(null).default(null), // .required()
   storageType: joi.string().required(),
   storagePath: joi.string().required(),
   storageFilename: joi.string().required()
