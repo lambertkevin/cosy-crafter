@@ -178,7 +178,7 @@ describe('Parts API V1 tests', () => {
           });
       });
 
-      describe('Required fields', () => {
+      describe('Requirements', () => {
         it('should fail if missing name', async () => {
           const payloadFormData = objectToFormData({
             ...partPayload,
@@ -194,8 +194,6 @@ describe('Parts API V1 tests', () => {
               payload: payloadStream,
               headers: {
                 ...payloadFormData.getHeaders(),
-                maxBodyLength: 200 * 1024 * 1024, // 200MB max part size
-                maxContentLength: 200 * 1024 * 1024, // 200MB max part size
                 authorization: accessToken
               }
             })
@@ -225,8 +223,6 @@ describe('Parts API V1 tests', () => {
               payload: payloadStream,
               headers: {
                 ...payloadFormData.getHeaders(),
-                maxBodyLength: 200 * 1024 * 1024, // 200MB max part size
-                maxContentLength: 200 * 1024 * 1024, // 200MB max part size
                 authorization: accessToken
               }
             })
@@ -256,8 +252,6 @@ describe('Parts API V1 tests', () => {
               payload: payloadStream,
               headers: {
                 ...payloadFormData.getHeaders(),
-                maxBodyLength: 200 * 1024 * 1024, // 200MB max part size
-                maxContentLength: 200 * 1024 * 1024, // 200MB max part size
                 authorization: accessToken
               }
             })
@@ -288,8 +282,6 @@ describe('Parts API V1 tests', () => {
               payload: payloadStream,
               headers: {
                 ...payloadFormData.getHeaders(),
-                maxBodyLength: 200 * 1024 * 1024, // 200MB max part size
-                maxContentLength: 200 * 1024 * 1024, // 200MB max part size
                 authorization: accessToken
               }
             })
@@ -300,6 +292,70 @@ describe('Parts API V1 tests', () => {
                 statusCode: 400,
                 error: 'Bad Request',
                 message: '"file" is required'
+              });
+            });
+        });
+
+        it('should fail if name is longer than 100 characters', async () => {
+          const payloadFormData = objectToFormData({
+            ...partPayload,
+            file: Buffer.alloc(0),
+            name:
+              // 101 characters
+              'UbI5Of66mGLq6HBQqCnDyhBpzWpRtSKUAqvznxu3wz85vuP9iNsxBtkVoTF8PdBAQkMv45l5YAESLcBPN8NIcdzIURKmJTAJ7HaQu'
+          });
+          const payloadStream = await getStream(payloadFormData);
+
+          return server
+            .inject({
+              method: 'POST',
+              url: '/v1/parts',
+              payload: payloadStream,
+              headers: {
+                ...payloadFormData.getHeaders(),
+                authorization: accessToken
+              }
+            })
+            .then((response) => {
+              expect(response).to.be.a('object');
+              expect(response).to.include({ statusCode: 400 });
+              expect(response.result).to.deep.include({
+                statusCode: 400,
+                error: 'Bad Request',
+                message:
+                  '"name" length must be less than or equal to 100 characters long'
+              });
+            });
+        });
+
+        it('should fail if tags are longer than 200 characters', async () => {
+          const payloadFormData = objectToFormData({
+            ...partPayload,
+            file: Buffer.alloc(0),
+            tags:
+              // 201 characters
+              'YVynrJFfbyWe47ddFwxg4sQAvs9ptOlvT9hWy6gSf1vqABmsQ03osPrtpU56GtpKNS88LgWXpkvyRuBHf9zkC12bRYVyr5hqL31u, YzhNiKJKFn8kun974RdwMLFar9ZRDoenyYXkmSPet4BGMIMahCAYbl8ZC7xXhBqKnlnEnJab9faun4y27ISboOZc7NTnW9bXw7R1R'
+          });
+          const payloadStream = await getStream(payloadFormData);
+
+          return server
+            .inject({
+              method: 'POST',
+              url: '/v1/parts',
+              payload: payloadStream,
+              headers: {
+                ...payloadFormData.getHeaders(),
+                authorization: accessToken
+              }
+            })
+            .then((response) => {
+              expect(response).to.be.a('object');
+              expect(response).to.include({ statusCode: 400 });
+              expect(response.result).to.deep.include({
+                statusCode: 400,
+                error: 'Bad Request',
+                message:
+                  '"tags" length must be less than or equal to 200 characters long'
               });
             });
         });
