@@ -264,10 +264,6 @@ describe('Podcasts API V1 tests', () => {
           .inject({
             method: 'DELETE',
             url: `/v1/podcasts/${podcastToDelete?.data?._id?.toString()}`,
-            payload: {
-              name: 'e2e-podcast-to-update-2',
-              edition: 101
-            },
             headers: {
               authorization: accessToken
             }

@@ -210,10 +210,6 @@ describe('Sections API V1 tests', () => {
           .inject({
             method: 'DELETE',
             url: `/v1/sections/${sectionToDelete?.data?._id?.toString()}`,
-            payload: {
-              name: 'e2e-section-to-update-2',
-              edition: 101
-            },
             headers: {
               authorization: accessToken
             }
