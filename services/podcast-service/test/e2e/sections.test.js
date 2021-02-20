@@ -51,7 +51,7 @@ describe('Sections API V1 tests', () => {
           });
       });
 
-      describe('Required fields', () => {
+      describe('Requirements', () => {
         it('should fail if missing name', async () => {
           return server
             .inject({
@@ -69,6 +69,32 @@ describe('Sections API V1 tests', () => {
                 statusCode: 400,
                 error: 'Bad Request',
                 message: '"name" is required'
+              });
+            });
+        });
+
+        it('should fail if name is longer than 100 characters', async () => {
+          return server
+            .inject({
+              method: 'POST',
+              url: '/v1/sections',
+              payload: {
+                name:
+                  // 101 characters
+                  'ufpF4G7Ai5FR32f8I63iAQJVV6X51eD9MCMWUmQ4VbbfLih4uFD5bzFfASJEnuOH6LnZOjySvxiyUHIctk9EIjRsnyQeLzpWgEvo3'
+              },
+              headers: {
+                authorization: accessToken
+              }
+            })
+            .then((response) => {
+              expect(response).to.be.a('object');
+              expect(response).to.include({ statusCode: 400 });
+              expect(response.result).to.include({
+                statusCode: 400,
+                error: 'Bad Request',
+                message:
+                  '"name" length must be less than or equal to 100 characters long'
               });
             });
         });

@@ -51,7 +51,7 @@ describe('Podcasts API V1 tests', () => {
           });
       });
 
-      describe('Required fields', () => {
+      describe('Requirements', () => {
         it('should fail if missing name', async () => {
           return server
             .inject({
@@ -94,6 +94,57 @@ describe('Podcasts API V1 tests', () => {
                 statusCode: 400,
                 error: 'Bad Request',
                 message: '"edition" is required'
+              });
+            });
+        });
+
+        it('should fail if edition is not a number', async () => {
+          return server
+            .inject({
+              method: 'POST',
+              url: '/v1/podcasts',
+              payload: {
+                name: 'e2e-podcast-not-number-edition',
+                edition: -1
+              },
+              headers: {
+                authorization: accessToken
+              }
+            })
+            .then((response) => {
+              expect(response).to.be.a('object');
+              expect(response).to.include({ statusCode: 400 });
+              expect(response.result).to.include({
+                statusCode: 400,
+                error: 'Bad Request',
+                message: '"edition" must be a positive number'
+              });
+            });
+        });
+
+        it('should fail if edition is not a positive number', async () => {
+          return server
+            .inject({
+              method: 'POST',
+              url: '/v1/podcasts',
+              payload: {
+                name:
+                  // 101 characters
+                  'ufpF4G7Ai5FR32f8I63iAQJVV6X51eD9MCMWUmQ4VbbfLih4uFD5bzFfASJEnuOH6LnZOjySvxiyUHIctk9EIjRsnyQeLzpWgEvo3',
+                edition: 300
+              },
+              headers: {
+                authorization: accessToken
+              }
+            })
+            .then((response) => {
+              expect(response).to.be.a('object');
+              expect(response).to.include({ statusCode: 400 });
+              expect(response.result).to.include({
+                statusCode: 400,
+                error: 'Bad Request',
+                message:
+                  '"name" length must be less than or equal to 100 characters long'
               });
             });
         });
