@@ -1,8 +1,9 @@
 import { expect } from 'chai';
 import { startAuthService, accessToken } from '../utils/authUtils';
+import * as SectionController from '../../src/controllers/SectionController';
 import init from '../../src/server';
 
-describe('Sections API tests', () => {
+describe('Sections API V1 tests', () => {
   let server;
   let pid;
 
@@ -14,6 +15,7 @@ describe('Sections API tests', () => {
 
   after(() => {
     process.kill(pid);
+    server.stop();
   });
 
   describe('Server Testing', () => {
@@ -30,7 +32,7 @@ describe('Sections API tests', () => {
     });
   });
 
-  describe('Section Creation and Deletion', () => {
+  describe('Section Creation', () => {
     describe('Fails', () => {
       it('should fail trying to create section without jwt. HTTP 401', () => {
         return server
@@ -100,7 +102,107 @@ describe('Sections API tests', () => {
     });
   });
 
-  describe.skip('Section Update', () => {
-    it('has to be implemented');
+  describe('Section Update', () => {
+    describe('Fails', () => {
+      it('should fail trying to update section without jwt. HTTP 401', () => {
+        return server
+          .inject({
+            method: 'POST',
+            url: '/v1/sections'
+          })
+          .then((response) => {
+            expect(response).to.be.a('object');
+            expect(response).to.include({ statusCode: 401 });
+            expect(response.result).to.include({
+              statusCode: 401,
+              error: 'Unauthorized',
+              message: 'Missing authentication'
+            });
+          });
+      });
+    });
+
+    describe('Success', () => {
+      it('should succeed updating a section basic fields', async () => {
+        const sectionToUpdate = await SectionController.create({
+          name: 'e2e-section-to-update'
+        });
+
+        return server
+          .inject({
+            method: 'PATCH',
+            url: `/v1/sections/${sectionToUpdate?.data?._id?.toString()}`,
+            payload: {
+              name: 'e2e-section-to-update-2'
+            },
+            headers: {
+              authorization: accessToken
+            }
+          })
+          .then((response) => {
+            expect(response).to.be.a('object');
+            expect(response).to.include({ statusCode: 200 });
+            expect(response?.result).to.include({
+              statusCode: 200
+            });
+            expect(response?.result?.data).to.include({
+              name: 'e2e-section-to-update-2'
+            });
+          });
+      });
+    });
+  });
+
+  describe('Section Deletion', () => {
+    describe('Fails', () => {
+      it('should fail trying to delete section without jwt. HTTP 401', () => {
+        return server
+          .inject({
+            method: 'DELETE',
+            url: '/v1/sections/1234a1234b1234c1234d1234'
+          })
+          .then((response) => {
+            expect(response).to.be.a('object');
+            expect(response).to.include({ statusCode: 401 });
+            expect(response.result).to.include({
+              statusCode: 401,
+              error: 'Unauthorized',
+              message: 'Missing authentication'
+            });
+          });
+      });
+    });
+
+    describe('Success', () => {
+      it('should succeed deleting a section', async () => {
+        const sectionToDelete = await SectionController.create({
+          name: 'e2e-section-to-delete',
+          edition: 200
+        });
+
+        return server
+          .inject({
+            method: 'DELETE',
+            url: `/v1/sections/${sectionToDelete?.data?._id?.toString()}`,
+            payload: {
+              name: 'e2e-section-to-update-2',
+              edition: 101
+            },
+            headers: {
+              authorization: accessToken
+            }
+          })
+          .then((response) => {
+            expect(response).to.be.a('object');
+            expect(response).to.include({ statusCode: 200 });
+            expect(response?.result).to.include({
+              statusCode: 200
+            });
+            expect(response?.result?.data?.deleted[0]).to.equal(
+              sectionToDelete?.data?._id.toString()
+            );
+          });
+      });
+    });
   });
 });
