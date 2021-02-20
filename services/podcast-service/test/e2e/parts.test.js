@@ -47,11 +47,10 @@ describe('Parts API V1 tests', () => {
     });
   });
 
-  describe('Parts Creation and Deletion', () => {
+  describe('Parts Creation', () => {
     let partPayloadFormData;
     let partPayloadStream;
     let partPayload;
-    let part;
 
     before(async () => {
       partPayload = {
@@ -320,7 +319,6 @@ describe('Parts API V1 tests', () => {
             }
           })
           .then((response) => {
-            part = response.result;
             expect(response).to.be.a('object');
             expect(response).to.include({ statusCode: 200 });
             expect(response?.result).to.include({
@@ -336,61 +334,6 @@ describe('Parts API V1 tests', () => {
             expect(response?.result?.data?.podcast?.toString()).to.be.equal(
               podcast?.data?._id?.toString()
             );
-          });
-      });
-
-      it('should succeed deleting part', () => {
-        return server
-          .inject({
-            method: 'DELETE',
-            url: '/v1/parts',
-            payload: { ids: [part?.data?._id?.toString()] },
-            headers: {
-              authorization: accessToken
-            }
-          })
-          .then((response) => {
-            expect(response).to.be.a('object');
-            expect(response).to.include({ statusCode: 200 });
-            expect(response?.result).to.include({
-              statusCode: 200
-            });
-            expect(response?.result?.data?.deleted[0]).to.be.equal(
-              part?.data?._id?.toString()
-            );
-          });
-      });
-
-      it('should cascade delete part when deleting podcast', async () => {
-        const part2 = await PartController.create({
-          name: `part2`,
-          section: section?.data?._id?.toString(),
-          podcast: podcast?.data?._id?.toString(),
-          tags: 'tag1',
-          file: {
-            path: path.join(path.resolve('./'), 'test', 'files', 'blank.mp3'),
-            bytes: 61637,
-            filename: 'blank.mp3',
-            headers: {
-              'content-disposition':
-                'form-data; name="file"; filename="blank.mp3"',
-              'content-type': 'audio/mpeg'
-            }
-          }
-        });
-        await PodcastController.remove([podcast.data._id]);
-
-        return server
-          .inject({
-            method: 'GET',
-            url: `/v1/parts/${part2.data._id.toString()}`,
-            headers: {
-              authorization: accessToken
-            }
-          })
-          .then((response) => {
-            expect(response).to.be.a('object');
-            expect(response).to.include({ statusCode: 404 });
           });
       });
     });
@@ -648,6 +591,141 @@ describe('Parts API V1 tests', () => {
             expect(response?.result?.data).to.include({
               originalFilename: 'blank2.mp3'
             });
+          });
+      });
+    });
+  });
+
+  describe('Parts Deletion', () => {
+    describe('Fails', () => {
+      it('should fail trying to create part without jwt. HTTP 401', () => {
+        return server
+          .inject({
+            method: 'DELETE',
+            url: '/v1/parts/1234a1234b1234c1234d1234'
+          })
+          .then((response) => {
+            expect(response).to.be.a('object');
+            expect(response).to.include({ statusCode: 401 });
+            expect(response.result).to.deep.include({
+              statusCode: 401,
+              error: 'Unauthorized',
+              message: 'Missing authentication'
+            });
+          });
+      });
+    });
+
+    describe('Success', () => {
+      it('should succeed deleting part', async () => {
+        const partToDelete = await PartController.create({
+          name: `partToDelete`,
+          section: section?.data?._id?.toString(),
+          podcast: podcast?.data?._id?.toString(),
+          tags: 'tag1',
+          file: {
+            path: path.join(path.resolve('./'), 'test', 'files', 'blank.mp3'),
+            bytes: 61637,
+            filename: 'blank.mp3',
+            headers: {
+              'content-disposition':
+                'form-data; name="file"; filename="blank.mp3"',
+              'content-type': 'audio/mpeg'
+            }
+          }
+        });
+
+        return server
+          .inject({
+            method: 'DELETE',
+            url: '/v1/parts',
+            payload: { ids: [partToDelete?.data?._id?.toString()] },
+            headers: {
+              authorization: accessToken
+            }
+          })
+          .then((response) => {
+            expect(response).to.be.a('object');
+            expect(response).to.include({ statusCode: 200 });
+            expect(response?.result).to.include({
+              statusCode: 200
+            });
+            expect(response?.result?.data?.deleted[0]).to.be.equal(
+              partToDelete?.data?._id?.toString()
+            );
+          });
+      });
+
+      it('should cascade delete part when deleting podcast', async () => {
+        const podcastToDelete = await PodcastController.create({
+          name: 'e2e-podcast-to-cascade-delete',
+          edition: 1234
+        });
+        const partToDelete = await PartController.create({
+          name: `partToDelete`,
+          section: section?.data?._id?.toString(),
+          podcast: podcastToDelete?.data?._id?.toString(),
+          tags: 'tag1',
+          file: {
+            path: path.join(path.resolve('./'), 'test', 'files', 'blank.mp3'),
+            bytes: 61637,
+            filename: 'blank.mp3',
+            headers: {
+              'content-disposition':
+                'form-data; name="file"; filename="blank.mp3"',
+              'content-type': 'audio/mpeg'
+            }
+          }
+        });
+        await PodcastController.remove([podcastToDelete.data._id]);
+
+        return server
+          .inject({
+            method: 'GET',
+            url: `/v1/parts/${partToDelete.data._id.toString()}`,
+            headers: {
+              authorization: accessToken
+            }
+          })
+          .then((response) => {
+            expect(response).to.be.a('object');
+            expect(response).to.include({ statusCode: 404 });
+          });
+      });
+
+      it('should cascade delete part when deleting section', async () => {
+        const sectionToDelete = await SectionController.create({
+          name: 'e2e-podcast-to-cascade-delete'
+        });
+        const partToDelete = await PartController.create({
+          name: `part2`,
+          section: sectionToDelete?.data?._id?.toString(),
+          podcast: podcast?.data?._id?.toString(),
+          tags: 'tag1',
+          file: {
+            path: path.join(path.resolve('./'), 'test', 'files', 'blank.mp3'),
+            bytes: 61637,
+            filename: 'blank.mp3',
+            headers: {
+              'content-disposition':
+                'form-data; name="file"; filename="blank.mp3"',
+              'content-type': 'audio/mpeg'
+            }
+          }
+        });
+        await PodcastController.remove([podcast.data._id]);
+
+        return server
+          .inject({
+            method: 'GET',
+            url: `/v1/parts/${partToDelete.data._id.toString()}`,
+            headers: {
+              authorization: accessToken
+            }
+          })
+          .then((response) => {
+            expect(response).to.be.a('object');
+            expect(response).to.include({ statusCode: 404 });
           });
       });
     });
