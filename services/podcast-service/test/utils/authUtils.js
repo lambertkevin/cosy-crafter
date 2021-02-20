@@ -10,7 +10,7 @@ import { spawn } from 'child_process';
 export const startAuthService = () =>
   // Promise starting the auth-service locally
   new Promise((resolve) => {
-    const child = spawn('npm', ['run', 'test'], {
+    const child = spawn('npm', ['run', 'mock'], {
       cwd: path.join(path.resolve('./'), '..', 'auth-service')
     });
 
