@@ -1,7 +1,13 @@
 import path from 'path';
+import jwt from 'jsonwebtoken';
 import { spawn } from 'child_process';
 
-export default () =>
+/**
+ * Start the auth-service locally as a child process spawn
+ *
+ * @return {Promise}
+ */
+export const startAuthService = () =>
   // Promise starting the auth-service locally
   new Promise((resolve) => {
     const child = spawn('npm', ['run', 'test'], {
@@ -15,3 +21,18 @@ export default () =>
       }
     });
   });
+
+export const accessToken = jwt.sign(
+  {
+    service: 'e2e-service'
+  },
+  process.env.SERVICE_JWT_SECRET,
+  {
+    expiresIn: '10m'
+  }
+);
+
+export default {
+  startAuthService,
+  accessToken
+};

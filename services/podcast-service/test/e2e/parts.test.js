@@ -1,39 +1,27 @@
 import fs from 'fs';
 import path from 'path';
 import { expect } from 'chai';
-import jwt from 'jsonwebtoken';
-import FormData from 'form-data';
 import getStream from 'get-stream';
 import * as SectionController from '../../src/controllers/SectionController';
 import * as PodcastController from '../../src/controllers/PodcastController';
 import * as PartController from '../../src/controllers/PartController';
-import startAuthService from '../utils/authServiceUtils';
+import { startAuthService, accessToken } from '../utils/authUtils';
+import { objectToFormData } from '../utils/formUtils';
 import init from '../../src/server';
-
-const objectToFormData = (obj) => {
-  const fd = new FormData();
-  Object.keys(obj).forEach((key) => {
-    fd.append(key, obj[key]);
-  });
-  return fd;
-};
-
-const accessToken = jwt.sign(
-  {
-    service: 'e2e-service'
-  },
-  process.env.SERVICE_JWT_SECRET,
-  {
-    expiresIn: '10m'
-  }
-);
 
 describe('Parts API tests', () => {
   let server;
+  let pid;
 
   before(async () => {
-    await startAuthService();
+    const authServiceChild = await startAuthService();
+    pid = authServiceChild.pid;
     server = await init();
+  });
+
+  after(() => {
+    process.kill(pid);
+    server.stop();
   });
 
   describe('Server Testing', () => {
