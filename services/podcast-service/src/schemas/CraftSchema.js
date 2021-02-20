@@ -23,7 +23,7 @@ export const creationSchema = joi.object({
     }),
   /** @WARNING Not required until I add the users to auth service */
   user: joi.string().length(24).allow(null).default(null), // .required()
-  storageType: joi.string().required(),
+  storageType: joi.string().valid('local', 'aws', 'scaleway').required(),
   storagePath: joi.string().required(),
   storageFilename: joi.string().required()
 });
