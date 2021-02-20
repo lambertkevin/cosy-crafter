@@ -1,6 +1,7 @@
 import _ from 'lodash';
 import Hapi from '@hapi/hapi';
 import Inert from '@hapi/inert';
+import mongoose from 'mongoose';
 import Vision from '@hapi/vision';
 import HapiSwagger from 'hapi-swagger';
 import HapiJWT from 'hapi-auth-jwt2';
@@ -13,8 +14,8 @@ import db from './database';
 export default async () => {
   try {
     const server = Hapi.server(nodeConfig);
-    await auth();
     await db();
+    await auth();
     await server.register([
       Inert,
       Vision,
@@ -41,12 +42,17 @@ export default async () => {
 
     await server.register(apis);
     await server.start();
-    console.log('Server running on %s', server.info.uri);
 
+    server.events.on('stop', async () => {
+      await mongoose.disconnect();
+    });
+
+    console.log('Server running on %s', server.info.uri);
     return server;
   } catch (err) {
     /** @WARNING Change this to fatal when feature available in winston + sentry */
     logger.error('Fatal Error while starting the service', err);
+    console.error(err);
     return process.exit(1);
   }
 };
