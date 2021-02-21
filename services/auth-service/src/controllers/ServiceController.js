@@ -269,7 +269,7 @@ export const refresh = async ({ accessToken, refreshToken }) => {
       'Service Token Refresh Error: Tokens verification failed',
       error
     );
-    return Boom.unauthorized();
+    return Boom.unauthorized('Tokens verification failed');
   }
 };
 
