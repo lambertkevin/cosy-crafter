@@ -23,13 +23,13 @@ export const find = (sanitized = true) =>
 /**
  * Return a specific Token
  *
- * @param {String} jwtid
+ * @param {String} id
  * @param {Boolean} sanitized
  *
  * @return {Promise<Object>} {Token}
  */
-export const findOne = (jwtid, sanitized = true) =>
-  Token.findOne({ jwtid }, sanitized ? projection : {})
+export const findOne = (id, sanitized = true) =>
+  Token.findOne({ _id: id }, sanitized ? projection : {})
     .exec()
     .then(calibrate.response)
     .catch((error) => {
@@ -108,12 +108,12 @@ export const update = (id, { jwtid, type }, sanitized = true) =>
 /**
  * Remove Tokens
  *
- * @param {Arrays} jwtids
+ * @param {Arrays} ids
  *
  * @return {Promise<void>}
  */
-export const remove = (jwtids) =>
-  Token.deleteMany({ jwtid: { $in: jwtids.filter((x) => x) } })
+export const remove = (ids) =>
+  Token.deleteMany({ _id: { $in: ids.filter((x) => x) } })
     .exec()
     .then((res) => {
       if (!res.deletedCount) {
@@ -121,7 +121,7 @@ export const remove = (jwtids) =>
       }
 
       return calibrate.response({
-        deleted: jwtids
+        deleted: ids
       });
     })
     .catch((error) => {
