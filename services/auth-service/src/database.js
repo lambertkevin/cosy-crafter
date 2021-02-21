@@ -5,7 +5,7 @@ import { logger } from './utils/Logger';
 
 export default async () => {
   const mongoURL = await (async () => {
-    if (process.env.NODE_ENV === 'test') {
+    if (['test', 'mock'].includes(process.env.NODE_ENV)) {
       const testDB = new MongoMemoryServer();
       const uri = await testDB.getUri();
 
