@@ -6,7 +6,7 @@ import calibrate from 'calibrate';
 import { v4 as uuid } from 'uuid';
 import privateIp from 'private-ip';
 import Service, { projection, hiddenFields } from '../models/ServiceModel';
-import * as TokenController from './TokenController';
+import * as TokenBlacklistController from './TokenBlacklistController';
 import tokensFactory from '../utils/TokensFactory';
 import { logger } from '../utils/Logger';
 
@@ -234,7 +234,7 @@ export const refresh = async ({ accessToken, refreshToken }) => {
     if (decodedAccessToken.service === decodedRefreshToken.service) {
       try {
         // Check if the token isn't blacklisted
-        const { data: isBlackListed } = await TokenController.findOne(
+        const { data: isBlackListed } = await TokenBlacklistController.findOne(
           decodedRefreshToken.jti
         );
         // Check if the service is still registered
