@@ -9,12 +9,13 @@ const REFRESH_TOKEN_LIFETIME = '1d';
  *
  * @param {String|Object|Buffer} payload
  * @param {String} jwtid
+ * @param {String} expire
  *
  * @return {Promise<String>}
  */
-export const accessTokenFactory = (payload, jwtid) =>
+export const accessTokenFactory = (payload, jwtid, expire) =>
   jwt.sign(payload, process.env.SERVICE_JWT_SECRET, {
-    expiresIn: ACCESS_TOKEN_LIFETIME,
+    expiresIn: expire || ACCESS_TOKEN_LIFETIME,
     jwtid
   });
 
@@ -23,12 +24,13 @@ export const accessTokenFactory = (payload, jwtid) =>
  *
  * @param {String|Object|Buffer} payload
  * @param {String} jwtid
+ * @param {String} expire
  *
  * @return {Promise<String>}
  */
-export const refreshTokenFactory = (payload, jwtid) =>
+export const refreshTokenFactory = (payload, jwtid, expire) =>
   jwt.sign(payload, process.env.SERVICE_JWT_REFRESH_SECRET, {
-    expiresIn: REFRESH_TOKEN_LIFETIME,
+    expiresIn: expire || REFRESH_TOKEN_LIFETIME,
     jwtid
   });
 
