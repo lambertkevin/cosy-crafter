@@ -52,7 +52,6 @@ export default async () => {
   } catch (err) {
     /** @WARNING Change this to fatal when feature available in winston + sentry */
     logger.error('Fatal Error while starting the service', err);
-    console.error(err);
     return process.exit(1);
   }
 };
