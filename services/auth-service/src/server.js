@@ -24,6 +24,8 @@ export default async () => {
     await killPort(nodeConfig.port);
     await server.start();
     console.log('Server running on %s', server.info.uri);
+
+    return server;
   } catch (err) {
     /** @WARNING Change this to fatal when feature available in winston + sentry */
     logger.error('Fatal Error while starting the service', err);
