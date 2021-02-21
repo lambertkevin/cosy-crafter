@@ -1,6 +1,9 @@
 import joi from 'joi';
-import { responseSchema, creationSchema } from '../schemas/TokenSchema';
-import * as tokenController from '../controllers/TokenController';
+import {
+  responseSchema,
+  creationSchema
+} from '../schemas/TokenBlacklistSchema';
+import * as TokenBlacklistController from '../controllers/TokenBlacklistController';
 import { calibrateSchema } from '../utils/SchemasUtils';
 import failValidationHandler from '../utils/FailValidationHandler';
 
@@ -16,7 +19,7 @@ export default {
       method: 'GET',
       path: '/',
       options: {
-        handler: () => tokenController.find(),
+        handler: () => TokenBlacklistController.find(),
         tags: ['api', 'tokens'],
         description: 'Get all Tokens',
         notes: 'Returns all the blacklisted tokens',
@@ -42,7 +45,8 @@ export default {
       method: 'GET',
       path: '/{jwtid}',
       options: {
-        handler: (request) => tokenController.findOne(request.params.jwtid),
+        handler: (request) =>
+          TokenBlacklistController.findOne(request.params.jwtid),
         tags: ['api', 'tokens'],
         description: 'Get a Token',
         notes: 'Returns a specific blacklisted token',
@@ -72,7 +76,7 @@ export default {
       method: 'POST',
       path: '/',
       options: {
-        handler: (request) => tokenController.create(request.payload),
+        handler: (request) => TokenBlacklistController.create(request.payload),
         validate: {
           failAction: failValidationHandler,
           payload: creationSchema
@@ -102,7 +106,8 @@ export default {
       method: 'DELETE',
       path: '/',
       options: {
-        handler: (request) => tokenController.remove(request.payload.jwtids),
+        handler: (request) =>
+          TokenBlacklistController.remove(request.payload.jwtids),
         validate: {
           failAction: failValidationHandler,
           payload: joi.object({
@@ -157,7 +162,8 @@ export default {
       method: 'DELETE',
       path: '/{jwtid}',
       options: {
-        handler: (request) => tokenController.remove([request.params.jwtid]),
+        handler: (request) =>
+          TokenBlacklistController.remove([request.params.jwtid]),
         validate: {
           failAction: failValidationHandler,
           params: joi.object({

@@ -1,7 +1,7 @@
 import _ from 'lodash';
 import Boom from '@hapi/boom';
 import calibrate from 'calibrate';
-import Token, { projection, hiddenFields } from '../models/TokenModel';
+import Token, { projection, hiddenFields } from '../models/TokenBlaclistModel';
 import { logger } from '../utils/Logger';
 
 /**

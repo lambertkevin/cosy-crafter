@@ -1,5 +1,6 @@
 import Hapi from '@hapi/hapi';
 import Inert from '@hapi/inert';
+import mongoose from 'mongoose';
 import Vision from '@hapi/vision';
 import HapiSwagger from 'hapi-swagger';
 import killPort from 'kill-port';
@@ -24,6 +25,10 @@ export default async () => {
     await killPort(nodeConfig.port);
     await server.start();
     console.log('Server running on %s', server.info.uri);
+
+    server.events.on('stop', async () => {
+      await mongoose.disconnect();
+    });
 
     return server;
   } catch (err) {
