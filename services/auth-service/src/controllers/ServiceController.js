@@ -168,7 +168,7 @@ export const remove = (identifiers = []) =>
 export const login = async ({ identifier, key }, ip) => {
   try {
     const service = await (() => {
-      if (process.env.NODE_ENV === 'test') {
+      if (process.env.NODE_ENV === 'mock') {
         return {
           service: identifier
         };
@@ -184,7 +184,7 @@ export const login = async ({ identifier, key }, ip) => {
       // If ip is matching or ip is from private network and service ip was private on creation
       ((service.ip === ip || (privateIp(ip) && service.ip === 'private')) &&
         bcrypt.compareSync(key, service.key)) ||
-      process.env.NODE_ENV === 'test'
+      process.env.NODE_ENV === 'mock'
     ) {
       const tokens = await tokensFactory(
         {
