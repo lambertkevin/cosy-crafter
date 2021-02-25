@@ -23,7 +23,10 @@ export const makeQueue = () => {
   const workers = [];
   let jobs = (() => {
     try {
-      if (!fs.existsSync(JOB_LIST_SAVE_FILE)) {
+      if (
+        !fs.existsSync(JOB_LIST_SAVE_FILE) ||
+        process.env.NODE_ENV === 'test'
+      ) {
         return [];
       }
 
@@ -163,12 +166,14 @@ export const makeQueue = () => {
     registerEvents() {
       this.events.on('jobs-updated', () => {
         console.log('Job List Updated', jobs.length);
-        fs.writeFileSync(
-          JOB_LIST_SAVE_FILE,
-          stringify({ jobs }, (key, val) => {
-            return typeof val === 'function' ? val.toString() : val;
-          })
-        );
+        if (process.env.NODE_ENV !== 'test') {
+          fs.writeFileSync(
+            JOB_LIST_SAVE_FILE,
+            stringify({ jobs }, (key, val) => {
+              return typeof val === 'function' ? val.toString() : val;
+            })
+          );
+        }
 
         if (this.availableWorkers.length && this.waitingJobs.length) {
           this.next();
