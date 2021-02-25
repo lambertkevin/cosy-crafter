@@ -6,6 +6,12 @@ import * as StorageController from '../controllers/StorageController';
 export default {
   name: 'craftStorageApi',
   async register(server) {
+    server.route({
+      method: 'get',
+      path: '/ping',
+      handler: () => 'pong'
+    });
+
     /**
      * Upload a Craft file
      *
