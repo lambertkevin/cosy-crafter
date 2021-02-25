@@ -165,33 +165,62 @@ export const removePodcastPartFile = async ({
  * @param {Object} data
  * @param {String} data.file
  * @param {String} data.filename
+ * @param {String} data.storageStrategy
  *
  * @return {Promise<Object>}
  */
-export const addCraftFile = async ({ file, filename }) => {
+export const addCraftFile = async ({
+  file,
+  filename,
+  storageStrategy: _storageStrategy
+}) => {
   const storagePath = `crafts`;
   const location = `${storagePath}/${filename}`;
-  const storageStrategy = ['local'];
-  const storedFile = await storages.setFileFromReadable(
-    storageStrategy,
-    file,
-    location
-  );
+  const defaultStorageStrategy = ['local'];
+  let storageStrategy;
 
-  if (!storedFile) {
-    logger.error('Add Craft File Error: All storages options have failed', {
-      file,
-      filename
-    });
-    return Boom.serverUnavailable('All storages options have failed');
+  // Check if storageStrat is set and storages exist, else go default
+  try {
+    if (_storageStrategy) {
+      storageStrategy = _storageStrategy.split(',').map((x) => x.trim());
+      const storagesExist = storageStrategy.every((storage) =>
+        storages.storagesAvailable.includes(storage)
+      );
+
+      if (!storagesExist) {
+        return Boom.badData("At least one storage type doesn't exist");
+      }
+    } else {
+      throw new Error();
+    }
+  } catch (e) {
+    storageStrategy = defaultStorageStrategy;
   }
 
-  return calibrate.response({
-    storagePath,
-    storageType: storedFile.storageName,
-    storageFilename: filename,
-    publicLink: storedFile.publicLink
-  });
+  try {
+    const storedFile = await storages.setFileFromReadable(
+      storageStrategy,
+      file,
+      location
+    );
+
+    return calibrate.response({
+      filename,
+      location,
+      storageType: storedFile.storageName,
+      publicLink: storedFile.publicLink
+    });
+  } catch (error) {
+    if (error.isBoom) {
+      logger.error(`Add Craft File Error: ${error.message}`, {
+        filename,
+        location,
+        storageStrategy
+      });
+      return error;
+    }
+    return Boom.boomify(error);
+  }
 };
 
 /**
