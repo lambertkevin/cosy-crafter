@@ -1,5 +1,5 @@
 import JobApi from './JobApi';
 
 export default (socket) => {
-  JobApi('job', socket);
+  JobApi('/v1/jobs', socket);
 };

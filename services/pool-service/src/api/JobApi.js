@@ -9,18 +9,21 @@ const routes = [
     handler: createTranscodingJob,
     validation: joi.object({
       name: joi.string().required(),
-      files: joi.array().items(
-        joi.object({
-          id: joi.string().length(24).required(),
-          type: joi.string().valid('podcast-part', 'user-input').required(),
-          seek: joi
-            .object({
-              start: joi.number().optional(),
-              end: joi.number().optional()
-            })
-            .optional()
-        })
-      )
+      files: joi
+        .array()
+        .items(
+          joi.object({
+            id: joi.string().length(24).required(),
+            type: joi.string().valid('podcast-part', 'user-input').required(),
+            seek: joi
+              .object({
+                start: joi.number().optional(),
+                end: joi.number().optional()
+              })
+              .optional()
+          })
+        )
+        .required()
     })
   }
 ];
@@ -42,11 +45,11 @@ export default (prefix, socket) => {
         return route.handler.apply(null, [data, ack, socket]);
       } catch (e) {
         logger.error('Socket payload validation error', e);
-
         if (e.name !== 'AckError') {
           return ack({
-            statusCode: 409,
-            message: 'Bad Request'
+            statusCode: 400,
+            error: 'Bad Request',
+            message: e.message
           });
         }
         return null;
