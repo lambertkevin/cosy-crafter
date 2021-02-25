@@ -17,44 +17,66 @@ const storages = StorageFactory();
  * @param {ReadableStream} payload.file
  * @param {String} payload.podcastName
  * @param {String} payload.filename
+ * @param {Array} payload.storageType
  *
  * @return {Object}
  */
 export const addPodcastPartFile = async ({
   file,
   podcastName,
-  filename: originalFilename
+  filename: originalFilename,
+  storageStrategy: _storageStrategy
 }) => {
   const extension = originalFilename.split('.').pop();
   const filename = `${uuid()}.${extension}`;
   const location = `podcasts/${_.kebabCase(podcastName)}`;
-  const storageStrategy =
+  const defaultStorageStrategy =
     process.env.NODE_ENV === 'production' ? ['scaleway', 'local'] : ['local'];
-  const storedFile = await storages.setFileFromReadable(
-    storageStrategy,
-    file,
-    `${location}/${filename}`
-  );
+  let storageStrategy;
 
-  if (!storedFile) {
-    logger.error(
-      'Add Podcast Part File Error: All storages options have failed',
-      {
-        file,
-        podcastName,
-        filename
+  // Check if storageStrat is set and storages exist, else go default
+  try {
+    if (_storageStrategy) {
+      storageStrategy = _storageStrategy.split(',').map((x) => x.trim());
+      const storagesExist = storageStrategy.every((storage) =>
+        storages.storagesAvailable.includes(storage)
+      );
+
+      if (!storagesExist) {
+        return Boom.badData("At least one storage type doesn't exist");
       }
-    );
-
-    return Boom.serverUnavailable('All storages options have failed');
+    } else {
+      throw new Error();
+    }
+  } catch (e) {
+    storageStrategy = defaultStorageStrategy;
   }
 
-  return calibrate.response({
-    filename,
-    location,
-    storageType: storedFile.storageName,
-    publicLink: storedFile.publicLink
-  });
+  try {
+    const storedFile = await storages.setFileFromReadable(
+      storageStrategy,
+      file,
+      `${location}/${filename}`
+    );
+
+    return calibrate.response({
+      filename,
+      location,
+      storageType: storedFile.storageName,
+      publicLink: storedFile.publicLink
+    });
+  } catch (error) {
+    if (error.isBoom) {
+      logger.error(`Add Podcast Part File Error: ${error.message}`, {
+        originalFilename,
+        filename,
+        podcastName,
+        storageStrategy
+      });
+      return error;
+    }
+    return Boom.boomify(error);
+  }
 };
 
 /**
