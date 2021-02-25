@@ -36,3 +36,6 @@ This idea comes from the creators of le [Cosy Corner](https://soundcloud.com/lec
 ## To Do
 
 [![Trello](https://img.shields.io/endpoint?style=for-the-badge&url=https%3A%2F%2Ftrello-cosy-crafter-x80lyv2bhqee.runkit.sh%2F)](https://trello.com/b/jxvlYk1I/cosy-crafter)
+
+## UI
+UI is a work in progress. You can see an idea of what it should look like right [here](https://i.imgur.com/S6YlIbr.png).
