@@ -2,12 +2,13 @@ import fs from 'fs';
 import path from 'path';
 import { expect } from 'chai';
 import getStream from 'get-stream';
+import * as StorageController from '../../src/controllers/StorageController';
 import { startAuthService, accessToken } from '../utils/authUtils';
 import { objectToFormData } from '../utils/formUtils';
 import mockS3 from '../utils/mockS3';
 import init from '../../src/server';
 
-describe('Podcast Storage API V1 tests', () => {
+describe('Podcast Part Storage API V1 tests', () => {
   let s3FakeServers;
   let server;
   let pid;
@@ -117,6 +118,34 @@ describe('Podcast Storage API V1 tests', () => {
           });
       });
 
+      it('should fail if storageType is defined but with unknow storage. HTTP 422', async () => {
+        const payloadFormData = objectToFormData({
+          ...podcastPartPayload,
+          storageStrategy: 'unkown-storage'
+        });
+        const payloadStream = await getStream(payloadFormData);
+
+        return server
+          .inject({
+            method: 'POST',
+            url: '/v1/podcast-parts',
+            payload: payloadStream,
+            headers: {
+              ...payloadFormData.getHeaders(),
+              authorization: accessToken
+            }
+          })
+          .then((response) => {
+            expect(response).to.be.a('object');
+            expect(response).to.include({ statusCode: 422 });
+            expect(response.result).to.deep.include({
+              statusCode: 422,
+              error: 'Unprocessable Entity',
+              message: "At least one storage type doesn't exist"
+            });
+          });
+      });
+
       describe('Requirements', () => {
         it('should fail if missing podcastName', async () => {
           const payloadFormData = objectToFormData({
@@ -198,34 +227,6 @@ describe('Podcast Storage API V1 tests', () => {
                 statusCode: 400,
                 error: 'Bad Request',
                 message: '"file" is required'
-              });
-            });
-        });
-
-        it('should fail if storageType is defined but with unknow storage. HTTP 422', async () => {
-          const payloadFormData = objectToFormData({
-            ...podcastPartPayload,
-            storageStrategy: 'unkown-storage'
-          });
-          const payloadStream = await getStream(payloadFormData);
-
-          return server
-            .inject({
-              method: 'POST',
-              url: '/v1/podcast-parts',
-              payload: payloadStream,
-              headers: {
-                ...payloadFormData.getHeaders(),
-                authorization: accessToken
-              }
-            })
-            .then((response) => {
-              expect(response).to.be.a('object');
-              expect(response).to.include({ statusCode: 422 });
-              expect(response.result).to.deep.include({
-                statusCode: 422,
-                error: 'Unprocessable Entity',
-                message: "At least one storage type doesn't exist"
               });
             });
         });
@@ -333,6 +334,209 @@ describe('Podcast Storage API V1 tests', () => {
               location: 'podcasts/e-2-e-podcast',
               storageType: 'scaleway',
               publicLink: `https://cosy-crafter.s3.fr-par.scw.cloud/podcasts/e-2-e-podcast/${response?.result?.data?.filename}`
+            });
+          });
+      });
+    });
+  });
+
+  describe('Podcast Part Deletion', () => {
+    let localStoredFile;
+    let awsStoredFile;
+    let scalewayStoredFile;
+
+    before(async () => {
+      localStoredFile = await StorageController.addPodcastPartFile({
+        file: fs.createReadStream(path.resolve('./test/files/blank.mp3')),
+        podcastName: 'e2e-podcast',
+        filename: 'e2e-filename.mp3',
+        storageStrategy: 'local'
+      });
+      awsStoredFile = await StorageController.addPodcastPartFile({
+        file: fs.createReadStream(path.resolve('./test/files/blank.mp3')),
+        podcastName: 'e2e-podcast',
+        filename: 'e2e-filename.mp3',
+        storageStrategy: 'aws'
+      });
+      scalewayStoredFile = await StorageController.addPodcastPartFile({
+        file: fs.createReadStream(path.resolve('./test/files/blank.mp3')),
+        podcastName: 'e2e-podcast',
+        filename: 'e2e-filename.mp3',
+        storageStrategy: 'scaleway'
+      });
+    });
+
+    describe('Fails', () => {
+      it('should fail deleting a podcast part without jwt. HTTP 401', () => {
+        return server
+          .inject({
+            method: 'DELETE',
+            url: '/v1/podcast-parts',
+            payload: {
+              storageType: localStoredFile?.data?.storageType,
+              storagePath: localStoredFile?.data?.location,
+              storageFilename: localStoredFile?.data?.filename
+            }
+          })
+          .then((response) => {
+            expect(response).to.be.a('object');
+            expect(response).to.include({ statusCode: 401 });
+            expect(response.result).to.deep.include({
+              statusCode: 401,
+              error: 'Unauthorized',
+              message: 'Missing authentication'
+            });
+          });
+      });
+
+      describe('Requirements', () => {
+        it('should fail if missing storageType', async () => {
+          return server
+            .inject({
+              method: 'DELETE',
+              url: '/v1/podcast-parts',
+              payload: {
+                storageFilename: localStoredFile?.data?.filename,
+                storageFilename: localStoredFile?.data?.filename
+              },
+              headers: {
+                authorization: accessToken
+              }
+            })
+            .then((response) => {
+              expect(response).to.be.a('object');
+              expect(response).to.include({ statusCode: 400 });
+              expect(response.result).to.deep.include({
+                statusCode: 400,
+                error: 'Bad Request',
+                message: '"storageType" is required'
+              });
+            });
+        });
+
+        it('should fail if missing storagePath', async () => {
+          return server
+            .inject({
+              method: 'DELETE',
+              url: '/v1/podcast-parts',
+              payload: {
+                storageType: localStoredFile?.data?.storageType,
+                storageFilename: localStoredFile?.data?.filename
+              },
+              headers: {
+                authorization: accessToken
+              }
+            })
+            .then((response) => {
+              expect(response).to.be.a('object');
+              expect(response).to.include({ statusCode: 400 });
+              expect(response.result).to.deep.include({
+                statusCode: 400,
+                error: 'Bad Request',
+                message: '"storagePath" is required'
+              });
+            });
+        });
+
+        it('should fail if missing storageFilename', async () => {
+          return server
+            .inject({
+              method: 'DELETE',
+              url: '/v1/podcast-parts',
+              payload: {
+                storageType: localStoredFile?.data?.storageType,
+                storagePath: localStoredFile?.data?.location
+              },
+              headers: {
+                authorization: accessToken
+              }
+            })
+            .then((response) => {
+              expect(response).to.be.a('object');
+              expect(response).to.include({ statusCode: 400 });
+              expect(response.result).to.deep.include({
+                statusCode: 400,
+                error: 'Bad Request',
+                message: '"storageFilename" is required'
+              });
+            });
+        });
+      });
+    });
+
+    describe('Success', () => {
+      it('should succeed deleting podcast part on local', () => {
+        return server
+          .inject({
+            method: 'DELETE',
+            url: '/v1/podcast-parts',
+            payload: {
+              storageType: localStoredFile?.data?.storageType,
+              storagePath: localStoredFile?.data?.location,
+              storageFilename: localStoredFile?.data?.filename
+            },
+            headers: {
+              authorization: accessToken
+            }
+          })
+          .then((response) => {
+            expect(response).to.be.a('object');
+            expect(response).to.include({ statusCode: 200 });
+            expect(response?.result).to.deep.include({
+              statusCode: 200,
+              data: { deleted: localStoredFile?.data?.filename }
+            });
+          });
+      });
+
+      it('should succeed deleting podcast part on aws', () => {
+        return server
+          .inject({
+            method: 'DELETE',
+            url: '/v1/podcast-parts',
+            payload: {
+              storageType: awsStoredFile?.data?.storageType,
+              storagePath: awsStoredFile?.data?.location,
+              storageFilename: awsStoredFile?.data?.filename
+            },
+            headers: {
+              authorization: accessToken
+            }
+          })
+          .then((response) => {
+            expect(response).to.be.a('object');
+            expect(response).to.include({ statusCode: 200 });
+            expect(response?.result).to.deep.include({
+              statusCode: 200,
+              data: {
+                deleted: awsStoredFile?.data?.filename
+              }
+            });
+          });
+      });
+
+      it('should succeed deleting podcast part on scaleway', () => {
+        return server
+          .inject({
+            method: 'DELETE',
+            url: '/v1/podcast-parts',
+            payload: {
+              storageType: scalewayStoredFile?.data?.storageType,
+              storagePath: scalewayStoredFile?.data?.location,
+              storageFilename: scalewayStoredFile?.data?.filename
+            },
+            headers: {
+              authorization: accessToken
+            }
+          })
+          .then((response) => {
+            expect(response).to.be.a('object');
+            expect(response).to.include({ statusCode: 200 });
+            expect(response?.result).to.deep.include({
+              statusCode: 200,
+              data: {
+                deleted: scalewayStoredFile?.data?.filename
+              }
             });
           });
       });
