@@ -5,26 +5,48 @@ import { storagesConfig } from '../config';
 
 export default () => {
   try {
-    const storages = {
-      scaleway: new Storage({
-        type: StorageType.S3,
-        ...storagesConfig.scaleway
-      }),
+    const storages =
+      process.env.NODE_ENV === 'test'
+        ? {
+            scaleway: new Storage({
+              type: StorageType.S3,
+              accessKeyId: 'S3RVER',
+              secretAccessKey: 'S3RVER',
+              endpoint: 'http://localhost:4500'
+            }),
 
-      aws: new Storage({
-        type: StorageType.S3,
-        ...storagesConfig.aws,
-        useDualStack: true,
-        sslEnabled: true
-      }),
+            aws: new Storage({
+              type: StorageType.S3,
+              accessKeyId: 'S3RVER',
+              secretAccessKey: 'S3RVER',
+              endpoint: 'http://localhost:4501'
+            }),
 
-      local: new Storage({
-        type: StorageType.LOCAL,
-        directory: path.resolve('./bucket'),
-        mode: '750'
-      })
-    };
+            local: new Storage({
+              type: StorageType.LOCAL,
+              directory: path.resolve('./bucket/tests/local'),
+              mode: '750'
+            })
+          }
+        : {
+            scaleway: new Storage({
+              type: StorageType.S3,
+              ...storagesConfig.scaleway
+            }),
 
+            aws: new Storage({
+              type: StorageType.S3,
+              ...storagesConfig.aws,
+              useDualStack: true,
+              sslEnabled: true
+            }),
+
+            local: new Storage({
+              type: StorageType.LOCAL,
+              directory: path.resolve('./bucket'),
+              mode: '750'
+            })
+          };
     /**
      * Will upload a stream to one of the storage available
      * depending on a priority list given as argument
