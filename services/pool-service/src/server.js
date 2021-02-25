@@ -8,7 +8,7 @@ import { workerHandler, transcodingQueue } from './queue';
 import { auth } from './auth';
 import apis from './api';
 
-const init = async () => {
+export default async () => {
   try {
     await auth();
     const app = express();
@@ -47,16 +47,23 @@ const init = async () => {
     app.get('/details', (req, res) => {
       res.send(transcodingQueue);
     });
+
+    app.close = () => {
+      apiServer.close();
+      workerServer.close();
+    };
+
+    return app;
   } catch (err) {
     /** @WARNING Change this to fatal when feature available in winston + sentry */
     logger.error('Fatal Error while starting the service', err);
-    process.exit(0);
+    return process.exit(0);
   }
 };
 
-process.on('unhandledRejection', (err) => {
-  logger.error('unhandledRejection', err);
-  process.exit(1);
-});
-
-init();
+if (process.env.NODE_ENV !== 'test') {
+  process.on('unhandledRejection', (err) => {
+    logger.error('unhandledRejection', err);
+    process.exit(1);
+  });
+}
