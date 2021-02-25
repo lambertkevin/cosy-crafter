@@ -170,7 +170,7 @@ export const login = async ({ identifier, key }, ip) => {
     const service = await (() => {
       if (process.env.NODE_ENV === 'mock') {
         return {
-          service: identifier
+          identifier
         };
       }
       return Service.findOne({ identifier }).exec();
