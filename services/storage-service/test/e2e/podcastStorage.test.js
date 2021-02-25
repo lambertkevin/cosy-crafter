@@ -27,7 +27,7 @@ describe('Podcast Part Storage API V1 tests', () => {
   });
 
   describe('Server Testing', () => {
-    it('should validate if parts v1 API is reachable', () => {
+    it('should validate if podcast parts v1 API is reachable', () => {
       return server
         .inject({
           method: 'GET',
