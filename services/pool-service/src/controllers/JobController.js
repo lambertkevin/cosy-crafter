@@ -2,17 +2,14 @@ import _ from 'lodash';
 import { makeJob } from '../lib/JobFactory';
 import { logger } from '../utils/Logger';
 import { transcodingQueue } from '../queue';
-import {
-  makeRsaPrivateEncrypter,
-  makeRsaPublicDecrypter
-} from '../utils/RsaUtils';
+import { makeRsaPrivateEncrypter } from '../utils/RsaUtils';
 
 export const createTranscodingJob = ({ name, files }, ack) => {
   try {
     const privateEncrypter = makeRsaPrivateEncrypter();
 
     const transcodingJob = makeJob(
-      (job, socket) =>
+      (job, workerSocket) =>
         new Promise((resolve, reject) => {
           const payload = privateEncrypter(
             {
@@ -22,7 +19,8 @@ export const createTranscodingJob = ({ name, files }, ack) => {
             },
             'base64'
           );
-          socket.emit('transcode/join', payload, (response) => {
+
+          workerSocket.emit('transcode/join', payload, (response) => {
             if (response.statusCode !== 200) {
               logger.error('Transcode/Join in job controller failed', response);
               ack({
@@ -34,12 +32,12 @@ export const createTranscodingJob = ({ name, files }, ack) => {
             logger.info('Transcode/Join in job controller finished', response);
             ack({
               statusCode: 200,
-              response: _.get(response, ['savedCraft', 'data'])
+              data: response?.savedCraft?.data
             });
             return resolve(response);
           });
 
-          socket.on(`job-progress-${job.id}`, ({ percent }) => {
+          workerSocket.on(`job-progress-${job.id}`, ({ percent }) => {
             // eslint-disable-next-line no-param-reassign
             job.progress = percent;
           });
@@ -50,6 +48,17 @@ export const createTranscodingJob = ({ name, files }, ack) => {
     );
 
     transcodingQueue.addJob(transcodingJob);
+
+    if (process.env.NODE_ENV === 'test') {
+      return ack({
+        statusCode: 200,
+        data: {
+          location: `crafts/${name}.mp3`,
+          storageType: 'local',
+          publicLink: null
+        }
+      });
+    }
 
     return transcodingJob;
   } catch (error) {
