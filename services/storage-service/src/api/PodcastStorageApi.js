@@ -6,6 +6,11 @@ import { calibrateSchema } from '../utils/SchemasUtils';
 export default {
   name: 'podcastStorageApi',
   async register(server) {
+    server.route({
+      method: 'get',
+      path: '/ping',
+      handler: () => 'pong'
+    });
     /**
      * Upload a podcast part file
      *
