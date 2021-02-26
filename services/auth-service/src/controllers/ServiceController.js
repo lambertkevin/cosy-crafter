@@ -238,7 +238,16 @@ export const refresh = async ({ accessToken, refreshToken }) => {
           decodedRefreshToken.jti
         );
         // Check if the service is still registered
-        const { data: service } = await findOne(decodedAccessToken.service);
+        const { data: service } = await (() => {
+          if (process.env.NODE_ENV === 'mock') {
+            return {
+              data: {
+                identifier: decodedAccessToken.service
+              }
+            };
+          }
+          return findOne(decodedAccessToken.service);
+        })();
 
         if (!isBlackListed && !_.isEmpty(service)) {
           // Omit JWT payload properties from spec

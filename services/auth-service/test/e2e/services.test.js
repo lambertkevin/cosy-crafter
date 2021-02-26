@@ -289,7 +289,7 @@ describe('Services API tests', () => {
             });
         });
 
-        it('fail refreshing accessToken. HTTP 400', async () => {
+        it('fail refreshing without accessToken. HTTP 400', async () => {
           const { data } = await ServiceController.login(
             {
               identifier: '2e2-service-login',
@@ -317,7 +317,7 @@ describe('Services API tests', () => {
             });
         });
 
-        it('fail refreshing refreshToken. HTTP 400', async () => {
+        it('fail refreshing without refreshToken. HTTP 400', async () => {
           const { data } = await ServiceController.login(
             {
               identifier: '2e2-service-login',
