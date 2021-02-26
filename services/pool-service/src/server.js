@@ -1,7 +1,7 @@
 import os from 'os';
 import express from 'express';
+import jwt from 'jsonwebtoken';
 import socket from 'socket.io';
-import socketioJwt from 'socketio-jwt';
 import { logger } from './utils/Logger';
 import { nodeConfig } from './config';
 import { workerHandler, transcodingQueue } from './queue';
@@ -12,34 +12,40 @@ export default async () => {
   try {
     await auth();
     const app = express();
-    const apiServer = app.listen(nodeConfig.apiPort, () => {
+    const server = app.listen(nodeConfig.apiPort, () => {
       console.log(
-        `Api running on http://${os.hostname()}:${nodeConfig.apiPort}`
+        `Server running on http://${os.hostname()}:${nodeConfig.apiPort}`
       );
     });
-    const workerServer = app.listen(nodeConfig.workerPort, () => {
-      console.log(
-        `Workers running on htt://${os.hostname()}:${nodeConfig.workerPort}`
-      );
-    });
+    const io = socket(server);
 
-    const ioApi = socket.listen(apiServer);
-    const ioWorkers = socket.listen(workerServer);
-
-    ioApi.on('connection', async (client) => {
+    io.of('/clients').on('connection', async (client) => {
       apis(client);
     });
 
-    ioWorkers
-      .use(
-        socketioJwt.authorize({
-          secret: process.env.SERVICE_JWT_SECRET,
-          handshake: true,
-          auth_header_required: true
-        })
-      )
+    io.of('/workers')
+      .use((worker, next) => {
+        try {
+          const { token } = worker.handshake.auth;
+          jwt.verify(token, process.env.SERVICE_JWT_SECRET);
+          // eslint-disable-next-line no-param-reassign
+          worker.handshake.decodedToken = jwt.decode(token);
+          next();
+        } catch (error) {
+          if (['JsonWebTokenError', 'TokenExpiredError'].includes(error.name)) {
+            error.data = { name: error.name, message: error.message };
+            next(error);
+          } else {
+            next(new Error('An error has occured'));
+            setTimeout(() => {
+              worker.disconnect();
+            }, 200);
+          }
+        }
+      })
       .on('connection', (worker) => {
-        if (worker.decoded_token.service) {
+        console.log(worker);
+        if (worker?.handshake?.decodedToken?.service) {
           workerHandler(worker);
         }
       });
@@ -48,12 +54,7 @@ export default async () => {
       res.send(transcodingQueue);
     });
 
-    app.close = () => {
-      apiServer.close();
-      workerServer.close();
-    };
-
-    return app;
+    return server;
   } catch (err) {
     /** @WARNING Change this to fatal when feature available in winston + sentry */
     logger.error('Fatal Error while starting the service', err);
