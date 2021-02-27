@@ -1,20 +1,20 @@
 import { expect } from 'chai';
-import ioClient from 'socket.io-client';
-import { startAuthService } from '../utils/authUtils';
+import io from 'socket.io-client';
+import {
+  startAuthService,
+  accessTokenExpired,
+  accessToken
+} from '../utils/authUtils';
 import init from '../../src/server';
 
-describe('Pool Api tests', () => {
+describe('Socket Clients Api tests', () => {
   let server;
-  let pool;
   let pid;
 
   before(async () => {
     const authServiceChild = await startAuthService();
     pid = authServiceChild.pid;
     server = await init();
-    pool = ioClient.connect(
-      `http://${process.env.POOL_SERVICE_NAME}:${process.env.POOL_SERVICE_PORT}`
-    );
   });
 
   after(() => {
@@ -23,15 +23,84 @@ describe('Pool Api tests', () => {
   });
 
   describe('Server Testing', () => {
-    it('should successfully connect to pool WS', (done) => {
-      pool.on('connect', () => {
-        expect(pool.connected).to.be.equal(true);
-        done();
+    describe('Fails', () => {
+      it('should fail to connect to pool without JWT', (done) => {
+        io(
+          `http://${process.env.POOL_SERVICE_NAME}:${process.env.POOL_SERVICE_PORT}/clients`
+        ).on('connect_error', function cb(error) {
+          expect(error?.data).to.deep.include({
+            name: 'JsonWebTokenError',
+            message: 'jwt must be provided'
+          });
+          this.close();
+          done();
+        });
+      });
+
+      it('should fail to connect to pool with invalid JWT', (done) => {
+        io(
+          `http://${process.env.POOL_SERVICE_NAME}:${process.env.POOL_SERVICE_PORT}/clients`,
+          {
+            auth: {
+              token: 'wrong-token'
+            }
+          }
+        ).on('connect_error', function cb(error) {
+          expect(error?.data).to.deep.include({
+            name: 'JsonWebTokenError',
+            message: 'jwt malformed'
+          });
+          this.close();
+          done();
+        });
+      });
+
+      it('should fail to connect to pool with expired JWT', (done) => {
+        io(
+          `http://${process.env.POOL_SERVICE_NAME}:${process.env.POOL_SERVICE_PORT}/clients`,
+          {
+            auth: {
+              token: accessTokenExpired
+            }
+          }
+        ).on('connect_error', function cb(error) {
+          expect(error?.data).to.deep.include({
+            name: 'TokenExpiredError',
+            message: 'jwt expired'
+          });
+          this.close();
+          done();
+        });
+      });
+    });
+
+    describe('Success', () => {
+      it('should successfully connect to pool WS', (done) => {
+        io(
+          `http://${process.env.POOL_SERVICE_NAME}:${process.env.POOL_SERVICE_PORT}/clients`,
+          {
+            auth: {
+              token: accessToken
+            }
+          }
+        ).on('connect', function cb() {
+          expect(this.connected).to.be.equal(true);
+          this.close();
+          done();
+        });
       });
     });
   });
 
   describe('Job Addition', () => {
+    const pool = io(
+      `http://${process.env.POOL_SERVICE_NAME}:${process.env.POOL_SERVICE_PORT}/clients`,
+      {
+        auth: {
+          token: accessToken
+        }
+      }
+    );
     const filePodcast = {
       id: '1234a1234b1234c1234d1234',
       type: 'podcast-part',
