@@ -2,6 +2,7 @@ import fs from 'fs';
 import path from 'path';
 import axios from 'axios';
 import Boom from '@hapi/boom';
+import jwt from 'jsonwebtoken';
 import {
   makeRsaPublicEncrypter,
   makeRsaPublicDecrypter
@@ -102,6 +103,27 @@ export const refresh = async () => {
     /** @WARNING Change this to fatal when feature available in winston + sentry */
     logger.error('Error while refreshing the service', e);
     throw Boom.preconditionFailed();
+  }
+};
+
+export const socketJwtMiddleware = (socket, next) => {
+  try {
+    const { token } = socket.handshake.auth;
+    jwt.verify(token, process.env.SERVICE_JWT_SECRET);
+
+    next();
+  } catch (error) {
+    if (['JsonWebTokenError', 'TokenExpiredError'].includes(error.name)) {
+      error.data = { name: error.name, message: error.message };
+
+      next(error);
+    } else {
+      setTimeout(() => {
+        socket.disconnect();
+      }, 200);
+
+      next(new Error('An error has occured'));
+    }
   }
 };
 

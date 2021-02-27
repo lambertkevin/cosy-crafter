@@ -22,14 +22,31 @@ export const startAuthService = () =>
     });
   });
 
-export const accessToken = jwt.sign(
+/**
+ * Create an access token
+ *
+ * @param {String|Object|Buffer} payload
+ * @param {String} expire
+ *
+ * @return {Promise<String>}
+ */
+export const accessTokenFactory = (payload, expire) =>
+  jwt.sign(payload, process.env.SERVICE_JWT_SECRET, {
+    expiresIn: expire
+  });
+
+export const accessToken = accessTokenFactory(
   {
     service: 'e2e-service'
   },
-  process.env.SERVICE_JWT_SECRET,
+  '10m'
+);
+
+export const accessTokenExpired = accessTokenFactory(
   {
-    expiresIn: '10m'
-  }
+    service: 'e2e-service'
+  },
+  '-1s'
 );
 
 export default {
