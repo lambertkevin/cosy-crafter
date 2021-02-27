@@ -21,7 +21,9 @@ export default async () => {
     io.of('/clients')
       .use(socketJwtMiddleware)
       .on('connection', (client) => {
-        apis(client);
+        if (client?.handshake?.decodedToken?.service) {
+          apis(client);
+        }
       });
 
     io.of('/workers')
