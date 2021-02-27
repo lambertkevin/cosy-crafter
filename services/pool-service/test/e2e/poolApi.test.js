@@ -2,8 +2,8 @@ import { expect } from 'chai';
 import io from 'socket.io-client';
 import {
   startAuthService,
-  accessTokenExpired,
-  accessToken
+  accessToken,
+  accessTokenExpired
 } from '../utils/authUtils';
 import init from '../../src/server';
 
@@ -89,38 +89,74 @@ describe('Socket Clients Api tests', () => {
           done();
         });
       });
+
+      it('should successfully refresh token if accessToken is expired and retry', (done) => {
+        let token = accessTokenExpired;
+        io(
+          `http://${process.env.POOL_SERVICE_NAME}:${process.env.POOL_SERVICE_PORT}/clients`,
+          {
+            auth: (cb) =>
+              cb({
+                token
+              })
+          }
+        )
+          .on('connect', function cb() {
+            expect(this.connected).to.be.equal(true);
+            done();
+          })
+          .on('connect_error', async function cb(error) {
+            if (error.data.name === 'TokenExpiredError') {
+              // simulate refreshing the token
+              await new Promise((resolve) => {
+                setTimeout(() => {
+                  token = accessToken;
+                  resolve();
+                }, 10);
+              });
+              this.connect();
+            }
+          });
+      });
     });
   });
 
   describe('Job Addition', () => {
-    const pool = io(
-      `http://${process.env.POOL_SERVICE_NAME}:${process.env.POOL_SERVICE_PORT}/clients`,
-      {
-        auth: {
-          token: accessToken
+    let filePodcast;
+    let jobPayload;
+    let userInput;
+    let pool;
+
+    before(() => {
+      pool = io(
+        `http://${process.env.POOL_SERVICE_NAME}:${process.env.POOL_SERVICE_PORT}/clients`,
+        {
+          auth: {
+            token: accessToken
+          }
         }
-      }
-    );
-    const filePodcast = {
-      id: '1234a1234b1234c1234d1234',
-      type: 'podcast-part',
-      seek: {
-        start: 0,
-        end: 10
-      }
-    };
-    const userInput = {
-      id: '1234e1234f1234g1234h1234',
-      type: 'user-input',
-      seek: {
-        start: 0,
-        end: 10
-      }
-    };
-    const jobPayload = {
-      name: 'e2e-job',
-      files: [filePodcast, userInput]
-    };
+      );
+      filePodcast = {
+        id: '1234a1234b1234c1234d1234',
+        type: 'podcast-part',
+        seek: {
+          start: 0,
+          end: 10
+        }
+      };
+      userInput = {
+        id: '1234e1234f1234g1234h1234',
+        type: 'user-input',
+        seek: {
+          start: 0,
+          end: 10
+        }
+      };
+      jobPayload = {
+        name: 'e2e-job',
+        files: [filePodcast, userInput]
+      };
+    });
 
     describe('Fails', () => {
       describe('Requirements', () => {
