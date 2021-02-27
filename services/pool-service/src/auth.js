@@ -110,6 +110,8 @@ export const socketJwtMiddleware = (socket, next) => {
   try {
     const { token } = socket.handshake.auth;
     jwt.verify(token, process.env.SERVICE_JWT_SECRET);
+    // eslint-disable-next-line no-param-reassign
+    socket.handshake.decodedToken = jwt.decode(token);
 
     next();
   } catch (error) {
