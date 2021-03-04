@@ -8,7 +8,8 @@
     "dev": "nodemon --exec npm start -e js",
     "lint": "eslint ./src",
     "debug": "npm run start --inspect",
-    "test": "NODE_ENV=test mocha test/e2e/**/*.js"
+    "test": "NODE_ENV=test mocha test/e2e/**/*.js",
+    "test-unit": "NODE_ENV=test mocha test/unit/**/*.js"
   },
   "author": "Kevin Lambert",
   "license": "ISC",
@@ -40,6 +41,7 @@
     "@babel/polyfill": "^7.12.1",
     "babel-eslint": "^10.1.0",
     "chai": "^4.3.0",
+    "chai-spies": "^1.0.0",
     "eslint": "^7.7.0",
     "eslint-config-airbnb-base": "^14.2.0",
     "eslint-config-prettier": "^6.11.0",
