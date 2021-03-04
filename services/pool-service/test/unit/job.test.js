@@ -331,7 +331,7 @@ describe('Job Unit Test', () => {
           retries: 0
         });
 
-        return job.process().catch((e) => {
+        return job.start().catch((e) => {
           expect(e).to.be.an('error');
           expect(e.name).to.be.equal('JobFailedError');
           expect(e.message).to.be.equal('Job finally failed');
@@ -348,7 +348,7 @@ describe('Job Unit Test', () => {
           retries: 0
         });
 
-        return job.process().catch((e) => {
+        return job.start().catch((e) => {
           expect(e).to.be.an('error');
           expect(e.name).to.be.equal('JobFailedError');
           expect(e.message).to.be.equal('Job finally failed');
@@ -365,7 +365,7 @@ describe('Job Unit Test', () => {
           retries: 1
         });
 
-        return job.process().catch((e) => {
+        return job.start().catch((e) => {
           expect(e).to.be.an('error');
           expect(e.name).to.be.equal('RetryError');
           expect(e.message).to.be.equal('Job failed but will retry');
@@ -385,7 +385,7 @@ describe('Job Unit Test', () => {
           asyncAction: successAsyncAction.toString()
         });
 
-        return job.process().then(() => {
+        return job.start().then(() => {
           expect(job.status).to.be.equal(JOB_STATUS_DONE);
           expect(job.startedAt).to.be.a('number');
           expect(job.finishedAt).to.be.a('number');
@@ -399,7 +399,7 @@ describe('Job Unit Test', () => {
           finishedAt: undefined
         });
 
-        return job.process().then(() => {
+        return job.start().then(() => {
           expect(job.status).to.be.equal(JOB_STATUS_DONE);
           expect(job.startedAt).to.be.a('number');
           expect(job.finishedAt).to.be.a('number');
