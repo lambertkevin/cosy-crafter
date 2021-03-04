@@ -367,7 +367,7 @@ describe('Job Unit Test', () => {
 
         return job.start().catch((e) => {
           expect(e).to.be.an('error');
-          expect(e.name).to.be.equal('RetryError');
+          expect(e.name).to.be.equal('JobRetryError');
           expect(e.message).to.be.equal('Job failed but will retry');
           expect(job.fails).to.be.equal(1);
           expect(job.retries).to.be.equal(0);

@@ -242,10 +242,10 @@ export const makeJob = (asyncAction, opts) => {
           error: rejection
         });
 
-        const retryError = new Error('Job failed but will retry');
-        retryError.name = 'RetryError';
+        const jobRetryError = new Error('Job failed but will retry');
+        jobRetryError.name = 'JobRetryError';
 
-        return retryError;
+        return jobRetryError;
       }
 
       this.status = JOB_STATUS_FAILED;
