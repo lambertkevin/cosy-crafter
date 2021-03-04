@@ -205,7 +205,16 @@ export const makeJob = (asyncAction, opts) => {
       this.startedAt = Date.now();
       this.status = JOB_STATUS_ONGOING;
 
-      return this.asyncAction(this, workerApi)
+      const action = this.asyncAction(this, workerApi);
+
+      if (!(action instanceof Promise)) {
+        const asyncActionNotAsync = new Error('asyncAction is not a Promise');
+        asyncActionNotAsync.name = 'AsyncActionNotAsync';
+
+        return Promise.reject(asyncActionNotAsync);
+      }
+
+      return action
         .then((res) => {
           this.finishedAt = Date.now();
           this.status = JOB_STATUS_DONE;

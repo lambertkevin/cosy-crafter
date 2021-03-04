@@ -374,6 +374,18 @@ describe('Job Unit Test', () => {
           expect(job.status).to.be.equal(JOB_STATUS_WAITING);
         });
       });
+
+      it('should fail if asyncAction returns is not a promise', async () => {
+        const job = makeJob(() => {});
+
+        try {
+          const start = await job.start();
+          expect(start).to.throw();
+        } catch (e) {
+          expect(e).to.be.an('error');
+          expect(e.name).to.be.equal('AsyncActionNotAsync');
+        }
+      });
     });
 
     describe('Success', () => {
