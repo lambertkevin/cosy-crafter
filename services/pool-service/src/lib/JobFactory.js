@@ -195,13 +195,13 @@ export const makeJob = (asyncAction, opts) => {
     },
 
     /**
-     * Process the action of the job
+     * Start the action of the job
      *
      * @param {Object} workerApi
      *
      * @return {Promise}
      */
-    process(workerApi) {
+    start(workerApi) {
       this.startedAt = Date.now();
       this.status = JOB_STATUS_ONGOING;
 
