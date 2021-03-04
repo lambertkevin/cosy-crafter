@@ -279,6 +279,8 @@ export const makeQueue = (registerEvents = true) => {
     'removeJob',
     'addWorker',
     'removeWorker',
+    // For test purposes with chai spies,
+    // we need to be able to set next again as a different function
     process.env.NODE_ENV === 'test' ? undefined : 'next',
     'registerEvents'
   ];
