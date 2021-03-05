@@ -200,7 +200,7 @@ export const makeQueue = (registerEvents = true) => {
         }
 
         // Let's imagine you feed this queue with workers not made by the provided factory
-        if (!worker.execute || !typeof worker.execute === 'function') {
+        if (!worker.execute || typeof worker.execute !== 'function') {
           this.removeWorker(worker);
         }
 
