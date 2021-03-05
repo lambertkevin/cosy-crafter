@@ -8,7 +8,7 @@
     "dev": "nodemon --exec npm start -e js",
     "lint": "eslint ./src",
     "debug": "npm run start --inspect",
-    "test": "NODE_ENV=test mocha test/e2e/**/*.js"
+    "test": "NODE_ENV=test mocha test/integration/**/*.js"
   },
   "author": "Kevin Lambert",
   "license": "ISC",
