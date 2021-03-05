@@ -9,7 +9,6 @@ export const workerHandler = (socket) => {
   console.log('worker added!');
 
   socket.on('disconnect', async () => {
-    worker.kill();
     transcodingQueue.removeWorker(worker);
     console.log('worker removed!');
   });
