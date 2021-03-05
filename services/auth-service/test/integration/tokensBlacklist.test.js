@@ -30,7 +30,7 @@ describe('Tokens Blacklist API tests', () => {
 
   describe('Blacklisted Token Creation', () => {
     describe('Fails', () => {
-      it.skip('should fail trying to create service if user is not allowed. HTTP 401', () => {
+      it.skip('should fail trying to create blacklisted token if user is not allowed. HTTP 401', () => {
         return server
           .inject({
             method: 'POST',

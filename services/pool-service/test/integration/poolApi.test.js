@@ -5,6 +5,7 @@ import {
   accessToken,
   accessTokenExpired
 } from '../utils/authUtils';
+import { transcodingQueue } from '../../src/queue';
 import init from '../../src/server';
 
 describe('Socket Clients Api tests', () => {
@@ -291,6 +292,8 @@ describe('Socket Clients Api tests', () => {
           expect(response?.data).to.have.property('location');
           expect(response?.data).to.have.property('storageType');
           expect(response?.data).to.have.property('publicLink');
+          expect(transcodingQueue.jobs.length).to.be.equal(1);
+          transcodingQueue.removeJob(transcodingQueue.jobs.all[0]);
           done();
         });
       });
