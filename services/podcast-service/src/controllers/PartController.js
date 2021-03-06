@@ -111,9 +111,9 @@ export const create = async (
     if (process.env.NODE_ENV === 'test') {
       savedFile = {
         storageType: 'local',
-        location: 'e2e-test',
-        filename: 'e2e-test.mp3',
-        publicLink: 'e2e-test'
+        location: 'integration-test',
+        filename: 'integration-test.mp3',
+        publicLink: 'integration-test'
       };
     } else {
       const savingFile = await axiosAsService.post(
@@ -327,9 +327,9 @@ export const update = async (id, payload, sanitized = true) => {
       if (process.env.NODE_ENV === 'test') {
         savedFile = {
           storageType: 'local',
-          location: 'e2e-test',
-          filename: 'e2e-test.mp3',
-          publicLink: 'e2e-test'
+          location: 'integration-test',
+          filename: 'integration-test.mp3',
+          publicLink: 'integration-test'
         };
       } else {
         const storageRequest = await axiosAsService.post(

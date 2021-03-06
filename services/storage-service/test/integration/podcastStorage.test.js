@@ -44,8 +44,8 @@ describe('Podcast Part Storage API V1 tests', () => {
 
   describe('Podcast Part Upload', () => {
     const podcastPartPayload = {
-      podcastName: 'e2e-podcast',
-      filename: 'e2e-filename.mp3',
+      podcastName: 'integration-podcast',
+      filename: 'integration-filename.mp3',
       file: Buffer.alloc(0)
     };
 
@@ -262,7 +262,7 @@ describe('Podcast Part Storage API V1 tests', () => {
             });
             expect(response?.result?.data).to.have.property('filename');
             expect(response?.result?.data).to.include({
-              location: 'podcasts/e-2-e-podcast',
+              location: 'podcasts/integration-podcast',
               storageType: 'local',
               publicLink: undefined
             });
@@ -297,9 +297,9 @@ describe('Podcast Part Storage API V1 tests', () => {
             });
             expect(response?.result?.data).to.have.property('filename');
             expect(response?.result?.data).to.include({
-              location: 'podcasts/e-2-e-podcast',
+              location: 'podcasts/integration-podcast',
               storageType: 'aws',
-              publicLink: `https://cosy-crafter-backup.s3.eu-west-3.amazonaws.com/podcasts/e-2-e-podcast/${response?.result?.data?.filename}`
+              publicLink: `https://cosy-crafter-backup.s3.eu-west-3.amazonaws.com/podcasts/integration-podcast/${response?.result?.data?.filename}`
             });
           });
       });
@@ -332,9 +332,9 @@ describe('Podcast Part Storage API V1 tests', () => {
             });
             expect(response?.result?.data).to.have.property('filename');
             expect(response?.result?.data).to.include({
-              location: 'podcasts/e-2-e-podcast',
+              location: 'podcasts/integration-podcast',
               storageType: 'scaleway',
-              publicLink: `https://cosy-crafter.s3.fr-par.scw.cloud/podcasts/e-2-e-podcast/${response?.result?.data?.filename}`
+              publicLink: `https://cosy-crafter.s3.fr-par.scw.cloud/podcasts/integration-podcast/${response?.result?.data?.filename}`
             });
           });
       });
@@ -349,20 +349,20 @@ describe('Podcast Part Storage API V1 tests', () => {
     before(async () => {
       localStoredFile = await StorageController.addPodcastPartFile({
         file: fs.createReadStream(path.resolve('./test/files/blank.mp3')),
-        podcastName: 'e2e-podcast',
-        filename: 'e2e-filename.mp3',
+        podcastName: 'integration-podcast',
+        filename: 'integration-filename.mp3',
         storageStrategy: 'local'
       });
       awsStoredFile = await StorageController.addPodcastPartFile({
         file: fs.createReadStream(path.resolve('./test/files/blank.mp3')),
-        podcastName: 'e2e-podcast',
-        filename: 'e2e-filename.mp3',
+        podcastName: 'integration-podcast',
+        filename: 'integration-filename.mp3',
         storageStrategy: 'aws'
       });
       scalewayStoredFile = await StorageController.addPodcastPartFile({
         file: fs.createReadStream(path.resolve('./test/files/blank.mp3')),
-        podcastName: 'e2e-podcast',
-        filename: 'e2e-filename.mp3',
+        podcastName: 'integration-podcast',
+        filename: 'integration-filename.mp3',
         storageStrategy: 'scaleway'
       });
     });

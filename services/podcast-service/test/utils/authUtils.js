@@ -24,7 +24,7 @@ export const startAuthService = () =>
 
 export const accessToken = jwt.sign(
   {
-    service: 'e2e-service'
+    service: 'integration-service'
   },
   process.env.SERVICE_JWT_SECRET,
   {

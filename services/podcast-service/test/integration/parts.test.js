@@ -20,10 +20,10 @@ describe('Parts API V1 tests', () => {
     pid = authServiceChild.pid;
     server = await init();
     section = await SectionController.create({
-      name: `e2e-test`
+      name: `integration-test`
     });
     podcast = await PodcastController.create({
-      name: `e2e-podcast`,
+      name: `integration-podcast`,
       edition: 1
     });
   });
@@ -400,7 +400,7 @@ describe('Parts API V1 tests', () => {
 
     before(async () => {
       podcast = await PodcastController.create({
-        name: `e2e-podcast-2`,
+        name: `integration-podcast-2`,
         edition: 2
       });
 
@@ -581,10 +581,10 @@ describe('Parts API V1 tests', () => {
 
       it('should succeed updating dependencies', async () => {
         const newSection = await SectionController.create({
-          name: `e2e-test-2`
+          name: `integration-test-2`
         });
         const newPodcast = await PodcastController.create({
-          name: `e2e-podcast-3`,
+          name: `integration-podcast-3`,
           edition: 3
         });
         const payloadFormData = objectToFormData({
@@ -714,7 +714,7 @@ describe('Parts API V1 tests', () => {
 
       it('should cascade delete part when deleting podcast', async () => {
         const podcastToDelete = await PodcastController.create({
-          name: 'e2e-podcast-to-cascade-delete',
+          name: 'integration-podcast-to-cascade-delete',
           edition: 1234
         });
         const partToDelete = await PartController.create({
@@ -751,7 +751,7 @@ describe('Parts API V1 tests', () => {
 
       it('should cascade delete part when deleting section', async () => {
         const sectionToDelete = await SectionController.create({
-          name: 'e2e-podcast-to-cascade-delete'
+          name: 'integration-podcast-to-cascade-delete'
         });
         const partToDelete = await PartController.create({
           name: `part2`,

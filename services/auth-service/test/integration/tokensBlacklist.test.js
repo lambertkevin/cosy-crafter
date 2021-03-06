@@ -63,7 +63,7 @@ describe('Tokens Blacklist API tests', () => {
               method: 'POST',
               url: '/tokens',
               payload: {
-                type: 'e2eToken',
+                type: 'integrationToken',
                 jwtid: uuid()
               }
             })

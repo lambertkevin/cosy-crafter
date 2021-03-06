@@ -108,7 +108,7 @@ describe('Sections API V1 tests', () => {
             method: 'POST',
             url: '/v1/sections',
             payload: {
-              name: 'e2e-test-section'
+              name: 'integration-test-section'
             },
             headers: {
               authorization: accessToken
@@ -121,7 +121,7 @@ describe('Sections API V1 tests', () => {
               statusCode: 200
             });
             expect(response.result.data).to.include({
-              name: 'e2e-test-section'
+              name: 'integration-test-section'
             });
           });
       });
@@ -151,7 +151,7 @@ describe('Sections API V1 tests', () => {
     describe('Success', () => {
       it('should succeed updating a section basic fields', async () => {
         const sectionToUpdate = await SectionController.create({
-          name: 'e2e-section-to-update'
+          name: 'integration-section-to-update'
         });
 
         return server
@@ -159,7 +159,7 @@ describe('Sections API V1 tests', () => {
             method: 'PATCH',
             url: `/v1/sections/${sectionToUpdate?.data?._id?.toString()}`,
             payload: {
-              name: 'e2e-section-to-update-2'
+              name: 'integration-section-to-update-2'
             },
             headers: {
               authorization: accessToken
@@ -172,7 +172,7 @@ describe('Sections API V1 tests', () => {
               statusCode: 200
             });
             expect(response?.result?.data).to.include({
-              name: 'e2e-section-to-update-2'
+              name: 'integration-section-to-update-2'
             });
           });
       });
@@ -202,7 +202,7 @@ describe('Sections API V1 tests', () => {
     describe('Success', () => {
       it('should succeed deleting a section', async () => {
         const sectionToDelete = await SectionController.create({
-          name: 'e2e-section-to-delete',
+          name: 'integration-section-to-delete',
           edition: 200
         });
 
