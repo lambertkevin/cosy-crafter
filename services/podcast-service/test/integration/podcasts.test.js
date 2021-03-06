@@ -81,7 +81,7 @@ describe('Podcasts API V1 tests', () => {
               method: 'POST',
               url: '/v1/podcasts',
               payload: {
-                name: 'e2e-podcast-test'
+                name: 'integration-podcast-test'
               },
               headers: {
                 authorization: accessToken
@@ -104,7 +104,7 @@ describe('Podcasts API V1 tests', () => {
               method: 'POST',
               url: '/v1/podcasts',
               payload: {
-                name: 'e2e-podcast-not-number-edition',
+                name: 'integration-podcast-not-number-edition',
                 edition: -1
               },
               headers: {
@@ -158,7 +158,7 @@ describe('Podcasts API V1 tests', () => {
             method: 'POST',
             url: '/v1/podcasts',
             payload: {
-              name: 'e2e-test-podcast',
+              name: 'integration-test-podcast',
               edition: 4
             },
             headers: {
@@ -172,7 +172,7 @@ describe('Podcasts API V1 tests', () => {
               statusCode: 200
             });
             expect(response.result.data).to.include({
-              name: 'e2e-test-podcast'
+              name: 'integration-test-podcast'
             });
           });
       });
@@ -202,7 +202,7 @@ describe('Podcasts API V1 tests', () => {
     describe('Success', () => {
       it('should succeed updating a podcast basic fields', async () => {
         const podcastToUpdate = await PodcastController.create({
-          name: 'e2e-podcast-to-update',
+          name: 'integration-podcast-to-update',
           edition: 100
         });
 
@@ -211,7 +211,7 @@ describe('Podcasts API V1 tests', () => {
             method: 'PATCH',
             url: `/v1/podcasts/${podcastToUpdate?.data?._id?.toString()}`,
             payload: {
-              name: 'e2e-podcast-to-update-2',
+              name: 'integration-podcast-to-update-2',
               edition: 101
             },
             headers: {
@@ -225,7 +225,7 @@ describe('Podcasts API V1 tests', () => {
               statusCode: 200
             });
             expect(response?.result?.data).to.include({
-              name: 'e2e-podcast-to-update-2',
+              name: 'integration-podcast-to-update-2',
               edition: 101
             });
           });
@@ -256,7 +256,7 @@ describe('Podcasts API V1 tests', () => {
     describe('Success', () => {
       it('should succeed deleting a podcast', async () => {
         const podcastToDelete = await PodcastController.create({
-          name: 'e2e-podcast-to-delete',
+          name: 'integration-podcast-to-delete',
           edition: 200
         });
 

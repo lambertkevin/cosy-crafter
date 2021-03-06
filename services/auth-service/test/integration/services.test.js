@@ -49,7 +49,7 @@ describe('Services API tests', () => {
             method: 'POST',
             url: '/services',
             payload: {
-              identifier: 'e2e-service'
+              identifier: 'integration-service'
             }
           })
           .then((response) => {
@@ -69,7 +69,7 @@ describe('Services API tests', () => {
             method: 'POST',
             url: '/services',
             payload: {
-              identifier: 'e2e-service'
+              identifier: 'integration-service'
             },
             headers: {
               'x-authorization': publicEncrypter(Date.now(), 'base64')
@@ -354,7 +354,7 @@ describe('Services API tests', () => {
             method: 'POST',
             url: '/services',
             payload: {
-              identifier: 'e2e-service'
+              identifier: 'integration-service'
             },
             headers: {
               'x-authorization': publicEncrypter(Date.now(), 'base64')
@@ -427,7 +427,7 @@ describe('Services API tests', () => {
 
     before(async () => {
       service = await ServiceController.create({
-        identifier: 'e2e-service-to-delete',
+        identifier: 'integration-service-to-delete',
         key: '123',
         ip: '1.2.3.4'
       });

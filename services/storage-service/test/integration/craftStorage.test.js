@@ -44,7 +44,7 @@ describe('Craft Storage API V1 tests', () => {
 
   describe('Craft Upload', () => {
     const craftPayload = {
-      filename: 'e2e-craft-filename.mp3',
+      filename: 'integration-craft-filename.mp3',
       file: Buffer.alloc(0)
     };
 
@@ -233,7 +233,7 @@ describe('Craft Storage API V1 tests', () => {
             });
             expect(response?.result?.data).to.have.property('filename');
             expect(response?.result?.data).to.include({
-              location: 'crafts/e2e-craft-filename.mp3',
+              location: 'crafts/integration-craft-filename.mp3',
               storageType: 'local',
               publicLink: undefined
             });
@@ -268,7 +268,7 @@ describe('Craft Storage API V1 tests', () => {
             });
             expect(response?.result?.data).to.have.property('filename');
             expect(response?.result?.data).to.include({
-              location: 'crafts/e2e-craft-filename.mp3',
+              location: 'crafts/integration-craft-filename.mp3',
               storageType: 'aws',
               publicLink: `https://cosy-crafter-backup.s3.eu-west-3.amazonaws.com/crafts/${response?.result?.data?.filename}`
             });
@@ -303,7 +303,7 @@ describe('Craft Storage API V1 tests', () => {
             });
             expect(response?.result?.data).to.have.property('filename');
             expect(response?.result?.data).to.include({
-              location: 'crafts/e2e-craft-filename.mp3',
+              location: 'crafts/integration-craft-filename.mp3',
               storageType: 'scaleway',
               publicLink: `https://cosy-crafter.s3.fr-par.scw.cloud/crafts/${response?.result?.data?.filename}`
             });
@@ -320,20 +320,20 @@ describe('Craft Storage API V1 tests', () => {
     before(async () => {
       localStoredFile = await StorageController.addPodcastPartFile({
         file: fs.createReadStream(path.resolve('./test/files/blank.mp3')),
-        podcastName: 'e2e-podcast',
-        filename: 'e2e-filename.mp3',
+        podcastName: 'integration-podcast',
+        filename: 'integration-filename.mp3',
         storageStrategy: 'local'
       });
       awsStoredFile = await StorageController.addPodcastPartFile({
         file: fs.createReadStream(path.resolve('./test/files/blank.mp3')),
-        podcastName: 'e2e-podcast',
-        filename: 'e2e-filename.mp3',
+        podcastName: 'integration-podcast',
+        filename: 'integration-filename.mp3',
         storageStrategy: 'aws'
       });
       scalewayStoredFile = await StorageController.addPodcastPartFile({
         file: fs.createReadStream(path.resolve('./test/files/blank.mp3')),
-        podcastName: 'e2e-podcast',
-        filename: 'e2e-filename.mp3',
+        podcastName: 'integration-podcast',
+        filename: 'integration-filename.mp3',
         storageStrategy: 'scaleway'
       });
     });

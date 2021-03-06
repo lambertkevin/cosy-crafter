@@ -37,14 +37,14 @@ export const accessTokenFactory = (payload, expire) =>
 
 export const accessToken = accessTokenFactory(
   {
-    service: 'e2e-service'
+    service: 'integration-service'
   },
   '10m'
 );
 
 export const accessTokenExpired = accessTokenFactory(
   {
-    service: 'e2e-service'
+    service: 'integration-service'
   },
   '-1s'
 );

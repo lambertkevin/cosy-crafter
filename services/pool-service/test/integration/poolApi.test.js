@@ -154,7 +154,7 @@ describe('Socket Clients Api tests', () => {
         }
       };
       jobPayload = {
-        name: 'e2e-job',
+        name: 'integration-job',
         files: [filePodcast, userInput]
       };
     });
@@ -226,7 +226,7 @@ describe('Socket Clients Api tests', () => {
         it('should fail if file type is not podcast-part or user-input. ERROR CODE 400', (done) => {
           const payload = {
             ...jobPayload,
-            files: [{ ...filePodcast, type: 'e2e-type' }]
+            files: [{ ...filePodcast, type: 'integration-type' }]
           };
 
           pool.emit('/v1/jobs/add', payload, (response) => {
@@ -268,7 +268,7 @@ describe('Socket Clients Api tests', () => {
               {
                 ...filePodcast,
                 seek: {
-                  test: 'e2e'
+                  test: 'integration'
                 }
               }
             ]

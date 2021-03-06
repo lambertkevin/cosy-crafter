@@ -268,7 +268,7 @@ describe('Crafts API V1 tests', () => {
 
   describe('Craft Update', () => {
     const craftPayload = {
-      name: 'e2e-craft-to-update',
+      name: 'integration-craft-to-update',
       jobId: uuid(),
       user: '603181b5136eaf770f0949e8',
       storageType: 'aws',
@@ -354,7 +354,7 @@ describe('Crafts API V1 tests', () => {
     describe('Success', () => {
       it("should succeed updating all craft's fields", async () => {
         const updatedCraftPayload = {
-          name: 'e2e-craft-to-update-2',
+          name: 'integration-craft-to-update-2',
           jobId: uuid(),
           user: '603181b5136eaf770f0949a8',
           storageType: 'scaleway',
@@ -387,7 +387,7 @@ describe('Crafts API V1 tests', () => {
 
   describe('Craft Deletion', () => {
     const craftPayload = {
-      name: 'e2e-craft-to-delete',
+      name: 'integration-craft-to-delete',
       jobId: uuid(),
       user: '603181b5136eaf770f0949e8',
       storageType: 'aws',
