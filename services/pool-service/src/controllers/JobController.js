@@ -1,13 +1,10 @@
-import _ from 'lodash';
 import { makeJob } from '../lib/JobFactory';
 import { logger } from '../utils/Logger';
-import { transcodingQueue } from '../queue';
 import { makeRsaPrivateEncrypter } from '../utils/RsaUtils';
 
 export const createTranscodingJob = ({ name, files }, ack) => {
   try {
     const privateEncrypter = makeRsaPrivateEncrypter();
-
     const transcodingJob = makeJob(
       (job, workerSocket) =>
         new Promise((resolve, reject) => {
@@ -46,8 +43,6 @@ export const createTranscodingJob = ({ name, files }, ack) => {
         retries: 1
       }
     );
-
-    transcodingQueue.addJob(transcodingJob);
 
     if (process.env.NODE_ENV === 'test') {
       return ack({
