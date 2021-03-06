@@ -1,12 +1,16 @@
 import joi from 'joi';
 import _ from 'lodash';
-import { createTranscodingJob } from '../controllers/JobController';
+import * as JobController from '../controllers/JobController';
+import { transcodingQueue } from '../queue';
 import { logger } from '../utils/Logger';
 
 const routes = [
   {
     path: '/add',
-    handler: createTranscodingJob,
+    handler: (data, ack) => {
+      const job = JobController.createTranscodingJob(data, ack);
+      transcodingQueue.addJob(job);
+    },
     validation: joi.object({
       name: joi.string().required(),
       files: joi
