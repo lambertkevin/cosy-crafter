@@ -7,6 +7,7 @@ import { makeQueue } from '../../src/lib/QueueFactory';
 import { makeSocketWorker } from '../../src/lib/SocketWorkerFactory';
 import {
   JOB_STATUS_FAILED,
+  JOB_STATUS_ONGOING,
   JOB_STATUS_WAITING
 } from '../../src/lib/types/JobTypes';
 
@@ -22,6 +23,19 @@ const failAsyncAction = () =>
   new Promise((resolve, reject) => {
     setTimeout(() => {
       reject();
+    }, 5);
+  });
+
+let flag = false;
+const failOnceAsyncAction = () =>
+  new Promise((resolve, reject) => {
+    setTimeout(() => {
+      if (!flag) {
+        reject();
+        flag = true;
+      } else {
+        resolve();
+      }
     }, 5);
   });
 
@@ -228,7 +242,7 @@ describe('Queue Unit Test', () => {
         expect(spy).to.have.been.called();
       });
 
-      it('shoud succeed adding a worker to queue', () => {
+      it('should succeed adding a worker to queue', () => {
         const worker = makeSocketWorker({ id: '123', handshake: null });
         const queue = makeQueue();
 
@@ -237,7 +251,7 @@ describe('Queue Unit Test', () => {
         expect(queue.workers.all).to.include(worker);
       });
 
-      it('shoud succeed removing a worker to queue', () => {
+      it('should succeed removing a worker to queue', () => {
         const worker = makeSocketWorker({ id: '123', handshake: null });
         const queue = makeQueue();
 
@@ -246,6 +260,45 @@ describe('Queue Unit Test', () => {
 
         queue.removeWorker(worker);
         expect(queue.workers.all).to.not.include(worker);
+      });
+
+      it('should execute a job that need to retry with a maximum priority', (done) => {
+        const job = makeJob(failAsyncAction, {
+          priority: 0,
+          retries: 1
+        });
+        const job2 = makeJob(successAsyncAction, {
+          priority: 0
+        });
+        const worker = makeSocketWorker({ id: null, handshake: null });
+        const queue = makeQueue(false);
+
+        queue.addWorker(worker);
+        queue.addJob(job);
+        queue.addJob(job2);
+
+        const next = queue.next();
+        expect(job.priority).to.be.equal(0);
+        expect(job.status).to.be.equal(JOB_STATUS_ONGOING);
+
+        next.then(() => {
+          // Once the first next is done and job has failed
+          expect(job.fails).to.be.equal(1);
+          // Priority increased by 1
+          expect(job.priority).to.be.equal(1);
+          // Job has been set to waiting again
+          expect(job2.status).to.be.equal(JOB_STATUS_WAITING);
+          // Job has been put on top of the queue
+          expect(queue.jobs.all[0]).to.be.equal(job);
+
+          // Then on the next "next"
+          queue.next();
+          // Before the end of next promise
+          // Job status should be ongoing again
+          expect(job.status).to.be.equal(JOB_STATUS_ONGOING);
+
+          done();
+        });
       });
     });
   });

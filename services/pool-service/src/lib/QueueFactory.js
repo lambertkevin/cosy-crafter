@@ -216,18 +216,34 @@ export const makeQueue = (registerEvents = true) => {
           // Lib made errors can be
           // from worker execute (if job/worker not made by provided factories): JobHasNoStart, StartIsNotPromise
           // from job start bubbling to worker execute: JobRetryError, JobFailedError, AsyncActionNotAsync
-          if (
-            [
-              'JobHasNoStart',
-              'StartIsNotPromise',
-              'JobFailedError',
-              'AsyncActionNotAsync'
-            ].includes(error.name)
-          ) {
-            this.removeJob(job);
-            throw error;
-          } else {
-            logger.error('Queue processing job error', { error, job, worker });
+          switch (error.name) {
+            case 'JobHasNoStart':
+            case 'StartIsNotPromise':
+            case 'JobFailedError':
+            case 'AsyncActionNotAsync': {
+              this.removeJob(job);
+              throw error;
+            }
+            case 'JobRetryError': {
+              // Get the job with the maximum value
+              const { priority: jobsMaxPriority } = _.maxBy(
+                jobs,
+                ({ priority }) => priority
+              );
+              // Make the retrying job the highest priority of the queue
+              // for it to be the next job to be handled
+              job.priority = jobsMaxPriority + 1;
+              // Sort the jobs again by priority
+              prioritizeArray(jobs);
+              break;
+            }
+            default:
+              logger.error('Queue processing job error', {
+                error,
+                job,
+                worker
+              });
+              break;
           }
         } finally {
           job.events.off('job-status-changed', onJobStatusChanged);
