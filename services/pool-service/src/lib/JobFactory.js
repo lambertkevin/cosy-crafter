@@ -61,8 +61,7 @@ export const makeJob = (asyncAction, opts) => {
     throw new Error(`Arguments are invalid: ${error?.message}`);
   }
 
-  let priority =
-    typeof opts?.priority !== 'undefined' ? opts.priority : JOB_PRIORITY_MEDIUM;
+  let priority = opts?.priority ?? JOB_PRIORITY_MEDIUM;
   let progress = opts?.progress || 0;
   let status =
     opts && opts.status && opts.status !== JOB_STATUS_ONGOING
