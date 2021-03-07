@@ -1,3 +1,4 @@
+import fs from 'fs';
 import ffmpeg from 'fluent-ffmpeg';
 
 /**
@@ -10,11 +11,33 @@ import ffmpeg from 'fluent-ffmpeg';
  */
 export const getMp3Duration = (file) =>
   new Promise((resolve, reject) => {
-    ffmpeg(file).ffprobe((err, data) => {
-      if (err) {
-        return reject();
+    if (typeof file === 'string') {
+      const fileExist = fs.existsSync(file);
+      if (!fileExist) {
+        const notFound = new Error("File doesn't exist");
+        notFound.name = 'NotFound';
+
+        return reject(notFound);
       }
-      return resolve(data.format.duration);
+    }
+
+    return ffmpeg(file).ffprobe((err, data) => {
+      if (err) {
+        const ffmpegError = new Error('FFmpeg failed to anaylize the file');
+        ffmpegError.name = 'FFmpegError';
+        ffmpeg.details = err;
+
+        reject(ffmpegError);
+      }
+
+      if (data.format.format_name !== 'mp3') {
+        const fileFormatError = new Error('File format is not suppported');
+        fileFormatError.name = 'FileFormatError';
+
+        reject(fileFormatError);
+      }
+
+      resolve(data.format.duration);
     });
   });
 
