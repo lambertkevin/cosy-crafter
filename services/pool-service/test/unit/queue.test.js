@@ -1,6 +1,6 @@
 import _ from 'lodash';
 import spies from 'chai-spies';
-import chai, { expect } from 'chai';
+import chai, { AssertionError, expect } from 'chai';
 import { EventEmitter } from 'events';
 import { makeJob } from '../../src/lib/JobFactory';
 import { makeQueue } from '../../src/lib/QueueFactory';
@@ -23,19 +23,6 @@ const failAsyncAction = () =>
   new Promise((resolve, reject) => {
     setTimeout(() => {
       reject();
-    }, 5);
-  });
-
-let flag = false;
-const failOnceAsyncAction = () =>
-  new Promise((resolve, reject) => {
-    setTimeout(() => {
-      if (!flag) {
-        reject();
-        flag = true;
-      } else {
-        resolve();
-      }
     }, 5);
   });
 
@@ -75,9 +62,13 @@ describe('Queue Unit Test', () => {
         queue.addJob(fakeJob);
 
         try {
-          const next = await queue.next();
-          expect(next).to.throw();
+          await queue.next();
+          expect.fail('Promise should have failed');
         } catch (e) {
+          if (e instanceof AssertionError) {
+            throw e;
+          }
+
           expect(e).to.be.an('error');
           expect(e.name).to.be.equal('JobHasNoEvents');
         }
@@ -95,9 +86,12 @@ describe('Queue Unit Test', () => {
         queue.addJob(fakeJob);
 
         try {
-          const next = await queue.next();
-          expect(next).to.throw();
+          await queue.next();
+          expect.fail('Promise should have failed');
         } catch (e) {
+          if (e instanceof AssertionError) {
+            throw e;
+          }
           expect(e).to.be.an('error');
           expect(e.name).to.be.equal('JobHasNoStart');
         }
@@ -116,9 +110,13 @@ describe('Queue Unit Test', () => {
         queue.addJob(fakeJob);
 
         try {
-          const next = await queue.next();
-          expect(next).to.throw();
+          await queue.next();
+          expect.fail('Promise should have failed');
         } catch (e) {
+          if (e instanceof AssertionError) {
+            throw e;
+          }
+
           expect(e).to.be.an('error');
           expect(e.name).to.be.equal('StartIsNotPromise');
         }
@@ -133,9 +131,13 @@ describe('Queue Unit Test', () => {
         queue.addJob(job);
 
         try {
-          const next = await queue.next();
-          expect(next).to.throw();
+          await queue.next();
+          expect.fail('Promise should have failed');
         } catch (e) {
+          if (e instanceof AssertionError) {
+            throw e;
+          }
+
           expect(e).to.be.an('error');
           expect(e.name).to.be.equal('JobFailedError');
         }

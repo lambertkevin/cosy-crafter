@@ -1,4 +1,4 @@
-import { expect } from 'chai';
+import { AssertionError, expect } from 'chai';
 import {
   JOB_STATUS_WAITING,
   JOB_STATUS_DONE,
@@ -379,9 +379,13 @@ describe('Job Unit Test', () => {
         const job = makeJob(() => {});
 
         try {
-          const start = await job.start();
-          expect(start).to.throw();
+          await job.start();
+          expect.fail('Promise should have failed');
         } catch (e) {
+          if (e instanceof AssertionError) {
+            throw e;
+          }
+
           expect(e).to.be.an('error');
           expect(e.name).to.be.equal('AsyncActionNotAsync');
         }

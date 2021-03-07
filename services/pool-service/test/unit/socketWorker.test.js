@@ -1,4 +1,4 @@
-import { expect } from 'chai';
+import { AssertionError, expect } from 'chai';
 import { makeSocketWorker } from '../../src/lib/SocketWorkerFactory';
 import {
   WORKER_STATUS_AVAILABLE,
@@ -44,9 +44,13 @@ describe('Socket Worker Unit Test', () => {
         const worker = makeSocketWorker(fakeSocket);
 
         try {
-          const execution = await worker.execute(fakeJob);
-          expect(execution).to.throw();
+          await worker.execute(fakeJob);
+          expect.fail('Promise should have failed');
         } catch (e) {
+          if (e instanceof AssertionError) {
+            throw e;
+          }
+
           expect(e).to.be.an('error');
           expect(e.name).to.be.equal('JobHasNoStart');
         }
@@ -57,9 +61,13 @@ describe('Socket Worker Unit Test', () => {
         const worker = makeSocketWorker(fakeSocket);
 
         try {
-          const execution = await worker.execute(fakeJob);
-          expect(execution).to.throw();
+          await worker.execute(fakeJob);
+          expect.fail('Promise should have failed');
         } catch (e) {
+          if (e instanceof AssertionError) {
+            throw e;
+          }
+
           expect(e).to.be.an('error');
           expect(e.name).to.be.equal('StartIsNotPromise');
         }
