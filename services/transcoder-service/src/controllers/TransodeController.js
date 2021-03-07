@@ -88,8 +88,8 @@ export const joinFiles = async (files, jobId, ack, socket) => {
       if (files[i] && fs.existsSync(files[i].path)) {
         const inputOptions = [];
         if (files[i].seek) {
-          const start = _.get(files, [i, 'seek', 'start']);
-          const end = _.get(files, [i, 'seek', 'end']);
+          const start = files[i]?.seek?.start;
+          const end = files[i]?.seek?.end;
           const seekStart = start ? `-ss ${start}` : null;
           const seekEnd = end ? `-to ${end}` : null;
 
@@ -161,7 +161,7 @@ export const upload = async (filepath, jobId) => {
         maxContentLength: 400 * 1024 * 1024 // 400MB max part size
       }
     );
-    const savedFile = _.get(savingFile, ['data', 'data'], {});
+    const savedFile = savingFile?.data?.data || {};
 
     if (_.isEmpty(savedFile)) {
       throw new Error('An error occured while saving the file');
