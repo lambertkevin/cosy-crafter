@@ -6,7 +6,10 @@ import FormData from 'form-data';
 import { v4 as uuid } from 'uuid';
 import ffmpeg from 'fluent-ffmpeg';
 import { makeAxiosInstance, axiosErrorBoomifier } from '../utils/AxiosUtils';
-import { getCrossFadeFilters } from '../utils/FfmpegUtils';
+import {
+  getCrossFadeFilters,
+  percentageFromTimemark
+} from '../utils/FfmpegUtils';
 import { getMp3ListDuration } from '../utils/Mp3Utils';
 import { sentry, logger } from '../utils/Logger';
 import { tokens } from '../auth';
@@ -72,9 +75,9 @@ export const getFile = (file) =>
  * @return {Promise<String>} [mergedFilePath]
  */
 export const joinFiles = async (files, jobId, ack, socket) => {
-  const { values: durationsArray, duration } = await getMp3ListDuration(
-    files.map((x) => x.path)
-  );
+  const filesPaths = files.map((x) => x.path);
+  // Get total duration of the combined mp3s
+  const { duration } = await getMp3ListDuration(filesPaths);
 
   return new Promise((resolve, reject) => {
     const mergedFilePath = path.join(
@@ -86,21 +89,21 @@ export const joinFiles = async (files, jobId, ack, socket) => {
 
     for (let i = 0; i < files.length; i += 1) {
       if (files[i] && fs.existsSync(files[i].path)) {
-        const inputOptions = [];
+        let inputOptions = [];
         if (files[i].seek) {
           const start = files[i]?.seek?.start;
           const end = files[i]?.seek?.end;
-          const seekStart = start ? `-ss ${start}` : null;
-          const seekEnd = end ? `-to ${end}` : null;
 
-          inputOptions.push(seekStart);
-          inputOptions.push(seekEnd);
+          inputOptions = [
+            start ? `-ss ${start}` : null,
+            end ? `-to ${end}` : null
+          ];
         }
         ff.input(files[i].path).inputOptions(inputOptions);
       }
     }
 
-    const crossFadeFilters = getCrossFadeFilters(files, durationsArray);
+    const crossFadeFilters = getCrossFadeFilters(files);
     if (crossFadeFilters) {
       ff.complexFilter(crossFadeFilters);
     }
@@ -115,12 +118,7 @@ export const joinFiles = async (files, jobId, ack, socket) => {
       socket.on(`disconnect`, killProcess);
     })
       .on('progress', ({ timemark }) => {
-        const percent =
-          ((Date.parse(`04/21/2014 ${timemark}`) -
-            Date.parse('04/21/2014 00:00:00.00')) /
-            1000 /
-            duration) *
-          100;
+        const percent = percentageFromTimemark(timemark, duration);
         console.log(percent);
         socket.emit(`job-progress-${jobId}`, {
           percent
@@ -232,8 +230,7 @@ export const createTranscodeJob = async (
 
     const filesWithPaths = files.map((x, i) => ({
       ...x,
-      path: filesPaths[i],
-      input: `${i}`
+      path: filesPaths[i]
     }));
 
     // --- Start Transcoding
