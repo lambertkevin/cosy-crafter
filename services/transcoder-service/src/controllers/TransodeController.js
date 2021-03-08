@@ -140,6 +140,14 @@ export const joinFiles = async (files, jobId, ack, socket) => {
   });
 };
 
+/**
+ * Upload a file as Craft on the storage-service
+ *
+ * @param {String} filepath
+ * @param {String} jobId
+ *
+ * @return {Promise<Object|Error>}
+ */
 export const upload = async (filepath, jobId) => {
   const formData = new FormData();
   formData.append('file', fs.createReadStream(filepath));
