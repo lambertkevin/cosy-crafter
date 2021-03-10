@@ -60,7 +60,7 @@ export const getCrossFadeFilters = (files) => {
  * Returns a percentage from a timemark format
  * based on the total duration
  *
- * @param {String} timemark [format HH:mm:ss.SSS]
+ * @param {String} timemark [format HH:mm:ss.SS]
  * @param {Number} duration
  *
  * @return {Number} percentage
@@ -70,7 +70,7 @@ export const percentageFromTimemark = (timemark, duration) => {
     return 0;
   }
 
-  const timemarkRegex = new RegExp('[0-9]{2}:[0-9]{2}:[0-9]{2}.[0-9]{3}');
+  const timemarkRegex = new RegExp('[0-9]{2}:[0-9]{2}:[0-9]{2}.[0-9]{2}$');
   if (!timemarkRegex.test(timemark)) {
     return 0;
   }

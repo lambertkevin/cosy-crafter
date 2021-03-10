@@ -79,12 +79,12 @@ describe('FFmpeg Utils Unit Tests', () => {
   describe('percentageFromTimemark', () => {
     describe('Fails', () => {
       it('should return 0 if timemark is wrongly formatted', () => {
-        const percentage = percentageFromTimemark('00:30:00', 3600);
+        const percentage = percentageFromTimemark('00:30:00.000', 3600);
         expect(percentage).to.be.equal(0);
       });
 
       it('should return 0 if duration is not a number', () => {
-        const percentage = percentageFromTimemark('00:30:00.000', '3600');
+        const percentage = percentageFromTimemark('00:30:00.00', '3600');
         expect(percentage).to.be.equal(0);
       });
 
@@ -99,24 +99,24 @@ describe('FFmpeg Utils Unit Tests', () => {
       });
 
       it('should return 0 if duration is null', () => {
-        const percentage = percentageFromTimemark('00:30:00.000', null);
+        const percentage = percentageFromTimemark('00:30:00.00', null);
         expect(percentage).to.be.equal(0);
       });
 
       it('should return 0 if duration is undefined', () => {
-        const percentage = percentageFromTimemark('00:30:00.000', undefined);
+        const percentage = percentageFromTimemark('00:30:00.00', undefined);
         expect(percentage).to.be.equal(0);
       });
     });
 
     describe('Success', () => {
       it('should get percentage 50% for 30min on 1 hour', () => {
-        const percentage = percentageFromTimemark('00:30:00.000', 3600);
+        const percentage = percentageFromTimemark('00:30:00.00', 3600);
         expect(percentage).to.be.equal(50);
       });
 
       it('should get percentage 75% for 45min on 1 hour', () => {
-        const percentage = percentageFromTimemark('00:45:00.000', 3600);
+        const percentage = percentageFromTimemark('00:45:00.00', 3600);
         expect(percentage).to.be.equal(75);
       });
     });
