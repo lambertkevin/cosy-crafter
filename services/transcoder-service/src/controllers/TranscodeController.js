@@ -1,11 +1,12 @@
 import fs from 'fs';
+import joi from 'joi';
 import _ from 'lodash';
 import path from 'path';
 import axios from 'axios';
 import FormData from 'form-data';
 import { v4 as uuid } from 'uuid';
 import ffmpeg from 'fluent-ffmpeg';
-import { makeAxiosInstance, axiosErrorBoomifier } from '../utils/AxiosUtils';
+import { makeAxiosInstance } from '../utils/AxiosUtils';
 import {
   getCrossFadeFilters,
   percentageFromTimemark
@@ -34,7 +35,7 @@ let busyFlag = false;
 export const getFile = (file) =>
   new Promise((resolve, reject) => {
     try {
-      if (file.type === 'podcast-part') {
+      if (file?.type === 'podcast-part') {
         const filepath = path.join(path.resolve('./'), 'cache', `${file.id}`);
 
         if (fs.existsSync(filepath)) {
@@ -69,15 +70,59 @@ export const getFile = (file) =>
  *
  * @param {Array<Object>} files
  * @param {String} jobId
- * @param {Function} ack
  * @param {socket.Socket} socket
  *
  * @return {Promise<String>} [mergedFilePath]
  */
-export const joinFiles = async (files, jobId, ack, socket) => {
+export const joinFiles = async (files, jobId, socket) => {
+  const argsSchema = joi.object({
+    files: joi
+      .array()
+      .items(
+        joi
+          .object({
+            path: joi.string().required(),
+            seek: joi
+              .object({
+                start: joi.number().optional(),
+                end: joi.number().optional()
+              })
+              .optional()
+          })
+          .unknown()
+      )
+      .required(),
+    jobId: joi.string().guid().required(),
+    socket: joi
+      .object({
+        id: joi.required(),
+        handshake: joi.required()
+      })
+      .unknown()
+      .required()
+  });
+
+  const { error: argsError } = await argsSchema.validateAsync({
+    files,
+    jobId,
+    socket
+  });
+
+  if (argsError) {
+    throw argsError;
+  }
+
+  // Add final silence for fadeout with acrossfade
+  files.push({
+    path: path.resolve('./src/utils/files/10s-silence.mp3'),
+    seek: {
+      end: 4
+    }
+  });
+
   const filesPaths = files.map((x) => x.path);
   // Get total duration of the combined mp3s
-  const { duration } = await getMp3ListDuration(filesPaths);
+  const { duration, values } = await getMp3ListDuration(filesPaths);
 
   return new Promise((resolve, reject) => {
     const mergedFilePath = path.join(
@@ -91,25 +136,24 @@ export const joinFiles = async (files, jobId, ack, socket) => {
       if (files[i] && fs.existsSync(files[i].path)) {
         let inputOptions = [];
         if (files[i].seek) {
-          const start = files[i]?.seek?.start;
-          const end = files[i]?.seek?.end;
-
           inputOptions = [
-            start ? `-ss ${start}` : null,
-            end ? `-to ${end}` : null
+            `-ss ${files[i]?.seek?.start ?? 0}`,
+            `-to ${files[i]?.seek?.end ?? values[i]}`
           ];
         }
         ff.input(files[i].path).inputOptions(inputOptions);
       }
     }
 
-    const crossFadeFilters = getCrossFadeFilters(files);
+    const crossFadeFilters = getCrossFadeFilters(files, duration);
     if (crossFadeFilters) {
       ff.complexFilter(crossFadeFilters);
     }
 
     ff.on('start', () => {
-      console.time('merge');
+      if (process.env.NODE_ENV === 'development') {
+        console.time('merge');
+      }
       const killProcess = () => {
         ff.kill('SIGSTOP');
         reject(new Error('Stopped by worker'));
@@ -119,19 +163,24 @@ export const joinFiles = async (files, jobId, ack, socket) => {
     })
       .on('progress', ({ timemark }) => {
         const percent = percentageFromTimemark(timemark, duration);
-        console.log(percent);
+        if (process.env.NODE_ENV === 'development') {
+          console.log(percent);
+        }
         socket.emit(`job-progress-${jobId}`, {
           percent
         });
       })
       .on('end', () => {
-        console.timeEnd('merge');
+        if (process.env.NODE_ENV === 'development') {
+          console.timeEnd('merge');
+        }
         socket.emit(`job-progress-${jobId}`, {
           percent: 100
         });
         resolve(mergedFilePath);
       })
       .on('error', (err) => {
+        console.log(err);
         logger.error(`[${jobId}] Error while transcoding`, err);
         reject(err);
       })
@@ -149,6 +198,27 @@ export const joinFiles = async (files, jobId, ack, socket) => {
  * @return {Promise<Object|Error>}
  */
 export const upload = async (filepath, jobId) => {
+  if (typeof filepath !== 'string') {
+    const filePathError = new Error('Filepath is invalid');
+    filePathError.name = 'FilePathError';
+
+    throw filePathError;
+  }
+
+  if (!fs.existsSync(filepath)) {
+    const fileNotFound = new Error("File doesn't exist");
+    fileNotFound.name = 'FileNotFound';
+
+    throw fileNotFound;
+  }
+
+  if (typeof jobId !== 'string' || !jobId) {
+    const jobIdError = new Error('JobId is invalid');
+    jobIdError.name = 'JobIdError';
+
+    throw jobIdError;
+  }
+
   const formData = new FormData();
   formData.append('file', fs.createReadStream(filepath));
   formData.append('filename', path.basename(filepath));
@@ -167,10 +237,13 @@ export const upload = async (filepath, jobId) => {
         maxContentLength: 400 * 1024 * 1024 // 400MB max part size
       }
     );
-    const savedFile = savingFile?.data?.data || {};
+    const savedFile = savingFile?.data?.data ?? {};
 
     if (_.isEmpty(savedFile)) {
-      throw new Error('An error occured while saving the file');
+      const saveError = new Error('An error occured while saving the file');
+      saveError.name = 'SaveError';
+
+      throw saveError;
     }
     return savedFile;
   } catch (error) {
@@ -178,7 +251,15 @@ export const upload = async (filepath, jobId) => {
       error,
       filepath
     });
-    throw axiosErrorBoomifier(error);
+
+    if (error.isAxiosError) {
+      const uploadServiceError = new Error('Storage service returned an error');
+      uploadServiceError.name = 'UploadServiceError';
+      uploadServiceError.details = error;
+
+      throw uploadServiceError;
+    }
+    throw error;
   }
 };
 
@@ -198,8 +279,9 @@ export const createTranscodeJob = async (
   ack,
   socket
 ) => {
+  let transaction;
   try {
-    if (!_.isArray(files) || _.isEmpty(files)) {
+    if (!Array.isArray(files) || _.isEmpty(files)) {
       return ack({
         statusCode: 400,
         message: 'Files are incorrects'
@@ -214,7 +296,7 @@ export const createTranscodeJob = async (
     }
 
     sentry.setTag('jobId', jobId);
-    const transaction = sentry.startTransaction({
+    transaction = sentry.startTransaction({
       name: 'Transcoding Job'
     });
     sentry.configureScope((scope) => {
@@ -251,7 +333,7 @@ export const createTranscodeJob = async (
     });
     // Will emit progress
     logger.info(`Start Transcoding`, { jobId, filesWithPaths });
-    const mergedFilePath = await joinFiles(filesWithPaths, jobId, ack, socket);
+    const mergedFilePath = await joinFiles(filesWithPaths, jobId, socket);
     transcodingSpan.finish();
     // --- End Transcoding
 
@@ -312,7 +394,7 @@ export const createTranscodeJob = async (
         });
       }
     });
-    transaction.finish();
+
     // Finish job
     ack({
       statusCode: 200,
@@ -326,6 +408,7 @@ export const createTranscodeJob = async (
       message: 'An error has occured'
     });
   } finally {
+    transaction.finish();
     busyFlag = false;
   }
 };
