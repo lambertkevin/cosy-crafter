@@ -29,7 +29,7 @@ describe('Mp3 Utils Unit Tests', () => {
           }
 
           expect(error).to.be.an('error');
-          expect(error.name).to.be.equal('FileFormatError');
+          expect(error.name).to.be.equal('FFmpegError');
         }
       });
 
