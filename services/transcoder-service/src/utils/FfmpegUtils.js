@@ -20,25 +20,26 @@ export const getCrossFadeFilters = (files) => {
       return acc;
     }
 
-    acc.push(`${acc[acc.length - 1]}${i}`);
+    acc.push(`${acc[acc.length - 1]}+${i}`);
     return acc;
   }, []);
 
   const crossFadeFilters = files
     .map((file, i) => {
-      return inputsMixed[i + 1]
+      return files[i + 1]
         ? {
             filter: 'acrossfade',
             options: {
               d: 4,
+              /** @see https://github.com/guillaumekh/ffmpeg-afade-cheatsheet  */
               /**  @WARNING Change crossfade depending on input-type podcast-part or user-input */
-              c1: 'log',
+              c1: 'par',
               c2: 'nofade'
             },
             // Take as input the last output done
             // E.g. We are at input 1 so last output has been
-            // the mixing of '0' and '1' merging in output '01' and
-            // we are now merging this '01' with '2' into output '012'
+            // the mixing of '0' and '1' merging in output '0+1' and
+            // we are now merging this '0+1' with '2' into output '0+1+2'
             inputs: [inputsMixed[i], `${i + 1}`],
             outputs: [inputsMixed[i + 1]]
           }
@@ -46,14 +47,14 @@ export const getCrossFadeFilters = (files) => {
     })
     .filter((x) => x);
 
-  // The last 'output' is implied by the fact
-  // it's the last merging/crossfade and
-  // therefore we need to remove it
+  // The 'acrossfade' filter cannot have
+  // an unconnected output (meaning it cannot have
+  // an unused output for the last usage of the filter)
+  // We then have to delete the last outuput of the last
   if (crossFadeFilters.length) {
     delete crossFadeFilters[crossFadeFilters.length - 1].outputs;
   }
-
-  return crossFadeFilters.length ? crossFadeFilters : null;
+  return crossFadeFilters;
 };
 
 /**
