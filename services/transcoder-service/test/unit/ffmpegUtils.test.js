@@ -16,44 +16,44 @@ describe('FFmpeg Utils Unit Tests', () => {
         expect(filters).to.include.deep.ordered.members([
           {
             filter: 'acrossfade',
-            options: { d: 4, c1: 'log', c2: 'nofade' },
+            options: { d: 4, c1: 'par', c2: 'nofade' },
             inputs: ['0', '1'],
-            outputs: ['01']
+            outputs: ['0+1']
           },
           {
             filter: 'acrossfade',
-            options: { d: 4, c1: 'log', c2: 'nofade' },
-            inputs: ['01', '2'],
-            outputs: ['012']
+            options: { d: 4, c1: 'par', c2: 'nofade' },
+            inputs: ['0+1', '2'],
+            outputs: ['0+1+2']
           },
           {
             filter: 'acrossfade',
-            options: { d: 4, c1: 'log', c2: 'nofade' },
-            inputs: ['012', '3'],
-            outputs: ['0123']
+            options: { d: 4, c1: 'par', c2: 'nofade' },
+            inputs: ['0+1+2', '3'],
+            outputs: ['0+1+2+3']
           },
           {
             filter: 'acrossfade',
-            options: { d: 4, c1: 'log', c2: 'nofade' },
-            inputs: ['0123', '4'],
-            outputs: ['01234']
+            options: { d: 4, c1: 'par', c2: 'nofade' },
+            inputs: ['0+1+2+3', '4'],
+            outputs: ['0+1+2+3+4']
           },
           {
             filter: 'acrossfade',
-            options: { d: 4, c1: 'log', c2: 'nofade' },
-            inputs: ['01234', '5'],
-            outputs: ['012345']
+            options: { d: 4, c1: 'par', c2: 'nofade' },
+            inputs: ['0+1+2+3+4', '5'],
+            outputs: ['0+1+2+3+4+5']
           },
           {
             filter: 'acrossfade',
-            options: { d: 4, c1: 'log', c2: 'nofade' },
-            inputs: ['012345', '6'],
-            outputs: ['0123456']
+            options: { d: 4, c1: 'par', c2: 'nofade' },
+            inputs: ['0+1+2+3+4+5', '6'],
+            outputs: ['0+1+2+3+4+5+6']
           },
           {
             filter: 'acrossfade',
-            options: { d: 4, c1: 'log', c2: 'nofade' },
-            inputs: ['0123456', '7']
+            options: { d: 4, c1: 'par', c2: 'nofade' },
+            inputs: ['0+1+2+3+4+5+6', '7']
           }
         ]);
       });
@@ -61,7 +61,8 @@ describe('FFmpeg Utils Unit Tests', () => {
       it('should fail or throw if array of files is empty', () => {
         const files = [];
         const filters = getCrossFadeFilters(files);
-        expect(filters).to.be.equal(null);
+        // eslint-disable-next-line no-unused-expressions
+        expect(filters).to.be.an('array').that.is.empty;
       });
 
       it('should fail or throw if array of files is null', () => {
