@@ -1,6 +1,6 @@
 import joi from 'joi';
 import _ from 'lodash';
-import { createTranscodeJob } from '../controllers/TransodeController';
+import { createTranscodeJob } from '../controllers/TranscodeController';
 import { makeRsaPublicDecrypter } from '../utils/RsaUtils';
 import { logger } from '../utils/Logger';
 
