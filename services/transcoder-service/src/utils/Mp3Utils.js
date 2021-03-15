@@ -27,17 +27,17 @@ export const getMp3Duration = (file) =>
         ffmpegError.name = 'FFmpegError';
         ffmpeg.details = err;
 
-        reject(ffmpegError);
+        return reject(ffmpegError);
       }
 
       if (data.format.format_name !== 'mp3') {
         const fileFormatError = new Error('File format is not suppported');
         fileFormatError.name = 'FileFormatError';
 
-        reject(fileFormatError);
+        return reject(fileFormatError);
       }
 
-      resolve(data.format.duration);
+      return resolve(data.format.duration);
     });
   });
 
