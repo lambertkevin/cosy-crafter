@@ -393,8 +393,8 @@ export const createTranscodeJob = async (
       /** @WARNING Add when users are added to auth service */
       // user : ''
       storageType: savedFile.storageType,
-      storagePath: savedFile.storagePath,
-      storageFilename: savedFile.storageFilename
+      storagePath: savedFile.location,
+      storageFilename: savedFile.filename
     };
 
     let savingCraftSpan;
