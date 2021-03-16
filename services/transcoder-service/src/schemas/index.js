@@ -55,12 +55,12 @@ export const transcodeJobPayloadSchema = joi
 /**
  * Socket Schema
  *
- * @description { id: any, handshake: {} ...}
+ * @description { id: string, emit: function() ...}
  */
 export const socketSchema = joi
   .object({
-    id: joi.required(),
-    handshake: joi.required()
+    id: joi.string().required(),
+    emit: joi.function().required()
   })
   .unknown()
   .required();
