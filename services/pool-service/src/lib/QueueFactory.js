@@ -183,7 +183,7 @@ export const makeQueue = (registerEvents = true) => {
     /**
      * Launch the next job
      *
-     * @return {void}
+     * @return {void|Error}
      */
     async next() {
       if (this.workers.available.length && this.jobs.waiting.length) {
@@ -213,6 +213,11 @@ export const makeQueue = (registerEvents = true) => {
           await worker.execute(job);
           this.removeJob(job);
         } catch (error) {
+          logger.error('Queue processing job error', {
+            error,
+            job,
+            worker
+          });
           // Lib made errors can be
           // from worker execute (if job/worker not made by provided factories): JobHasNoStart, StartIsNotPromise
           // from job start bubbling to worker execute: JobRetryError, JobFailedError, AsyncActionNotAsync
@@ -222,7 +227,7 @@ export const makeQueue = (registerEvents = true) => {
             case 'JobFailedError':
             case 'AsyncActionNotAsync': {
               this.removeJob(job);
-              throw error;
+              return error;
             }
             case 'JobRetryError': {
               // Get the job with the maximum value
@@ -238,22 +243,14 @@ export const makeQueue = (registerEvents = true) => {
               break;
             }
             default:
-              logger.error('Queue processing job error', {
-                error,
-                job,
-                worker
-              });
-              break;
           }
         } finally {
           job.events.off('job-status-changed', onJobStatusChanged);
           // Wait before launching "next" again
-          _.throttle(
-            this.next.bind(this),
-            process.env.NODE_ENV === 'development' ? 2000 : 500
-          );
+          this.next();
         }
       }
+      return undefined;
     },
 
     /**
