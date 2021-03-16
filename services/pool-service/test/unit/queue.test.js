@@ -85,16 +85,10 @@ describe('Queue Unit Test', () => {
         queue.addWorker(fakeWorker);
         queue.addJob(fakeJob);
 
-        try {
-          await queue.next();
-          expect.fail('Promise should have failed');
-        } catch (e) {
-          if (e instanceof AssertionError) {
-            throw e;
-          }
-          expect(e).to.be.an('error');
-          expect(e.name).to.be.equal('JobHasNoStart');
-        }
+        return queue.next().then((res) => {
+          expect(res).to.be.an('error');
+          expect(res.name).to.be.equal('JobHasNoStart');
+        });
       });
 
       it('should fail executing a job that start function is not a promise', async () => {
@@ -109,17 +103,10 @@ describe('Queue Unit Test', () => {
         queue.addWorker(fakeWorker);
         queue.addJob(fakeJob);
 
-        try {
-          await queue.next();
-          expect.fail('Promise should have failed');
-        } catch (e) {
-          if (e instanceof AssertionError) {
-            throw e;
-          }
-
-          expect(e).to.be.an('error');
-          expect(e.name).to.be.equal('StartIsNotPromise');
-        }
+        return queue.next().then((res) => {
+          expect(res).to.be.an('error');
+          expect(res.name).to.be.equal('StartIsNotPromise');
+        });
       });
 
       it('should fail executing a failing job', async () => {
@@ -130,17 +117,10 @@ describe('Queue Unit Test', () => {
         queue.addWorker(fakeWorker);
         queue.addJob(job);
 
-        try {
-          await queue.next();
-          expect.fail('Promise should have failed');
-        } catch (e) {
-          if (e instanceof AssertionError) {
-            throw e;
-          }
-
-          expect(e).to.be.an('error');
-          expect(e.name).to.be.equal('JobFailedError');
-        }
+        return queue.next().then((res) => {
+          expect(res).to.be.an('error');
+          expect(res.name).to.be.equal('JobFailedError');
+        });
       });
     });
 
