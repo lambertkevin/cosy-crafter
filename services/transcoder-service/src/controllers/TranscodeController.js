@@ -432,8 +432,10 @@ export const createTranscodeJob = async (
 
     // Finish job
     return ack({
-      statusCode: 200,
-      savedCraft
+      statusCode: 201,
+      data: {
+        craftId: savedCraft._id
+      }
     });
   } catch (e) {
     logger.error(`Error in createTranscodeJob`, e);
