@@ -6,14 +6,21 @@ import axios from 'axios';
 import FormData from 'form-data';
 import { v4 as uuid } from 'uuid';
 import ffmpeg from 'fluent-ffmpeg';
+import {
+  fileSchema,
+  filesSchema,
+  jobIdSchema,
+  nameSchema,
+  socketSchema
+} from '../schemas';
 import { makeAxiosInstance } from '../utils/AxiosUtils';
+import { getMp3ListDuration } from '../utils/Mp3Utils';
+import { sentry, logger } from '../utils/Logger';
+import { tokens } from '../auth';
 import {
   getCrossFadeFilters,
   percentageFromTimemark
 } from '../utils/FfmpegUtils';
-import { getMp3ListDuration } from '../utils/Mp3Utils';
-import { sentry, logger } from '../utils/Logger';
-import { tokens } from '../auth';
 
 const {
   STORAGE_SERVICE_NAME,
@@ -55,10 +62,22 @@ export const getFile = (file) =>
           })
           .catch((e) => {
             logger.error('Error while getting files to transcode', e);
-            reject(e);
+
+            const storageServiceError = new Error(
+              'Failed to fetch a file from storage service'
+            );
+            storageServiceError.name = 'StorageServiceError';
+            storageServiceError.details = e;
+            storageServiceError.code = 424;
+
+            reject(storageServiceError);
           });
       }
-      return reject(new Error('File Type Error'));
+
+      const fileTypeError = new Error('File fetch error: File type is invalid');
+      fileTypeError.name = 'FileTypeError';
+
+      return reject(fileTypeError);
     } catch (e) {
       logger.error('Error while getting files to transcode', e);
       return reject(e);
@@ -78,28 +97,10 @@ export const joinFiles = async (files, jobId, socket) => {
   const argsSchema = joi.object({
     files: joi
       .array()
-      .items(
-        joi
-          .object({
-            path: joi.string().required(),
-            seek: joi
-              .object({
-                start: joi.number().optional(),
-                end: joi.number().optional()
-              })
-              .optional()
-          })
-          .unknown()
-      )
+      .items(fileSchema.append({ path: joi.string().required() }))
       .required(),
-    jobId: joi.string().guid().required(),
-    socket: joi
-      .object({
-        id: joi.required(),
-        handshake: joi.required()
-      })
-      .unknown()
-      .required()
+    jobId: jobIdSchema,
+    socket: socketSchema
   });
 
   const { error: argsError } = await argsSchema.validateAsync({
@@ -225,7 +226,7 @@ export const upload = async (filepath, jobId) => {
 
   try {
     const axiosAsService = makeAxiosInstance();
-    const savingFile = await axiosAsService.post(
+    const { data: savingFile } = await axiosAsService.post(
       `http://${STORAGE_SERVICE_NAME}:${STORAGE_SERVICE_PORT}/v1/crafts`,
       formData,
       {
@@ -237,7 +238,7 @@ export const upload = async (filepath, jobId) => {
         maxContentLength: 400 * 1024 * 1024 // 400MB max part size
       }
     );
-    const savedFile = savingFile?.data?.data ?? {};
+    const savedFile = savingFile?.data ?? {};
 
     if (_.isEmpty(savedFile)) {
       const saveError = new Error('An error occured while saving the file');
@@ -256,6 +257,7 @@ export const upload = async (filepath, jobId) => {
       const uploadServiceError = new Error('Storage service returned an error');
       uploadServiceError.name = 'UploadServiceError';
       uploadServiceError.details = error;
+      uploadServiceError.code = 417;
 
       throw uploadServiceError;
     }
@@ -275,46 +277,66 @@ export const upload = async (filepath, jobId) => {
  * @return {Promise<String|Error>}
  */
 export const createTranscodeJob = async (
-  { files, name, jobId },
+  { files, name, jobId } = {},
   ack,
   socket
 ) => {
   let transaction;
   try {
-    if (!Array.isArray(files) || _.isEmpty(files)) {
-      return ack({
-        statusCode: 400,
-        message: 'Files are incorrects'
-      });
+    const { error: argsError } = joi
+      .object({
+        files: filesSchema,
+        name: nameSchema,
+        jobId: jobIdSchema,
+        ack: joi.function().required(),
+        socket: socketSchema
+      })
+      .validate({ files, name, jobId, ack, socket });
+
+    if (argsError) {
+      const payloadError = new Error(`Payload invalid: ${argsError.message}`);
+      payloadError.name = 'PayloadError';
+      payloadError.code = 400;
+
+      throw payloadError;
     }
 
     if (busyFlag) {
-      return ack({
-        statusCode: 429,
-        message: 'Resource is busy'
+      const workerBusyError = new Error('Resource is busy');
+      workerBusyError.name = 'WorkerBusy';
+      workerBusyError.code = 429;
+
+      throw workerBusyError;
+    }
+
+    busyFlag = true;
+
+    if (process.env.NODE_ENV === 'production') {
+      sentry.setTag('jobId', jobId);
+      transaction = sentry.startTransaction({
+        name: 'Transcoding Job'
+      });
+      sentry.configureScope((scope) => {
+        scope.setSpan(transaction);
       });
     }
 
-    sentry.setTag('jobId', jobId);
-    transaction = sentry.startTransaction({
-      name: 'Transcoding Job'
-    });
-    sentry.configureScope((scope) => {
-      scope.setSpan(transaction);
-    });
-    busyFlag = true;
-
     logger.info(`Received Job`, { jobId, files, name });
+
     // --- Start Download Files
-    const downloadFilesSpan = transaction.startChild({
-      data: {
-        files
-      },
-      op: 'Download Files',
-      description: 'Download all the files necessary to the transcoding'
-    });
+    let downloadFilesSpan;
+    if (process.env.NODE_ENV === 'production') {
+      downloadFilesSpan = transaction.startChild({
+        data: {
+          files
+        },
+        op: 'Download Files',
+        description: 'Download all the files necessary to the transcoding'
+      });
+    }
+
     const filesPaths = await Promise.all(files.map((x) => getFile(x)));
-    downloadFilesSpan.finish();
+    downloadFilesSpan?.finish();
     logger.info(`Files Downloaded`, { jobId, filesPaths });
     // --- End Download Files
 
@@ -324,32 +346,40 @@ export const createTranscodeJob = async (
     }));
 
     // --- Start Transcoding
-    const transcodingSpan = transaction.startChild({
-      data: {
-        filesWithPaths
-      },
-      op: 'Transcoding',
-      description: 'Joining and crossfading files into a single audio file'
-    });
+    let transcodingSpan;
+    if (process.env.NODE_ENV === 'production') {
+      transcodingSpan = transaction.startChild({
+        data: {
+          filesWithPaths
+        },
+        op: 'Transcoding',
+        description: 'Joining and crossfading files into a single audio file'
+      });
+    }
+
     // Will emit progress
     logger.info(`Start Transcoding`, { jobId, filesWithPaths });
     const mergedFilePath = await joinFiles(filesWithPaths, jobId, socket);
-    transcodingSpan.finish();
+    transcodingSpan?.finish();
     // --- End Transcoding
 
     // --- Start Uploading
-    const uploadingSpan = transaction.startChild({
-      data: {
-        mergedFilePath
-      },
-      op: 'Uploading',
-      description: 'Uploading the joined audio file'
-    });
+    let uploadingSpan;
+    if (process.env.NODE_ENV === 'production') {
+      uploadingSpan = transaction.startChild({
+        data: {
+          mergedFilePath
+        },
+        op: 'Uploading',
+        description: 'Uploading the joined audio file'
+      });
+    }
+
     logger.info(`Start Uploading`, { jobId, mergedFilePath });
     // Upload file
     const savedFile = await upload(mergedFilePath, jobId);
     logger.info(`File Uploaded`, { jobId, savedFile });
-    uploadingSpan.finish();
+    uploadingSpan?.finish();
     // --- End Uploading
 
     if (!savedFile || _.isEmpty(savedFile)) {
@@ -366,11 +396,16 @@ export const createTranscodeJob = async (
       storagePath: savedFile.storagePath,
       storageFilename: savedFile.storageFilename
     };
-    const savingCraftSpan = transaction.startChild({
-      data: payload,
-      op: 'Saving Craft',
-      description: 'Saving the craft in the podcast service'
-    });
+
+    let savingCraftSpan;
+    if (process.env.NODE_ENV === 'production') {
+      savingCraftSpan = transaction.startChild({
+        data: payload,
+        op: 'Saving Craft',
+        description: 'Saving the craft in the podcast service'
+      });
+    }
+
     const axiosAsService = makeAxiosInstance();
     const { data: savedCraft } = await axiosAsService.post(
       `http://${PODCAST_SERVICE_NAME}:${PODCAST_SERVICE_PORT}/v1/crafts`,
@@ -381,7 +416,7 @@ export const createTranscodeJob = async (
         }
       }
     );
-    savingCraftSpan.finish();
+    savingCraftSpan?.finish();
     // --- End Saving Craft
 
     // Delete old file
@@ -396,19 +431,39 @@ export const createTranscodeJob = async (
     });
 
     // Finish job
-    ack({
+    return ack({
       statusCode: 200,
       savedCraft
     });
-    return savedCraft;
   } catch (e) {
     logger.error(`Error in createTranscodeJob`, e);
+
+    if (typeof ack !== 'function') {
+      throw e;
+    }
+
+    if (e.name !== 'Error') {
+      return ack({
+        statusCode: e.code,
+        errorName: e.name,
+        message: e.message
+      });
+    }
+
     return ack({
       statusCode: 500,
+      errorName: e.name,
       message: 'An error has occured'
     });
   } finally {
-    transaction.finish();
+    transaction?.finish();
     busyFlag = false;
   }
+};
+
+export default {
+  getFile,
+  joinFiles,
+  upload,
+  createTranscodeJob
 };
