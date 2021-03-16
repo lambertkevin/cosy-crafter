@@ -16,7 +16,11 @@ export default async () => {
         `Server running on http://${os.hostname()}:${nodeConfig.apiPort}`
       );
     });
-    const io = socket(server);
+    const io = socket(server, {
+      cors: {
+        origin: process.env.NODE_ENV === 'development' ? '*' : undefined
+      }
+    });
 
     io.of('/clients')
       .use(socketJwtMiddleware)
