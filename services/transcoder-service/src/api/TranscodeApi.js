@@ -1,29 +1,14 @@
-import joi from 'joi';
 import _ from 'lodash';
 import { createTranscodeJob } from '../controllers/TranscodeController';
 import { makeRsaPublicDecrypter } from '../utils/RsaUtils';
+import { transcodeJobPayloadSchema } from '../schemas';
 import { logger } from '../utils/Logger';
 
 const routes = [
   {
     path: '/join',
     handler: createTranscodeJob,
-    validation: joi.object({
-      jobId: joi.string().length(36).required(),
-      files: joi.array().items(
-        joi.object({
-          id: joi.string().length(24).required(),
-          type: joi.string().valid('podcast-part', 'user-input').required(),
-          seek: joi
-            .object({
-              start: joi.number().optional(),
-              end: joi.number().optional()
-            })
-            .optional()
-        })
-      ),
-      name: joi.string().required()
-    })
+    validation: transcodeJobPayloadSchema
   }
 ];
 
