@@ -18,19 +18,13 @@ export const createTranscodingJob = ({ name, files }, ack) => {
           );
 
           workerSocket.emit('transcode/join', payload, (response) => {
-            if (response.statusCode !== 200) {
+            if (response.statusCode !== 201) {
               logger.error('Transcode/Join in job controller failed', response);
-              ack({
-                statusCode: 500,
-                message: 'Transcode/Join failed'
-              });
+              ack(response);
               return reject(new Error('Transcode Failed'));
             }
             logger.info('Transcode/Join in job controller finished', response);
-            ack({
-              statusCode: 200,
-              data: response?.savedCraft?.data
-            });
+            ack(response);
             return resolve(response);
           });
 
@@ -46,7 +40,7 @@ export const createTranscodingJob = ({ name, files }, ack) => {
 
     if (process.env.NODE_ENV === 'test') {
       return ack({
-        statusCode: 200,
+        statusCode: 201,
         data: {
           location: `crafts/${name}.mp3`,
           storageType: 'local',
