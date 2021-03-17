@@ -13,11 +13,10 @@ describe('Parts API V1 tests', () => {
   let section;
   let podcast;
   let server;
-  let pid;
+  let authServiceChild;
 
   before(async () => {
-    const authServiceChild = await startAuthService();
-    pid = authServiceChild.pid;
+    authServiceChild = await startAuthService();
     server = await init();
     section = await SectionController.create({
       name: `integration-test`
@@ -29,7 +28,7 @@ describe('Parts API V1 tests', () => {
   });
 
   after(() => {
-    process.kill(pid);
+    authServiceChild.kill('SIGINT');
     server.stop();
   });
 

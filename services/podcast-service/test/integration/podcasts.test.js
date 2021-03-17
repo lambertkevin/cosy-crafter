@@ -5,16 +5,15 @@ import init from '../../src/server';
 
 describe('Podcasts API V1 tests', () => {
   let server;
-  let pid;
+  let authServiceChild;
 
   before(async () => {
-    const authServiceChild = await startAuthService();
-    pid = authServiceChild.pid;
+    authServiceChild = await startAuthService();
     server = await init();
   });
 
   after(() => {
-    process.kill(pid);
+    authServiceChild.kill('SIGINT');
     server.stop();
   });
 

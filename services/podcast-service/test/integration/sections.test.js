@@ -5,16 +5,15 @@ import init from '../../src/server';
 
 describe('Sections API V1 tests', () => {
   let server;
-  let pid;
+  let authServiceChild;
 
   before(async () => {
-    const authServiceChild = await startAuthService();
-    pid = authServiceChild.pid;
+    authServiceChild = await startAuthService();
     server = await init();
   });
 
   after(() => {
-    process.kill(pid);
+    authServiceChild.kill('SIGINT');
     server.stop();
   });
 
@@ -56,7 +55,7 @@ describe('Sections API V1 tests', () => {
           return server
             .inject({
               method: 'POST',
-              url: '/v1/sections',
+              url: '/v1/sectionsa',
               payload: {},
               headers: {
                 authorization: accessToken
