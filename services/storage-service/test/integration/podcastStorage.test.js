@@ -92,7 +92,7 @@ describe('Podcast Part Storage API V1 tests', () => {
           ...podcastPartPayload,
           // Returns string and not ReadableStream
           file: fs.readFileSync(
-            path.join(path.resolve('./'), 'test', 'files', 'blank.mp3')
+            path.resolve('./', 'test', 'files', 'blank.mp3')
           )
         });
         const payloadStream = await getStream(payloadFormData);
@@ -238,7 +238,7 @@ describe('Podcast Part Storage API V1 tests', () => {
         const payloadFormData = objectToFormData({
           ...podcastPartPayload,
           file: fs.createReadStream(
-            path.join(path.resolve('./'), 'test', 'files', 'blank.mp3')
+            path.resolve('./', 'test', 'files', 'blank.mp3')
           )
         });
         const payloadStream = await getStream(payloadFormData);
@@ -272,7 +272,7 @@ describe('Podcast Part Storage API V1 tests', () => {
         const payloadFormData = objectToFormData({
           ...podcastPartPayload,
           file: fs.createReadStream(
-            path.join(path.resolve('./'), 'test', 'files', 'blank.mp3')
+            path.resolve('./', 'test', 'files', 'blank.mp3')
           ),
           storageStrategy: 'aws'
         });
@@ -307,7 +307,7 @@ describe('Podcast Part Storage API V1 tests', () => {
         const payloadFormData = objectToFormData({
           ...podcastPartPayload,
           file: fs.createReadStream(
-            path.join(path.resolve('./'), 'test', 'files', 'blank.mp3')
+            path.resolve('./', 'test', 'files', 'blank.mp3')
           ),
           storageStrategy: 'scaleway'
         });

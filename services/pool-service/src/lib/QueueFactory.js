@@ -15,7 +15,7 @@ import {
   JOB_STATUS_ONGOING
 } from './types/JobTypes';
 
-const JOB_LIST_SAVE_FILE = path.join(path.resolve('./'), '.job-save.json');
+const JOB_LIST_SAVE_FILE = path.resolve('./', '.job-save.json');
 
 const prioritizeArray = (arr) => _.orderBy(arr, ['priority'], ['desc']);
 
