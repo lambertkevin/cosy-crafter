@@ -675,20 +675,9 @@ describe('Transcode Controller Unit tests', () => {
         )
           .then(() => {
             expect(response.value).to.deep.include({
-              statusCode: 200,
-              savedCraft: {
-                data: {
-                  user: '603181b5136eaf770f0949e8',
-                  _id: '604ffd4e5e299c61f9df5ff1',
-                  name: 'My Craft',
-                  jobId: 'f32991eb-f544-40fd-ab24-93ef59ef2524',
-                  storageType: 'aws',
-                  storagePath: 'crafts/',
-                  storageFilename: 'craft.mp3',
-                  __v: 0
-                },
-                meta: {},
-                statusCode: 200
+              statusCode: 201,
+              data: {
+                craftId: '604ffd4e5e299c61f9df5ff1'
               }
             });
           })
