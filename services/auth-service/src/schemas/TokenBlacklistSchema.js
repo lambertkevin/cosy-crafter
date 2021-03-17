@@ -12,12 +12,12 @@ export const creationSchema = joi
       .example('refresh'),
     jwtid: joi
       .string()
-      .length(36)
+      .guid()
       .required()
       .meta({
         _mongoose: { unique: true }
       })
-      .example('123e4567-e89b-12d3-a456-426614174000')
+      .example('eefe539d-c1f5-4d98-9478-465a1479969b')
   })
   .label('Token');
 

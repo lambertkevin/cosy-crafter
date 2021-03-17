@@ -95,7 +95,7 @@ describe('Tokens Blacklist API tests', () => {
               expect(response?.result).to.deep.include({
                 statusCode: 400,
                 error: 'Bad Request',
-                message: '"jwtid" length must be 36 characters long'
+                message: '"jwtid" must be a valid GUID'
               });
             });
         });
