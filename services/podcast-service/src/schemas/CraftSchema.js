@@ -16,7 +16,7 @@ export const creationSchema = joi.object({
     .example('La partie qui est rigolote. LOL!'),
   jobId: joi
     .string()
-    .length(36)
+    .guid()
     .required()
     .meta({
       _mongoose: { unique: true }
