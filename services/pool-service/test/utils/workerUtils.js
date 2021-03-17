@@ -10,23 +10,21 @@ export const makeWorkerMock = (log, decrypter = 'pool', failing = false) => ({
         log.decryptedPayload = decryptedPayload;
         cb(
           failing
-            ? { statusCode: 500, message: 'Error' }
+            ? {
+                statusCode: 500,
+                message: 'An error has occured'
+              }
             : {
-                statusCode: 200,
-                savedCraft: {
-                  statusCode: 200,
-                  data: {
-                    filename: 'test-craft.mp3',
-                    location: 'crafts/integration-craft-filename.mp3',
-                    storageType: 'local',
-                    publicLink: `http://location/`
-                  }
+                statusCode: 201,
+                data: {
+                  craftId: '1234'
                 }
               }
         );
       } catch (e) {
         cb({
-          response: { statusCode: 500, message: 'Error' }
+          statusCode: 403,
+          message: 'Decryption error'
         });
       }
     }, 50);

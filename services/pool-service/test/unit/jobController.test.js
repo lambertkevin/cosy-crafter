@@ -40,8 +40,8 @@ describe('Job Controller Unit Tests', () => {
             }
           });
           expect(response).to.deep.include({
-            statusCode: 500,
-            message: 'Transcode/Join failed'
+            statusCode: 403,
+            message: 'Decryption error'
           });
           // Job should have failed and been put back in queue
           expect(transcodingJob.fails).to.be.equal(1);
@@ -71,7 +71,7 @@ describe('Job Controller Unit Tests', () => {
           });
           expect(response).to.deep.include({
             statusCode: 500,
-            message: 'Transcode/Join failed'
+            message: 'An error has occured'
           });
           // Job should have failed and been put back in queue
           expect(transcodingJob.fails).to.be.equal(1);
@@ -101,12 +101,9 @@ describe('Job Controller Unit Tests', () => {
             files: [{ id: '123' }, { id: '456' }]
           });
           expect(response).to.deep.include({
-            statusCode: 200,
+            statusCode: 201,
             data: {
-              filename: 'test-craft.mp3',
-              location: 'crafts/integration-craft-filename.mp3',
-              storageType: 'local',
-              publicLink: 'http://location/'
+              craftId: '1234'
             }
           });
           expect(transcodingJob.progress).to.be.equal(50);
