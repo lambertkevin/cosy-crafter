@@ -10,16 +10,15 @@ import init from '../../src/server';
 
 describe('Socket Clients Api tests', () => {
   let server;
-  let pid;
+  let authServiceChild;
 
   before(async () => {
-    const authServiceChild = await startAuthService();
-    pid = authServiceChild.pid;
+    authServiceChild = await startAuthService();
     server = await init();
   });
 
   after(() => {
-    process.kill(pid);
+    authServiceChild.kill('SIGINT');
     server.close();
   });
 

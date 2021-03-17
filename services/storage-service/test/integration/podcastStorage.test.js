@@ -11,17 +11,16 @@ import init from '../../src/server';
 describe('Podcast Part Storage API V1 tests', () => {
   let s3FakeServers;
   let server;
-  let pid;
+  let authServiceChild;
 
   before(async () => {
-    const authServiceChild = await startAuthService();
-    pid = authServiceChild.pid;
+    authServiceChild = await startAuthService();
     server = await init();
     s3FakeServers = await mockS3();
   });
 
   after(() => {
-    process.kill(pid);
+    authServiceChild.kill('SIGINT');
     server.stop();
     fs.rmdirSync(path.resolve('./bucket/tests/'), { recursive: true });
     s3FakeServers.forEach((s3) => s3.close());
