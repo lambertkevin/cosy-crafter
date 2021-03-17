@@ -6,12 +6,17 @@ export const transcodingQueue = makeQueue();
 export const workerHandler = (socket) => {
   const worker = makeSocketWorker(socket);
   transcodingQueue.addWorker(worker);
-  console.log('worker added!');
 
-  socket.on('disconnect', async () => {
-    worker.kill();
+  if (process.env.NODE_ENV === 'development') {
+    console.log('worker added!');
+  }
+
+  socket.on('disconnect', () => {
     transcodingQueue.removeWorker(worker);
-    console.log('worker removed!');
+
+    if (process.env.NODE_ENV === 'development') {
+      console.log('worker removed!');
+    }
   });
 };
 

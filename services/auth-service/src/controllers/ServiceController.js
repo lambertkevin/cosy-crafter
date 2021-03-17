@@ -6,7 +6,7 @@ import calibrate from 'calibrate';
 import { v4 as uuid } from 'uuid';
 import privateIp from 'private-ip';
 import Service, { projection, hiddenFields } from '../models/ServiceModel';
-import * as TokenController from './TokenController';
+import * as TokenBlacklistController from './TokenBlacklistController';
 import tokensFactory from '../utils/TokensFactory';
 import { logger } from '../utils/Logger';
 
@@ -167,7 +167,14 @@ export const remove = (identifiers = []) =>
  */
 export const login = async ({ identifier, key }, ip) => {
   try {
-    const service = await Service.findOne({ identifier }).exec();
+    const service = await (() => {
+      if (process.env.NODE_ENV === 'mock') {
+        return {
+          identifier
+        };
+      }
+      return Service.findOne({ identifier }).exec();
+    })();
 
     if (!service) {
       throw Boom.notFound();
@@ -175,8 +182,9 @@ export const login = async ({ identifier, key }, ip) => {
 
     if (
       // If ip is matching or ip is from private network and service ip was private on creation
-      (service.ip === ip || (privateIp(ip) && service.ip === 'private')) &&
-      bcrypt.compareSync(key, service.key)
+      ((service.ip === ip || (privateIp(ip) && service.ip === 'private')) &&
+        bcrypt.compareSync(key, service.key)) ||
+      process.env.NODE_ENV === 'mock'
     ) {
       const tokens = await tokensFactory(
         {
@@ -216,6 +224,7 @@ export const refresh = async ({ accessToken, refreshToken }) => {
         ignoreExpiration: true
       }
     );
+
     // Check refreshToken signature and verify its expiration
     const decodedRefreshToken = await jwt.verify(
       refreshToken,
@@ -226,11 +235,23 @@ export const refresh = async ({ accessToken, refreshToken }) => {
     if (decodedAccessToken.service === decodedRefreshToken.service) {
       try {
         // Check if the token isn't blacklisted
-        const { data: isBlackListed } = await TokenController.findOne(
+        const {
+          data: isBlackListed
+        } = await TokenBlacklistController.findOneByJwtId(
           decodedRefreshToken.jti
         );
+
         // Check if the service is still registered
-        const { data: service } = await findOne(decodedAccessToken.service);
+        const { data: service } = await (() => {
+          if (process.env.NODE_ENV === 'mock') {
+            return {
+              data: {
+                identifier: decodedAccessToken.service
+              }
+            };
+          }
+          return findOne(decodedAccessToken.service);
+        })();
 
         if (!isBlackListed && !_.isEmpty(service)) {
           // Omit JWT payload properties from spec
@@ -261,7 +282,7 @@ export const refresh = async ({ accessToken, refreshToken }) => {
       'Service Token Refresh Error: Tokens verification failed',
       error
     );
-    return Boom.unauthorized();
+    return Boom.unauthorized('Tokens verification failed');
   }
 };
 

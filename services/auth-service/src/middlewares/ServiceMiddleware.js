@@ -30,7 +30,7 @@ export const checkSignature = (request, h) => {
 export const checkIpWhiteList = (request, h) => {
   const ip = request.info.remoteAddress;
   const { whitelist = [] } = fs.readFileSync(
-    path.join(path.resolve('./'), 'remoteAddresses.json'),
+    path.resolve('./', 'remoteAddresses.json'),
     'utf8'
   );
 

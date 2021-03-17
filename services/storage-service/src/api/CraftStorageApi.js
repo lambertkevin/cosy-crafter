@@ -6,6 +6,12 @@ import * as StorageController from '../controllers/StorageController';
 export default {
   name: 'craftStorageApi',
   async register(server) {
+    server.route({
+      method: 'get',
+      path: '/ping',
+      handler: () => 'pong'
+    });
+
     /**
      * Upload a Craft file
      *
@@ -31,7 +37,14 @@ export default {
           payload: joi
             .object({
               filename: joi.string().required().example('fichier.mp3'),
-              file: joi.any().required().meta({ swaggerType: 'file' })
+              file: joi.any().required().meta({ swaggerType: 'file' }),
+              storageStrategy: joi
+                .string()
+                .allow('')
+                .regex(
+                  /^[a-zA-Z0-9, -]*$/,
+                  'Alphanumerics, space, dash and comma characters'
+                )
             })
             .label('CraftCreationSchema'),
           headers: joi

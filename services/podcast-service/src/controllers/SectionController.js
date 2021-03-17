@@ -106,7 +106,7 @@ export const update = (id, { name }, sanitized = true) =>
 /**
  * Delete sections
  *
- * @param {Arrays} ids
+ * @param {Array<String>} ids
  *
  * @return {Promise<Object>}
  */

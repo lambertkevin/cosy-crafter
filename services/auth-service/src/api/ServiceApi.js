@@ -28,6 +28,7 @@ export default {
       method: 'GET',
       path: '/',
       options: {
+        // @TODO User Auth needed here
         pre: [checkIpWhiteList],
         handler: () => ServiceController.find(),
         tags: ['api', 'services'],
@@ -55,6 +56,7 @@ export default {
       method: 'GET',
       path: '/{identifier}',
       options: {
+        // @TODO User Auth needed here
         handler: (request) =>
           ServiceController.findOne(request.params.identifier),
         tags: ['api', 'services'],
@@ -88,6 +90,7 @@ export default {
       method: 'POST',
       path: '/',
       options: {
+        // @TODO User Auth might be possible instead of whitelist and sign
         pre: [checkIpWhiteList, checkSignature],
         handler: async (request) => {
           try {

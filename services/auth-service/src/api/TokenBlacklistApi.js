@@ -1,6 +1,9 @@
 import joi from 'joi';
-import { responseSchema, creationSchema } from '../schemas/TokenSchema';
-import * as tokenController from '../controllers/TokenController';
+import {
+  responseSchema,
+  creationSchema
+} from '../schemas/TokenBlacklistSchema';
+import * as TokenBlacklistController from '../controllers/TokenBlacklistController';
 import { calibrateSchema } from '../utils/SchemasUtils';
 import failValidationHandler from '../utils/FailValidationHandler';
 
@@ -16,7 +19,8 @@ export default {
       method: 'GET',
       path: '/',
       options: {
-        handler: () => tokenController.find(),
+        // @TODO User Auth needed here
+        handler: () => TokenBlacklistController.find(),
         tags: ['api', 'tokens'],
         description: 'Get all Tokens',
         notes: 'Returns all the blacklisted tokens',
@@ -40,15 +44,23 @@ export default {
      */
     server.route({
       method: 'GET',
-      path: '/{jwtid}',
+      path: '/{id}',
       options: {
-        handler: (request) => tokenController.findOne(request.params.jwtid),
+        // @TODO User Auth needed here
+        handler: (request) =>
+          TokenBlacklistController.findOne(request.params.id),
         tags: ['api', 'tokens'],
         description: 'Get a Token',
         notes: 'Returns a specific blacklisted token',
         validate: {
           failAction: failValidationHandler,
-          params: creationSchema
+          params: joi.object({
+            id: joi
+              .string()
+              .length(24)
+              .required()
+              .example('5f3fa3c85d413d6f42bf67b2')
+          })
         },
         plugins: {
           'hapi-swagger': {
@@ -72,7 +84,8 @@ export default {
       method: 'POST',
       path: '/',
       options: {
-        handler: (request) => tokenController.create(request.payload),
+        // @TODO User Auth needed here
+        handler: (request) => TokenBlacklistController.create(request.payload),
         validate: {
           failAction: failValidationHandler,
           payload: creationSchema
@@ -102,18 +115,19 @@ export default {
       method: 'DELETE',
       path: '/',
       options: {
-        handler: (request) => tokenController.remove(request.payload.jwtids),
+        handler: (request) =>
+          TokenBlacklistController.remove(request.payload.ids),
         validate: {
           failAction: failValidationHandler,
           payload: joi.object({
-            jwtids: joi
+            ids: joi
               .array()
               .items(
                 joi
                   .string()
-                  .length(36)
+                  .length(24)
                   .required()
-                  .example('1b9d6bcd-bbfd-4b2d-9b5d-ab8dfbbd4bed')
+                  .example('5f3fa3c85d413d6f42bf67b2')
               )
           })
         },
@@ -132,9 +146,9 @@ export default {
                       .items(
                         joi
                           .string()
-                          .length(36)
+                          .length(24)
                           .required()
-                          .example('1b9d6bcd-bbfd-4b2d-9b5d-ab8dfbbd4bed')
+                          .example('5f3fa3c85d413d6f42bf67b2')
                       )
                   }),
                   false
@@ -155,13 +169,19 @@ export default {
      */
     server.route({
       method: 'DELETE',
-      path: '/{jwtid}',
+      path: '/{id}',
       options: {
-        handler: (request) => tokenController.remove([request.params.jwtid]),
+        // @TODO User Auth needed here
+        handler: (request) =>
+          TokenBlacklistController.remove([request.params.id]),
         validate: {
           failAction: failValidationHandler,
           params: joi.object({
-            jwtid: joi.string().length(36).required()
+            id: joi
+              .string()
+              .length(24)
+              .required()
+              .example('5f3fa3c85d413d6f42bf67b2')
           })
         },
         tags: ['api', 'tokens'],

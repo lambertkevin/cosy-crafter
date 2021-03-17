@@ -23,6 +23,12 @@ module.exports = {
     'comma-dangle': ['error', 'never'],
     'no-multi-spaces': 0,
     'no-underscore-dangle': 0,
-    '@hapi/hapi/scope-start': 0
+    '@hapi/hapi/scope-start': 0,
+    'import/no-extraneous-dependencies': [
+      'error',
+      {
+        devDependencies: ['**/*.test.js', `${resolve('./')}/test/utils/*.js`]
+      }
+    ]
   }
 };
