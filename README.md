@@ -20,7 +20,7 @@ _At this stage of the project, this is the used architecture. It will obviously 
 ## Stack
 
 - REST Api microservices: `hapi@19`
-- Websocket microservices: `express@4` + `socket-io@2`
+- Websocket microservices: `express@4` + `socket-io@3`
 - Transcoding microservice: `ffmpeg@latest` + `fluent-ffmpeg@2`
 - Environment: `docker` + `docker-compose@2.4`
 
@@ -38,4 +38,5 @@ This idea comes from the creators of le [Cosy Corner](https://soundcloud.com/lec
 [![Trello](https://img.shields.io/endpoint?style=for-the-badge&url=https%3A%2F%2Ftrello-cosy-crafter-x80lyv2bhqee.runkit.sh%2F)](https://trello.com/b/jxvlYk1I/cosy-crafter)
 
 ## UI
+
 UI is a work in progress. You can see an idea of what it should look like right [here](https://i.imgur.com/S6YlIbr.png).
