@@ -434,7 +434,7 @@ export const createTranscodeJob = async (
     return ack({
       statusCode: 201,
       data: {
-        craftId: savedCraft._id
+        craftId: savedCraft?.data?._id
       }
     });
   } catch (e) {
