@@ -35,13 +35,28 @@ export default (prefix, socket) => {
       } catch (e) {
         logger.error('Socket payload validation error', e);
 
+        if (
+          e.message.startsWith(
+            'Error during decryption (probably incorrect key)'
+          )
+        ) {
+          return ack?.({
+            statusCode: 403,
+            message: 'Decryption error'
+          });
+        }
+
         if (e.name !== 'AckError') {
-          return ack({
+          return ack?.({
             statusCode: 409,
             message: 'Bad Request'
           });
         }
-        return null;
+
+        return ack?.({
+          statusCode: 500,
+          message: 'An error occured'
+        });
       }
     };
 
