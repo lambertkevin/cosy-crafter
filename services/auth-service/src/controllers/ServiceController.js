@@ -224,6 +224,7 @@ export const refresh = async ({ accessToken, refreshToken }) => {
         ignoreExpiration: true
       }
     );
+
     // Check refreshToken signature and verify its expiration
     const decodedRefreshToken = await jwt.verify(
       refreshToken,
@@ -234,9 +235,12 @@ export const refresh = async ({ accessToken, refreshToken }) => {
     if (decodedAccessToken.service === decodedRefreshToken.service) {
       try {
         // Check if the token isn't blacklisted
-        const { data: isBlackListed } = await TokenBlacklistController.findOne(
+        const {
+          data: isBlackListed
+        } = await TokenBlacklistController.findOneByJwtId(
           decodedRefreshToken.jti
         );
+
         // Check if the service is still registered
         const { data: service } = await (() => {
           if (process.env.NODE_ENV === 'mock') {

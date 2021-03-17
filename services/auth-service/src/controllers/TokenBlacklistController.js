@@ -38,6 +38,23 @@ export const findOne = (id, sanitized = true) =>
     });
 
 /**
+ * Return a specific Token by its jwtid
+ *
+ * @param {String} jwtid [GUID]
+ * @param {Boolean} sanitized
+ *
+ * @return {Promise<Object>} {Token}
+ */
+export const findOneByJwtId = (jwtid, sanitized = true) =>
+  Token.findOne({ jwtid }, sanitized ? projection : {})
+    .exec()
+    .then(calibrate.response)
+    .catch((error) => {
+      logger.error('Token FindOneByJwtId Error', error);
+      return Boom.boomify(error);
+    });
+
+/**
  * Create a Token
  *
  * @param {Object} data
