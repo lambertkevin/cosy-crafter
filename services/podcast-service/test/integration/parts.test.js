@@ -59,7 +59,7 @@ describe('Parts API V1 tests', () => {
         // Be carefull, you can't spread this stream after it being consumed.
         // You'll have to have to manually add this property again.
         file: fs.createReadStream(
-          path.join(path.resolve('./'), 'test', 'files', 'blank.mp3')
+          path.resolve('./', 'test', 'files', 'blank.mp3')
         ),
         tags: 'tag1'
       };
@@ -409,7 +409,7 @@ describe('Parts API V1 tests', () => {
         podcast: podcast.data._id.toString(),
         tags: 'tag1',
         file: {
-          path: path.join(path.resolve('./'), 'test', 'files', 'blank.mp3'),
+          path: path.resolve('./', 'test', 'files', 'blank.mp3'),
           bytes: 61637,
           filename: 'blank.mp3',
           headers: {
@@ -622,7 +622,7 @@ describe('Parts API V1 tests', () => {
       it('should succeed updating part file', async () => {
         const payloadUpdateFormData = objectToFormData({
           file: fs.createReadStream(
-            path.join(path.resolve('./'), 'test', 'files', 'blank2.mp3')
+            path.resolve('./', 'test', 'files', 'blank2.mp3')
           )
         });
         const payloadUpdateStream = await getStream(payloadUpdateFormData);
@@ -679,7 +679,7 @@ describe('Parts API V1 tests', () => {
           podcast: podcast?.data?._id?.toString(),
           tags: 'tag1',
           file: {
-            path: path.join(path.resolve('./'), 'test', 'files', 'blank.mp3'),
+            path: path.resolve('./', 'test', 'files', 'blank.mp3'),
             bytes: 61637,
             filename: 'blank.mp3',
             headers: {
@@ -722,7 +722,7 @@ describe('Parts API V1 tests', () => {
           podcast: podcastToDelete?.data?._id?.toString(),
           tags: 'tag1',
           file: {
-            path: path.join(path.resolve('./'), 'test', 'files', 'blank.mp3'),
+            path: path.resolve('./', 'test', 'files', 'blank.mp3'),
             bytes: 61637,
             filename: 'blank.mp3',
             headers: {
@@ -758,7 +758,7 @@ describe('Parts API V1 tests', () => {
           podcast: podcast?.data?._id?.toString(),
           tags: 'tag1',
           file: {
-            path: path.join(path.resolve('./'), 'test', 'files', 'blank.mp3'),
+            path: path.resolve('./', 'test', 'files', 'blank.mp3'),
             bytes: 61637,
             filename: 'blank.mp3',
             headers: {

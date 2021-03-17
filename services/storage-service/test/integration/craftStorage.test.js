@@ -91,7 +91,7 @@ describe('Craft Storage API V1 tests', () => {
           ...craftPayload,
           // Returns string and not ReadableStream
           file: fs.readFileSync(
-            path.join(path.resolve('./'), 'test', 'files', 'blank.mp3')
+            path.resolve('./', 'test', 'files', 'blank.mp3')
           )
         });
         const payloadStream = await getStream(payloadFormData);
@@ -209,7 +209,7 @@ describe('Craft Storage API V1 tests', () => {
         const payloadFormData = objectToFormData({
           ...craftPayload,
           file: fs.createReadStream(
-            path.join(path.resolve('./'), 'test', 'files', 'blank.mp3')
+            path.resolve('./', 'test', 'files', 'blank.mp3')
           )
         });
         const payloadStream = await getStream(payloadFormData);
@@ -243,7 +243,7 @@ describe('Craft Storage API V1 tests', () => {
         const payloadFormData = objectToFormData({
           ...craftPayload,
           file: fs.createReadStream(
-            path.join(path.resolve('./'), 'test', 'files', 'blank.mp3')
+            path.resolve('./', 'test', 'files', 'blank.mp3')
           ),
           storageStrategy: 'aws'
         });
@@ -278,7 +278,7 @@ describe('Craft Storage API V1 tests', () => {
         const payloadFormData = objectToFormData({
           ...craftPayload,
           file: fs.createReadStream(
-            path.join(path.resolve('./'), 'test', 'files', 'blank.mp3')
+            path.resolve('./', 'test', 'files', 'blank.mp3')
           ),
           storageStrategy: 'scaleway'
         });

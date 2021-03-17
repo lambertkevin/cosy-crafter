@@ -11,7 +11,7 @@ export const startAuthService = () =>
   // Promise starting the auth-service locally
   new Promise((resolve) => {
     const child = spawn('npm', ['run', 'mock'], {
-      cwd: path.join(path.resolve('./'), '..', 'auth-service')
+      cwd: path.resolve('./', '..', 'auth-service')
     });
 
     child.stdout.on('data', (data) => {

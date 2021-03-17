@@ -43,7 +43,7 @@ export const getFile = (file) =>
   new Promise((resolve, reject) => {
     try {
       if (file?.type === 'podcast-part') {
-        const filepath = path.join(path.resolve('./'), 'cache', `${file.id}`);
+        const filepath = path.resolve('./', 'cache', `${file.id}`);
 
         if (fs.existsSync(filepath)) {
           return resolve(filepath);

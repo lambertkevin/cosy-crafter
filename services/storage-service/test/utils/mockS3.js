@@ -7,7 +7,7 @@ export default async () => {
     hostname: '0.0.0.0',
     port: 4501,
     silent: true,
-    directory: path.join(path.resolve('./'), 'bucket', 'tests', 'aws'),
+    directory: path.resolve('./', 'bucket', 'tests', 'aws'),
     configureBuckets: [
       {
         name: process.env.AWS_BUCKET_NAME
@@ -19,7 +19,7 @@ export default async () => {
     hostname: '0.0.0.0',
     port: 4500,
     silent: true,
-    directory: path.join(path.resolve('./'), 'bucket', 'tests', 'scaleway'),
+    directory: path.resolve('./', 'bucket', 'tests', 'scaleway'),
     configureBuckets: [
       {
         name: process.env.SCALEWAY_BUCKET_NAME
