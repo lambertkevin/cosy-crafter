@@ -1,6 +1,7 @@
 import { expect } from 'chai';
 import { makeRsaPublicEncrypter } from '../../src/utils/RsaUtils';
 import * as ServiceController from '../../src/controllers/ServiceController';
+import * as TokenBlacklistController from '../../src/controllers/TokenBlacklistController';
 import {
   accessTokenFactory,
   refreshTokenFactory
@@ -35,6 +36,10 @@ describe('Services API tests', () => {
 
   describe('Service Creation', () => {
     before(async () => {
+      await TokenBlacklistController.create({
+        jwtid: 'c674cda4-cf9f-4337-a198-4e7fe2e18e67',
+        type: 'refresh'
+      });
       await ServiceController.create({
         identifier: '2e2-service-login',
         key: '123',
@@ -237,6 +242,38 @@ describe('Services API tests', () => {
               statusCode: 401,
               error: 'Unauthorized',
               message: 'Tokens verification failed'
+            });
+          });
+      });
+
+      it('should fail refresh if token is blacklisted. HTTP 401', () => {
+        const accessToken = accessTokenFactory(
+          { service: '2e2-service-login' },
+          'a',
+          '5m'
+        );
+        const refreshToken = refreshTokenFactory(
+          { service: '2e2-service-login' },
+          'c674cda4-cf9f-4337-a198-4e7fe2e18e67',
+          '1m'
+        );
+
+        return server
+          .inject({
+            method: 'POST',
+            url: '/services/refresh',
+            payload: {
+              accessToken,
+              refreshToken
+            }
+          })
+          .then((response) => {
+            expect(response).to.be.a('object');
+            expect(response).to.include({ statusCode: 401 });
+            expect(response.result).to.deep.include({
+              statusCode: 401,
+              error: 'Unauthorized',
+              message: 'Token is blacklisted or service is not existing'
             });
           });
       });
