@@ -1,2 +1,4 @@
 require('dotenv').config();
-require('./server');
+const server = require('./server').default;
+
+server();

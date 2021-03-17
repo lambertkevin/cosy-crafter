@@ -8,7 +8,8 @@
     "dev": "nodemon --exec npm start -e js",
     "lint": "eslint ./src",
     "debug": "npm run start --inspect",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "mock": "NODE_ENV=mock npm run start",
+    "test": "NODE_ENV=test mocha test/integration/**/*.js"
   },
   "author": "Kevin Lambert",
   "license": "ISC",
@@ -22,7 +23,7 @@
     "@hapi/inert": "^6.0.2",
     "@hapi/vision": "^6.0.1",
     "@sentry/integrations": "^5.22.3",
-    "axios": "^0.19.2",
+    "axios": "^0.21.1",
     "bcryptjs": "^2.4.3",
     "calibrate": "^4.2.0",
     "dotenv": "^8.2.0",
@@ -33,6 +34,7 @@
     "joigoose": "^8.0.0",
     "jsonwebtoken": "^8.5.1",
     "lodash": "^4.17.20",
+    "mongodb-memory-server": "^6.9.3",
     "mongoose": "^5.10.0",
     "mongoose-unique-validator": "^2.0.3",
     "node-rsa": "^1.1.1",
@@ -44,13 +46,16 @@
     "winston-transport-sentry-node": "^0.6.0"
   },
   "devDependencies": {
+    "@babel/polyfill": "^7.12.1",
     "@hapi/eslint-config-hapi": "^13.0.2",
     "@hapi/eslint-plugin-hapi": "^4.3.5",
     "babel-eslint": "^10.1.0",
+    "chai": "^4.3.0",
     "eslint": "^7.7.0",
     "eslint-config-airbnb-base": "^14.2.0",
     "eslint-config-prettier": "^6.11.0",
     "eslint-plugin-import": "^2.22.0",
+    "mocha": "^8.3.0",
     "nodemon": "^2.0.4",
     "prettier": "^2.0.5"
   }

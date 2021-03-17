@@ -1,29 +1,14 @@
-import joi from 'joi';
 import _ from 'lodash';
-import { createTranscodeJob } from '../controllers/TransodeController';
+import { createTranscodeJob } from '../controllers/TranscodeController';
 import { makeRsaPublicDecrypter } from '../utils/RsaUtils';
+import { transcodeJobPayloadSchema } from '../schemas';
 import { logger } from '../utils/Logger';
 
 const routes = [
   {
     path: '/join',
     handler: createTranscodeJob,
-    validation: joi.object({
-      jobId: joi.string().length(36).required(),
-      files: joi.array().items(
-        joi.object({
-          id: joi.string().length(24).required(),
-          type: joi.string().valid('podcast-part', 'user-input').required(),
-          seek: joi
-            .object({
-              start: joi.number().optional(),
-              end: joi.number().optional()
-            })
-            .optional()
-        })
-      ),
-      name: joi.string().required()
-    })
+    validation: transcodeJobPayloadSchema
   }
 ];
 
@@ -50,13 +35,28 @@ export default (prefix, socket) => {
       } catch (e) {
         logger.error('Socket payload validation error', e);
 
+        if (
+          e.message.startsWith(
+            'Error during decryption (probably incorrect key)'
+          )
+        ) {
+          return ack?.({
+            statusCode: 403,
+            message: 'Decryption error'
+          });
+        }
+
         if (e.name !== 'AckError') {
-          return ack({
+          return ack?.({
             statusCode: 409,
             message: 'Bad Request'
           });
         }
-        return null;
+
+        return ack?.({
+          statusCode: 500,
+          message: 'An error occured'
+        });
       }
     };
 

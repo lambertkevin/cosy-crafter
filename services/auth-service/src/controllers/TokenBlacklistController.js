@@ -1,7 +1,7 @@
 import _ from 'lodash';
 import Boom from '@hapi/boom';
 import calibrate from 'calibrate';
-import Token, { projection, hiddenFields } from '../models/TokenModel';
+import Token, { projection, hiddenFields } from '../models/TokenBlaclistModel';
 import { logger } from '../utils/Logger';
 
 /**
@@ -23,17 +23,34 @@ export const find = (sanitized = true) =>
 /**
  * Return a specific Token
  *
- * @param {String} jwtid
+ * @param {String} id
  * @param {Boolean} sanitized
  *
  * @return {Promise<Object>} {Token}
  */
-export const findOne = (jwtid, sanitized = true) =>
-  Token.findOne({ jwtid }, sanitized ? projection : {})
+export const findOne = (id, sanitized = true) =>
+  Token.findOne({ _id: id }, sanitized ? projection : {})
     .exec()
     .then(calibrate.response)
     .catch((error) => {
       logger.error('Token FindOne Error', error);
+      return Boom.boomify(error);
+    });
+
+/**
+ * Return a specific Token by its jwtid
+ *
+ * @param {String} jwtid [GUID]
+ * @param {Boolean} sanitized
+ *
+ * @return {Promise<Object>} {Token}
+ */
+export const findOneByJwtId = (jwtid, sanitized = true) =>
+  Token.findOne({ jwtid }, sanitized ? projection : {})
+    .exec()
+    .then(calibrate.response)
+    .catch((error) => {
+      logger.error('Token FindOneByJwtId Error', error);
       return Boom.boomify(error);
     });
 
@@ -108,12 +125,12 @@ export const update = (id, { jwtid, type }, sanitized = true) =>
 /**
  * Remove Tokens
  *
- * @param {Arrays} jwtids
+ * @param {Arrays} ids
  *
  * @return {Promise<void>}
  */
-export const remove = (jwtids) =>
-  Token.deleteMany({ jwtid: { $in: jwtids.filter((x) => x) } })
+export const remove = (ids) =>
+  Token.deleteMany({ _id: { $in: ids.filter((x) => x) } })
     .exec()
     .then((res) => {
       if (!res.deletedCount) {
@@ -121,7 +138,7 @@ export const remove = (jwtids) =>
       }
 
       return calibrate.response({
-        deleted: jwtids
+        deleted: ids
       });
     })
     .catch((error) => {

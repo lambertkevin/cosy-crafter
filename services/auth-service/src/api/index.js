@@ -1,8 +1,8 @@
 import ServiceApi from './ServiceApi';
-import TokenApi from './TokenApi';
+import TokenBlacklistApi from './TokenBlacklistApi';
 
 export default [
   { plugin: ServiceApi, routes: { prefix: '/services' } },
-  { plugin: TokenApi, routes: { prefix: '/tokens' } }
+  { plugin: TokenBlacklistApi, routes: { prefix: '/tokens' } }
   //
 ];

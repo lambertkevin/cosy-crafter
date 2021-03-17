@@ -16,13 +16,14 @@ export const creationSchema = joi.object({
     .example('La partie qui est rigolote. LOL!'),
   jobId: joi
     .string()
-    .length(36)
+    .guid()
     .required()
     .meta({
       _mongoose: { unique: true }
     }),
-  user: joi.string().length(24).allow(null).default(null), // .required() // Not required until I add the users to auth service
-  storageType: joi.string().required(),
+  /** @WARNING Not required until I add the users to auth service */
+  user: joi.string().length(24).allow(null).default(null), // .required()
+  storageType: joi.string().valid('local', 'aws', 'scaleway').required(),
   storagePath: joi.string().required(),
   storageFilename: joi.string().required()
 });

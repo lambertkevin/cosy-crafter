@@ -1,45 +1,39 @@
 import os from 'os';
 import express from 'express';
 import socket from 'socket.io';
-import socketioJwt from 'socketio-jwt';
 import { logger } from './utils/Logger';
 import { nodeConfig } from './config';
 import { workerHandler, transcodingQueue } from './queue';
-import { auth } from './auth';
+import { auth, socketJwtMiddleware } from './auth';
 import apis from './api';
 
-const init = async () => {
+export default async () => {
   try {
     await auth();
     const app = express();
-    const apiServer = app.listen(nodeConfig.apiPort, () => {
+    const server = app.listen(nodeConfig.apiPort, () => {
       console.log(
-        `Api running on http://${os.hostname()}:${nodeConfig.apiPort}`
+        `Server running on http://${os.hostname()}:${nodeConfig.apiPort}`
       );
     });
-    const workerServer = app.listen(nodeConfig.workerPort, () => {
-      console.log(
-        `Workers running on htt://${os.hostname()}:${nodeConfig.workerPort}`
-      );
+    const io = socket(server, {
+      cors: {
+        origin: process.env.NODE_ENV === 'development' ? '*' : undefined
+      }
     });
 
-    const ioApi = socket.listen(apiServer);
-    const ioWorkers = socket.listen(workerServer);
+    io.of('/clients')
+      .use(socketJwtMiddleware)
+      .on('connection', (client) => {
+        if (client?.handshake?.decodedToken?.service) {
+          apis(client);
+        }
+      });
 
-    ioApi.on('connection', async (client) => {
-      apis(client);
-    });
-
-    ioWorkers
-      .use(
-        socketioJwt.authorize({
-          secret: process.env.SERVICE_JWT_SECRET,
-          handshake: true,
-          auth_header_required: true
-        })
-      )
+    io.of('/workers')
+      .use(socketJwtMiddleware)
       .on('connection', (worker) => {
-        if (worker.decoded_token.service) {
+        if (worker?.handshake?.decodedToken?.service) {
           workerHandler(worker);
         }
       });
@@ -47,16 +41,18 @@ const init = async () => {
     app.get('/details', (req, res) => {
       res.send(transcodingQueue);
     });
+
+    return server;
   } catch (err) {
     /** @WARNING Change this to fatal when feature available in winston + sentry */
     logger.error('Fatal Error while starting the service', err);
-    process.exit(0);
+    return process.exit(0);
   }
 };
 
-process.on('unhandledRejection', (err) => {
-  logger.error('unhandledRejection', err);
-  process.exit(1);
-});
-
-init();
+if (process.env.NODE_ENV !== 'test') {
+  process.on('unhandledRejection', (err) => {
+    logger.error('unhandledRejection', err);
+    process.exit(1);
+  });
+}

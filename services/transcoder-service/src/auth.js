@@ -10,7 +10,7 @@ import { identifier } from './config';
 import { logger } from './utils/Logger';
 
 const { AUTH_SERVICE_NAME, AUTH_SERVICE_PORT } = process.env;
-const CREDENTIALS_PATH = path.join(path.resolve('./'), '.credentials');
+const CREDENTIALS_PATH = path.resolve('./', '.credentials');
 
 export const tokens = {
   accessToken: null,
