@@ -55,7 +55,7 @@ describe('Sections API V1 tests', () => {
           return server
             .inject({
               method: 'POST',
-              url: '/v1/sectionsa',
+              url: '/v1/sections',
               payload: {},
               headers: {
                 authorization: accessToken
