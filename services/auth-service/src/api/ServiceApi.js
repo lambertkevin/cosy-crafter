@@ -4,7 +4,6 @@ import generatePassword from 'generate-password';
 import { responseSchema, creationSchema } from '../schemas/ServiceSchema';
 import * as ServiceController from '../controllers/ServiceController';
 import failValidationHandler from '../utils/FailValidationHandler';
-import axiosErrorBoomifier from '../utils/AxiosErrorBoomifier';
 import { calibrateSchema } from '../utils/SchemasUtils';
 import { logger } from '../utils/Logger';
 import {
@@ -112,8 +111,9 @@ export default {
                 'Service Creation Handler Error: Service creation failed',
                 service
               );
-              return axiosErrorBoomifier(service);
+              return Boom.boomify(service);
             }
+
             const encryptor = makeRsaPrivateEncrypter();
             return encryptor(password);
           } catch (error) {
