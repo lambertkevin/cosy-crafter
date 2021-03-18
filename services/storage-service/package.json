@@ -17,6 +17,7 @@
     "@babel/core": "^7.11.0",
     "@babel/node": "^7.10.5",
     "@babel/preset-env": "^7.11.0",
+    "@cosy/axios-utils": "file:../../lib/@cosy/axios-utils",
     "@hapi/boom": "^9.1.0",
     "@hapi/hapi": "^19.2.0",
     "@hapi/inert": "^6.0.2",
