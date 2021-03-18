@@ -4,7 +4,7 @@
   "description": "Service that handle serving podcast parts either for internal use or for public api",
   "main": "index.js",
   "scripts": {
-    "start": "babel-node ./src/index.js",
+    "start": "babel-node --ignore='node_modules' ./src/index.js",
     "dev": "nodemon --exec npm start -e js",
     "lint": "eslint ./src",
     "debug": "npm run start --inspect",
@@ -18,6 +18,7 @@
     "@babel/node": "^7.10.5",
     "@babel/preset-env": "^7.11.0",
     "@cosy/array-to-projection": "file:../../lib/@cosy/array-to-projection",
+    "@cosy/axios-utils": "file:../../lib/@cosy/axios-utils",
     "@hapi/boom": "^9.1.0",
     "@hapi/hapi": "^19.2.0",
     "@hapi/inert": "^6.0.2",
