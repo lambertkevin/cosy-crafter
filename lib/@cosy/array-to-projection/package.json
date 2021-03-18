@@ -1,5 +1,5 @@
 {
-  "name": "array-to-projection",
+  "name": "@cosy/array-to-projection",
   "version": "1.0.0",
   "description": "Generate an object containing hidden fields to be used as projection for mongoose",
   "main": "index.js",
