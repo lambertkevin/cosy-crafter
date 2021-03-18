@@ -23,6 +23,7 @@
     "@hapi/inert": "^6.0.2",
     "@hapi/vision": "^6.0.1",
     "@sentry/integrations": "^5.22.3",
+    "array-to-projection": "file:../../lib/shared/arrayToProjection",
     "axios": "^0.21.1",
     "bcryptjs": "^2.4.3",
     "calibrate": "^4.2.0",
