@@ -4,7 +4,7 @@
   "description": "Service handling authentication",
   "main": "index.js",
   "scripts": {
-    "start": "babel-node ./src/index.js",
+    "start": "babel-node --ignore='node_modules' ./src/index.js",
     "dev": "nodemon --exec npm start -e js",
     "lint": "eslint ./src",
     "debug": "npm run start --inspect",
