@@ -1,7 +1,7 @@
 import _ from 'lodash';
 import mongoose from 'mongoose';
 import joigoose from 'joigoose';
-import arrayToProjection from 'array-to-projection';
+import arrayToProjection from '@cosy/array-to-projection';
 import mongooseUniqueValidator from 'mongoose-unique-validator';
 import PodcastSchema, { hiddenProperties } from '../schemas/PodcastSchema';
 import { logger } from '../utils/Logger';

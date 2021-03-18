@@ -2,7 +2,7 @@ import _ from 'lodash';
 import axios from 'axios';
 import mongoose from 'mongoose';
 import joigoose from 'joigoose';
-import arrayToProjection from 'array-to-projection';
+import arrayToProjection from '@cosy/array-to-projection';
 import mongooseUniqueValidator from 'mongoose-unique-validator';
 import CraftSchema, { hiddenProperties } from '../schemas/CraftSchema';
 import { logger } from '../utils/Logger';

@@ -3,7 +3,7 @@ import axios from 'axios';
 import Boom from '@hapi/boom';
 import mongoose from 'mongoose';
 import joigoose from 'joigoose';
-import arrayToProjection from 'array-to-projection';
+import arrayToProjection from '@cosy/array-to-projection';
 import mongooseUniqueValidator from 'mongoose-unique-validator';
 import PartSchema, { hiddenProperties } from '../schemas/PartSchema';
 import { logger } from '../utils/Logger';

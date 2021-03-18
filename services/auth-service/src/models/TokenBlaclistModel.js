@@ -1,10 +1,10 @@
 import mongoose from 'mongoose';
 import joigoose from 'joigoose';
+import arrayToProjection from '@cosy/array-to-projection';
 import mongooseUniqueValidator from 'mongoose-unique-validator';
 import TokenBlacklistSchema, {
   hiddenProperties
 } from '../schemas/TokenBlacklistSchema';
-import arrayToProjection from 'array-to-projection';
 
 export const hiddenFields = [...hiddenProperties, 'updatedAt', '__v'];
 
