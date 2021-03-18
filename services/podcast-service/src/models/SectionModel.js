@@ -1,9 +1,9 @@
 import _ from 'lodash';
 import joigoose from 'joigoose';
 import mongoose from 'mongoose';
+import arrayToProjection from 'array-to-projection';
 import mongooseUniqueValidator from 'mongoose-unique-validator';
 import SectionSchema, { hiddenProperties } from '../schemas/SectionSchema';
-import arrayToProjection from '../utils/ArrayToProjection';
 import { logger } from '../utils/Logger';
 
 export const hiddenFields = [
