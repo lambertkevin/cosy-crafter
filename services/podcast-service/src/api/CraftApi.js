@@ -1,8 +1,8 @@
 import joi from 'joi';
+import failValidationHandler from '@cosy/hapi-fail-validation-handler';
 import { responseSchema, creationSchema } from '../schemas/CraftSchema';
-import * as craftController from '../controllers/CraftController';
 import { calibrateSchema, schemaKeys } from '../utils/SchemasUtils';
-import failValidationHandler from '../utils/FailValidationHandler';
+import * as craftController from '../controllers/CraftController';
 
 export default {
   name: 'craftApi',
