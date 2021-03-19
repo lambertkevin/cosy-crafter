@@ -1,0 +1,9 @@
+{
+  "name": "@cosy/custom-error",
+  "version": "1.0.0",
+  "description": "A custom error class",
+  "main": "index.js",
+  "private": "true",
+  "author": "Kévin Lambert",
+  "license": "MIT"
+}
