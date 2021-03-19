@@ -1,7 +1,7 @@
 import os from 'os';
 import express from 'express';
 import socket from 'socket.io';
-import { logger } from './utils/Logger';
+import { logger } from '@cosy/logger';
 import { nodeConfig } from './config';
 import { workerHandler, transcodingQueue } from './queue';
 import { auth, socketJwtMiddleware } from './auth';

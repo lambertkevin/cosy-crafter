@@ -3,14 +3,15 @@ import _ from 'lodash';
 import Boom from '@hapi/boom';
 import FormData from 'form-data';
 import calibrate from 'calibrate';
-import * as PodcastController from './PodcastController';
-import * as SectionController from './SectionController';
-import { makeAxiosInstance, axiosErrorBoomifier } from '../utils/AxiosUtils';
+import { logger } from '@cosy/logger';
+import CustomError from '@cosy/custom-error';
+import { makeAxiosInstance, axiosErrorBoomifier } from '@cosy/axios-utils';
 import { projection as podcastProjection } from '../models/PodcastModel';
 import { projection as sectionProjection } from '../models/SectionModel';
 import Part, { projection, hiddenFields } from '../models/PartModel';
-import { logger } from '../utils/Logger';
-import { tokens } from '../auth';
+import * as PodcastController from './PodcastController';
+import * as SectionController from './SectionController';
+import { tokens, refresh } from '../auth';
 
 const { STORAGE_SERVICE_NAME, STORAGE_SERVICE_PORT } = process.env;
 
@@ -105,7 +106,7 @@ export const create = async (
   formData.append('file', fs.createReadStream(file.path));
 
   try {
-    const axiosAsService = makeAxiosInstance();
+    const axiosAsService = makeAxiosInstance(refresh);
 
     let savedFile;
     if (process.env.NODE_ENV === 'test') {
@@ -132,7 +133,10 @@ export const create = async (
     }
 
     if (_.isEmpty(savedFile)) {
-      throw new Error('An error occured while saving the file');
+      throw new CustomError(
+        'An error occured while saving the file',
+        'FileSavingError'
+      );
     }
 
     return Part.create({
@@ -283,7 +287,7 @@ export const update = async (id, payload, sanitized = true) => {
   if (file) {
     // Delete old file
     const { storageType, storagePath, storageFilename } = part;
-    const axiosAsService = makeAxiosInstance();
+    const axiosAsService = makeAxiosInstance(refresh);
 
     if (
       storageType &&

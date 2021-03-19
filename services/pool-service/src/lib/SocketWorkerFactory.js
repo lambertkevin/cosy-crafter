@@ -1,11 +1,12 @@
 import joi from 'joi';
+import { logger } from '@cosy/logger';
 import { EventEmitter } from 'events';
+import CustomError from '@cosy/custom-error';
 import {
   WORKER_STATES,
   WORKER_STATUS_AVAILABLE,
   WORKER_STATUS_BUSY
 } from './types/WorkerTypes';
-import { logger } from '../utils/Logger';
 
 /**
  * Factory for the WebSocket Worker with Socket.io
@@ -49,7 +50,10 @@ export const makeSocketWorker = (socket) => {
           .validate(_status);
 
         if (statusError) {
-          throw new Error(`Unkown status: ${statusError.message}`);
+          throw new CustomError(
+            `Unknown status: ${statusError.message}`,
+            'StatusUnknownError'
+          );
         }
 
         status = _status;
@@ -76,20 +80,20 @@ export const makeSocketWorker = (socket) => {
       let start;
       try {
         if (!job.start || typeof job.start !== 'function') {
-          const jobHasNoStart = new Error('This job has no start function');
-          jobHasNoStart.name = 'JobHasNoStart';
-
+          const jobHasNoStart = new CustomError(
+            'This job has no start function',
+            'JobHasNoStart'
+          );
           throw jobHasNoStart;
         }
 
         start = job.start(socket);
 
         if (!(start instanceof Promise)) {
-          const startIsNotPromise = new Error(
-            "This job start doesn't return a promise"
+          const startIsNotPromise = new CustomError(
+            "This job start doesn't return a promise",
+            'StartIsNotPromise'
           );
-          startIsNotPromise.name = 'StartIsNotPromise';
-
           throw startIsNotPromise;
         }
       } catch (e) {

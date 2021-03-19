@@ -1,0 +1,13 @@
+{
+  "name": "@cosy/hapi-fail-validation-handler",
+  "version": "1.0.0",
+  "description": "Async function that allows errors to be shown as API responses when in dev mode with hapi framework",
+  "private": "true",
+  "main": "index.js",
+  "author": "Kévin Lambert",
+  "license": "MIT",
+  "dependencies": {
+    "@cosy/logger": "file:../logger",
+    "@hapi/boom": "^9.1.2"
+  }
+}

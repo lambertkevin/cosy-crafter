@@ -2,12 +2,13 @@ import fs from 'fs';
 import path from 'path';
 import axios from 'axios';
 import Boom from '@hapi/boom';
+import { logger } from '@cosy/logger';
+import CustomError from '@cosy/custom-error';
 import {
   makeRsaPublicEncrypter,
   makeRsaPublicDecrypter
-} from './utils/RsaUtils';
+} from '@cosy/rsa-utils';
 import { identifier } from './config';
-import { logger } from './utils/Logger';
 
 const { AUTH_SERVICE_NAME, AUTH_SERVICE_PORT } = process.env;
 const CREDENTIALS_PATH = path.resolve('./', '.credentials');
@@ -44,7 +45,7 @@ export const register = async () => {
       );
       return;
     }
-    throw new Error("Couldn't get a key");
+    throw new CustomError("Couldn't get a key");
   } catch (e) {
     logger.error('Error while registering the service', e);
     process.exit();

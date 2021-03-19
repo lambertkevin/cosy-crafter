@@ -1,8 +1,8 @@
 import joi from 'joi';
+import { calibrateSchema, schemaKeys } from '@cosy/schema-utils';
+import failValidationHandler from '@cosy/hapi-fail-validation-handler';
 import { responseSchema, creationSchema } from '../schemas/SectionSchema';
 import * as sectionController from '../controllers/SectionController';
-import { calibrateSchema, schemaKeys } from '../utils/SchemasUtils';
-import failValidationHandler from '../utils/FailValidationHandler';
 
 export default {
   name: 'sectionApi',

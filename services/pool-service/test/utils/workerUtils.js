@@ -1,4 +1,4 @@
-import { makeRsaPublicDecrypter } from '../../src/utils/RsaUtils';
+import { makeRsaPublicDecrypter } from '@cosy/rsa-utils';
 
 export const makeWorkerMock = (log, decrypter = 'pool', failing = false) => ({
   emit: (eventName, payload, cb) => {

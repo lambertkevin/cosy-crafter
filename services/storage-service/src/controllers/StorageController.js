@@ -2,10 +2,11 @@ import _ from 'lodash';
 import Boom from '@hapi/boom';
 import calibrate from 'calibrate';
 import { v4 as uuid } from 'uuid';
-import { axiosErrorBoomifier, makeAxiosInstance } from '../utils/AxiosUtils';
+import { logger } from '@cosy/logger';
+import CustomError from '@cosy/custom-error';
+import { axiosErrorBoomifier, makeAxiosInstance } from '@cosy/axios-utils';
 import StorageFactory from '../utils/StorageFactory';
-import { logger } from '../utils/Logger';
-import { tokens } from '../auth';
+import { tokens, refresh } from '../auth';
 
 const { PODCAST_SERVICE_NAME, PODCAST_SERVICE_PORT } = process.env;
 const storages = StorageFactory();
@@ -46,7 +47,10 @@ export const addPodcastPartFile = async ({
         return Boom.badData("At least one storage type doesn't exist");
       }
     } else {
-      throw new Error();
+      throw new CustomError(
+        'Storage strategy not specified',
+        'StorageStrategyUndefined'
+      );
     }
   } catch (e) {
     storageStrategy = defaultStorageStrategy;
@@ -88,7 +92,7 @@ export const addPodcastPartFile = async ({
  * @return {Response}
  */
 export const getPodcastPartFile = async (id, h) => {
-  const axiosAsService = makeAxiosInstance();
+  const axiosAsService = makeAxiosInstance(refresh);
   return axiosAsService
     .get(
       `http://${PODCAST_SERVICE_NAME}:${PODCAST_SERVICE_PORT}/v1/parts/${id}`,
@@ -191,7 +195,10 @@ export const addCraftFile = async ({
         return Boom.badData("At least one storage type doesn't exist");
       }
     } else {
-      throw new Error();
+      throw new CustomError(
+        'Storage strategy not specified',
+        'StorageStrategyUndefined'
+      );
     }
   } catch (e) {
     storageStrategy = defaultStorageStrategy;
@@ -232,7 +239,7 @@ export const addCraftFile = async ({
  * @return {Response}
  */
 export const getCraftFile = async (id, h) => {
-  const axiosAsService = makeAxiosInstance();
+  const axiosAsService = makeAxiosInstance(refresh);
   return axiosAsService
     .get(
       `http://${PODCAST_SERVICE_NAME}:${PODCAST_SERVICE_PORT}/v1/crafts/${id}`,

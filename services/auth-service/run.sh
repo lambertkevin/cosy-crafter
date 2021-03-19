@@ -3,7 +3,7 @@ set +e
 
 ./scripts/db_check.sh
 
-echo "Environnement: ${NODE_ENV:-unkown}"
+echo "Environnement: ${NODE_ENV:-unknown}"
 
 if [ "$NODE_ENV" = "development" ]; then
   npm run dev

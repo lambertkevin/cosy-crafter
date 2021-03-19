@@ -1,3 +1,4 @@
+import CustomError from '@cosy/custom-error';
 import { AssertionError, expect } from 'chai';
 import { makeSocketWorker } from '../../src/lib/SocketWorkerFactory';
 import {
@@ -19,9 +20,10 @@ describe('Socket Worker Unit Test', () => {
           worker.status = 'unknown state';
           expect(worker.status).to.throw();
         } catch (e) {
-          expect(e).to.be.an('error');
+          expect(e).to.be.an('error').and.to.be.an.instanceOf(CustomError);
+          expect(e?.name).to.be.equal('StatusUnknownError');
           expect(e.message).to.be.equal(
-            'Unkown status: "value" must be one of [available, busy]'
+            'Unknown status: "value" must be one of [available, busy]'
           );
         }
       });
@@ -51,7 +53,7 @@ describe('Socket Worker Unit Test', () => {
             throw e;
           }
 
-          expect(e).to.be.an('error');
+          expect(e).to.be.an('error').and.to.be.an.instanceOf(CustomError);
           expect(e.name).to.be.equal('JobHasNoStart');
         }
       });
@@ -68,7 +70,7 @@ describe('Socket Worker Unit Test', () => {
             throw e;
           }
 
-          expect(e).to.be.an('error');
+          expect(e).to.be.an('error').and.to.be.an.instanceOf(CustomError);
           expect(e.name).to.be.equal('StartIsNotPromise');
         }
       });

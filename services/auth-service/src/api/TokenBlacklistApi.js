@@ -1,11 +1,11 @@
 import joi from 'joi';
+import { calibrateSchema } from '@cosy/schema-utils';
+import failValidationHandler from '@cosy/hapi-fail-validation-handler';
+import * as TokenBlacklistController from '../controllers/TokenBlacklistController';
 import {
   responseSchema,
   creationSchema
 } from '../schemas/TokenBlacklistSchema';
-import * as TokenBlacklistController from '../controllers/TokenBlacklistController';
-import { calibrateSchema } from '../utils/SchemasUtils';
-import failValidationHandler from '../utils/FailValidationHandler';
 
 export default {
   name: 'tokenApi',

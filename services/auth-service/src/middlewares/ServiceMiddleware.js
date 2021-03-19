@@ -2,8 +2,8 @@ import fs from 'fs';
 import path from 'path';
 import Boom from '@hapi/boom';
 import privateIp from 'private-ip';
-import { makeRsaPrivateDecrypter } from '../utils/RsaUtils';
-import { logger } from '../utils/Logger';
+import { logger } from '@cosy/logger';
+import { makeRsaPrivateDecrypter } from '@cosy/rsa-utils';
 
 export const checkSignature = (request, h) => {
   try {

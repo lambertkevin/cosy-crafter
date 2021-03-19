@@ -1,8 +1,9 @@
 import _ from 'lodash';
+import { logger } from '@cosy/logger';
+import CustomError from '@cosy/custom-error';
+import { makeRsaPublicDecrypter } from '@cosy/rsa-utils';
 import { createTranscodeJob } from '../controllers/TranscodeController';
-import { makeRsaPublicDecrypter } from '../utils/RsaUtils';
 import { transcodeJobPayloadSchema } from '../schemas';
-import { logger } from '../utils/Logger';
 
 const routes = [
   {
@@ -25,10 +26,7 @@ export default (prefix, socket) => {
         }
 
         if (typeof ack !== 'function') {
-          const error = new Error('ack is not a function');
-          error.name = 'AckError';
-
-          throw error;
+          throw new CustomError('ack is not a function', 'AckError');
         }
 
         return route.handler.apply(null, [decryptedData, ack, socket]);

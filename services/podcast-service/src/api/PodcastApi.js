@@ -1,8 +1,8 @@
 import joi from 'joi';
+import { calibrateSchema, schemaKeys } from '@cosy/schema-utils';
+import failValidationHandler from '@cosy/hapi-fail-validation-handler';
 import { responseSchema, creationSchema } from '../schemas/PodcastSchema';
 import * as podcastController from '../controllers/PodcastController';
-import failValidationHandler from '../utils/FailValidationHandler';
-import { calibrateSchema, schemaKeys } from '../utils/SchemasUtils';
 
 export default {
   name: 'podcastApi',
