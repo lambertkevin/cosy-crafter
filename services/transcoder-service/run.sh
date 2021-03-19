@@ -1,7 +1,7 @@
 #!/bin/sh
 set +e
 
-echo "Environnement: ${NODE_ENV:-unkown}"
+echo "Environnement: ${NODE_ENV:-unknown}"
 
 if [ "$NODE_ENV" = "development" ]; then
   npm run dev
