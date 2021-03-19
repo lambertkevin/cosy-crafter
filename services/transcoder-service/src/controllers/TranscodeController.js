@@ -104,14 +104,14 @@ export const joinFiles = async (files, jobId, socket) => {
     socket: socketSchema
   });
 
-  const { error: argsError } = await argsSchema.validateAsync({
+  const { error: argsError } = argsSchema.validate({
     files,
     jobId,
     socket
   });
 
   if (argsError) {
-    throw argsError;
+    throw new CustomError(argsError.message, argsError.name, 406, argsError);
   }
 
   // Add final silence for fadeout with acrossfade

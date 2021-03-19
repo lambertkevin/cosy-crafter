@@ -1,4 +1,5 @@
 import path from 'path';
+import CustomError from '@cosy/custom-error';
 import { expect, AssertionError } from 'chai';
 import { getMp3Duration, getMp3ListDuration } from '../../src/utils/Mp3Utils';
 
@@ -14,7 +15,7 @@ describe('Mp3 Utils Unit Tests', () => {
             throw error;
           }
 
-          expect(error).to.be.an('error');
+          expect(error).to.be.an('error').and.to.be.an.instanceOf(CustomError);
           expect(error.name).to.be.equal('NotFound');
         }
       });
@@ -28,7 +29,7 @@ describe('Mp3 Utils Unit Tests', () => {
             throw error;
           }
 
-          expect(error).to.be.an('error');
+          expect(error).to.be.an('error').and.to.be.an.instanceOf(CustomError);
           expect(error.name).to.be.equal('FFmpegError');
         }
       });
@@ -44,7 +45,7 @@ describe('Mp3 Utils Unit Tests', () => {
             throw error;
           }
 
-          expect(error).to.be.an('error');
+          expect(error).to.be.an('error').and.to.be.an.instanceOf(CustomError);
           expect(error.name).to.be.equal('FileFormatError');
         }
       });
@@ -103,7 +104,7 @@ describe('Mp3 Utils Unit Tests', () => {
             throw error;
           }
 
-          expect(error).to.be.an('error');
+          expect(error).to.be.an('error').and.to.be.an.instanceOf(CustomError);
           expect(error.name).to.be.equal('FileFormatError');
         }
       });
@@ -124,7 +125,7 @@ describe('Mp3 Utils Unit Tests', () => {
             throw error;
           }
 
-          expect(error).to.be.an('error');
+          expect(error).to.be.an('error').and.to.be.an.instanceOf(CustomError);
           expect(error.name).to.be.equal('NotFound');
         }
       });
