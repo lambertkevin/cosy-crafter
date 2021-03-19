@@ -1,5 +1,5 @@
 import { expect } from 'chai';
-import { makeRsaPublicEncrypter } from '../../src/utils/RsaUtils';
+import { makeRsaPublicEncrypter } from '@cosy/rsa-utils';
 import * as ServiceController from '../../src/controllers/ServiceController';
 import * as TokenBlacklistController from '../../src/controllers/TokenBlacklistController';
 import {
