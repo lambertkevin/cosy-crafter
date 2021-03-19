@@ -1,0 +1,12 @@
+{
+  "name": "@cosy/schema-utils",
+  "version": "1.0.0",
+  "description": "Joi schema's helpers",
+  "main": "index.js",
+  "private": "true",
+  "author": "Kévin Lambert",
+  "license": "MIT",
+  "dependencies": {
+    "joi": "^17.4.0"
+  }
+}
