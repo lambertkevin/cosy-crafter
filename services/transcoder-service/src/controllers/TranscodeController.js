@@ -6,6 +6,7 @@ import axios from 'axios';
 import FormData from 'form-data';
 import { v4 as uuid } from 'uuid';
 import ffmpeg from 'fluent-ffmpeg';
+import CustomError from '@cosy/custom-error';
 import { sentry, logger } from '@cosy/logger';
 import { makeAxiosInstance } from '@cosy/axios-utils';
 import {
@@ -63,20 +64,20 @@ export const getFile = (file) =>
           .catch((e) => {
             logger.error('Error while getting files to transcode', e);
 
-            const storageServiceError = new Error(
-              'Failed to fetch a file from storage service'
+            const storageServiceError = new CustomError(
+              'Failed to fetch a file from storage service',
+              'StorageServiceError',
+              424,
+              e
             );
-            storageServiceError.name = 'StorageServiceError';
-            storageServiceError.details = e;
-            storageServiceError.code = 424;
-
             reject(storageServiceError);
           });
       }
 
-      const fileTypeError = new Error('File fetch error: File type is invalid');
-      fileTypeError.name = 'FileTypeError';
-
+      const fileTypeError = new CustomError(
+        'File fetch error: File type is invalid',
+        'FileTypeError'
+      );
       return reject(fileTypeError);
     } catch (e) {
       logger.error('Error while getting files to transcode', e);
@@ -157,7 +158,12 @@ export const joinFiles = async (files, jobId, socket) => {
       }
       const killProcess = () => {
         ff.kill('SIGSTOP');
-        reject(new Error('Stopped by worker'));
+        const transcodingKilled = new CustomError(
+          'Transcoding stopped by worker',
+          'TranscodingKilled',
+          499
+        );
+        reject(transcodingKilled);
       };
       socket.on(`kill-job-${jobId}`, killProcess);
       socket.on(`disconnect`, killProcess);
@@ -200,23 +206,20 @@ export const joinFiles = async (files, jobId, socket) => {
  */
 export const upload = async (filepath, jobId) => {
   if (typeof filepath !== 'string') {
-    const filePathError = new Error('Filepath is invalid');
-    filePathError.name = 'FilePathError';
-
+    const filePathError = new CustomError(
+      'Filepath is invalid',
+      'FilePathError'
+    );
     throw filePathError;
   }
 
   if (!fs.existsSync(filepath)) {
-    const fileNotFound = new Error("File doesn't exist");
-    fileNotFound.name = 'FileNotFound';
-
+    const fileNotFound = new CustomError("File doesn't exist", 'FileNotFound');
     throw fileNotFound;
   }
 
   if (typeof jobId !== 'string' || !jobId) {
-    const jobIdError = new Error('JobId is invalid');
-    jobIdError.name = 'JobIdError';
-
+    const jobIdError = new CustomError('JobId is invalid', 'JobIdError');
     throw jobIdError;
   }
 
@@ -241,9 +244,10 @@ export const upload = async (filepath, jobId) => {
     const savedFile = savingFile?.data ?? {};
 
     if (_.isEmpty(savedFile)) {
-      const saveError = new Error('An error occured while saving the file');
-      saveError.name = 'SaveError';
-
+      const saveError = new CustomError(
+        'An error occured while saving the file',
+        'SaveError'
+      );
       throw saveError;
     }
     return savedFile;
@@ -254,13 +258,15 @@ export const upload = async (filepath, jobId) => {
     });
 
     if (error.isAxiosError) {
-      const uploadServiceError = new Error('Storage service returned an error');
-      uploadServiceError.name = 'UploadServiceError';
-      uploadServiceError.details = error;
-      uploadServiceError.code = 417;
-
+      const uploadServiceError = new CustomError(
+        'Storage service returned an error',
+        'UploadServiceError',
+        417,
+        error
+      );
       throw uploadServiceError;
     }
+
     throw error;
   }
 };
@@ -294,18 +300,20 @@ export const createTranscodeJob = async (
       .validate({ files, name, jobId, ack, socket });
 
     if (argsError) {
-      const payloadError = new Error(`Payload invalid: ${argsError.message}`);
-      payloadError.name = 'PayloadError';
-      payloadError.code = 400;
-
+      const payloadError = new CustomError(
+        `Payload invalid: ${argsError.message}`,
+        'PayloadError',
+        400
+      );
       throw payloadError;
     }
 
     if (busyFlag) {
-      const workerBusyError = new Error('Resource is busy');
-      workerBusyError.name = 'WorkerBusy';
-      workerBusyError.code = 429;
-
+      const workerBusyError = new CustomError(
+        'Resource is busy',
+        'WorkerBusy',
+        419
+      );
       throw workerBusyError;
     }
 
@@ -383,7 +391,12 @@ export const createTranscodeJob = async (
     // --- End Uploading
 
     if (!savedFile || _.isEmpty(savedFile)) {
-      throw new Error('The saved file is incorrect', { mergedFilePath, jobId });
+      throw new CustomError(
+        'The saved file is incorrect',
+        'IncorrectSavedFile',
+        417,
+        { mergedFilePath, jobId }
+      );
     }
 
     // --- Start Saving Craft
@@ -445,7 +458,7 @@ export const createTranscodeJob = async (
     }
 
     // Check if error is a custom error and not a native one
-    if (!_.isError(e)) {
+    if (e instanceof CustomError) {
       return ack({
         statusCode: e.code,
         errorName: e.name,
