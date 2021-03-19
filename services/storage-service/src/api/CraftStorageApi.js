@@ -1,6 +1,6 @@
 import joi from 'joi';
+import failValidationHandler from '@cosy/hapi-fail-validation-handler';
 import { calibrateSchema } from '../utils/SchemasUtils';
-import failValidationHandler from '../utils/FailValidationHandler';
 import * as StorageController from '../controllers/StorageController';
 
 export default {
