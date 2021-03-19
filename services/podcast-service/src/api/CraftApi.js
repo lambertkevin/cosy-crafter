@@ -1,7 +1,7 @@
 import joi from 'joi';
+import { calibrateSchema, schemaKeys } from '@cosy/schema-utils';
 import failValidationHandler from '@cosy/hapi-fail-validation-handler';
 import { responseSchema, creationSchema } from '../schemas/CraftSchema';
-import { calibrateSchema, schemaKeys } from '../utils/SchemasUtils';
 import * as craftController from '../controllers/CraftController';
 
 export default {
