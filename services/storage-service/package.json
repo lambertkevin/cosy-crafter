@@ -21,6 +21,7 @@
     "@cosy/custom-error": "file:../../lib/@cosy/custom-error",
     "@cosy/hapi-fail-validation-handler": "file:../../lib/@cosy/hapi-fail-validation-handler",
     "@cosy/logger": "file:../../lib/@cosy/logger",
+    "@cosy/rsa-utils": "file:../../lib/@cosy/rsa-utils",
     "@cosy/schema-utils": "file:../../lib/@cosy/schema-utils",
     "@hapi/boom": "^9.1.0",
     "@hapi/hapi": "^19.2.0",
