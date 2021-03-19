@@ -121,7 +121,7 @@ describe('Podcast Part Storage API V1 tests', () => {
       it('should fail if storageType is defined but with unknow storage. HTTP 422', async () => {
         const payloadFormData = objectToFormData({
           ...podcastPartPayload,
-          storageStrategy: 'unkown-storage'
+          storageStrategy: 'unknown-storage'
         });
         const payloadStream = await getStream(payloadFormData);
 

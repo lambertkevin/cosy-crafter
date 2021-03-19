@@ -3,6 +3,7 @@ import Boom from '@hapi/boom';
 import calibrate from 'calibrate';
 import { v4 as uuid } from 'uuid';
 import { logger } from '@cosy/logger';
+import CustomError from '@cosy/custom-error';
 import { axiosErrorBoomifier, makeAxiosInstance } from '@cosy/axios-utils';
 import StorageFactory from '../utils/StorageFactory';
 import { tokens, refresh } from '../auth';
@@ -46,7 +47,10 @@ export const addPodcastPartFile = async ({
         return Boom.badData("At least one storage type doesn't exist");
       }
     } else {
-      throw new Error();
+      throw new CustomError(
+        'Storage strategy not specified',
+        'StorageStrategyUndefined'
+      );
     }
   } catch (e) {
     storageStrategy = defaultStorageStrategy;
@@ -191,7 +195,10 @@ export const addCraftFile = async ({
         return Boom.badData("At least one storage type doesn't exist");
       }
     } else {
-      throw new Error();
+      throw new CustomError(
+        'Storage strategy not specified',
+        'StorageStrategyUndefined'
+      );
     }
   } catch (e) {
     storageStrategy = defaultStorageStrategy;

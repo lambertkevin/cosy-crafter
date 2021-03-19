@@ -3,6 +3,7 @@ import path from 'path';
 import axios from 'axios';
 import Boom from '@hapi/boom';
 import { logger } from '@cosy/logger';
+import CustomError from '@cosy/custom-error';
 import {
   makeRsaPublicEncrypter,
   makeRsaPublicDecrypter
@@ -44,7 +45,7 @@ export const register = async () => {
       );
       return;
     }
-    throw new Error("Couldn't get a key");
+    throw new CustomError("Couldn't get a key");
   } catch (e) {
     logger.error('Error while registering the service', e);
     process.exit();
