@@ -7,7 +7,7 @@ import CustomError from '@cosy/custom-error';
 import {
   makeRsaPublicEncrypter,
   makeRsaPublicDecrypter
-} from './utils/RsaUtils';
+} from '@cosy/rsa-utils';
 import { identifier } from './config';
 
 const { AUTH_SERVICE_NAME, AUTH_SERVICE_PORT } = process.env;
