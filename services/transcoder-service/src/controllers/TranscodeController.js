@@ -6,6 +6,7 @@ import axios from 'axios';
 import FormData from 'form-data';
 import { v4 as uuid } from 'uuid';
 import ffmpeg from 'fluent-ffmpeg';
+import { sentry, logger } from '@cosy/logger';
 import {
   fileSchema,
   filesSchema,
@@ -15,7 +16,6 @@ import {
 } from '../schemas';
 import { makeAxiosInstance } from '../utils/AxiosUtils';
 import { getMp3ListDuration } from '../utils/Mp3Utils';
-import { sentry, logger } from '../utils/Logger';
 import { tokens } from '../auth';
 import {
   getCrossFadeFilters,
