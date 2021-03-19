@@ -1,0 +1,12 @@
+{
+  "name": "@cosy/rsa-utils",
+  "version": "1.0.0",
+  "description": "RSA keys' helpers handling encryption and decryption of payloads",
+  "main": "index.js",
+  "private": true,
+  "author": "Kévin Lambert",
+  "license": "MIT",
+  "dependencies": {
+    "node-rsa": "^1.1.1"
+  }
+}
