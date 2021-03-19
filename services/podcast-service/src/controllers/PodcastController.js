@@ -1,9 +1,9 @@
 import _ from 'lodash';
 import Boom from '@hapi/boom';
 import calibrate from 'calibrate';
+import { logger } from '@cosy/logger';
 import Podcast, { projection, hiddenFields } from '../models/PodcastModel';
 import { projection as partProjection } from '../models/PartModel';
-import { logger } from '../utils/Logger';
 
 /**
  * Return a list of all podcasts
