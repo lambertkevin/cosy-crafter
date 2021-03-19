@@ -2,10 +2,10 @@ import joi from 'joi';
 import Boom from '@hapi/boom';
 import { logger } from '@cosy/logger';
 import generatePassword from 'generate-password';
+import { calibrateSchema } from '@cosy/schema-utils';
 import failValidationHandler from '@cosy/hapi-fail-validation-handler';
 import { responseSchema, creationSchema } from '../schemas/ServiceSchema';
 import * as ServiceController from '../controllers/ServiceController';
-import { calibrateSchema } from '../utils/SchemasUtils';
 import {
   makeRsaPrivateDecrypter,
   makeRsaPrivateEncrypter
