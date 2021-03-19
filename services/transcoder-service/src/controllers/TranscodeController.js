@@ -7,6 +7,7 @@ import FormData from 'form-data';
 import { v4 as uuid } from 'uuid';
 import ffmpeg from 'fluent-ffmpeg';
 import { sentry, logger } from '@cosy/logger';
+import { makeAxiosInstance } from '@cosy/axios-utils';
 import {
   fileSchema,
   filesSchema,
@@ -14,9 +15,8 @@ import {
   nameSchema,
   socketSchema
 } from '../schemas';
-import { makeAxiosInstance } from '../utils/AxiosUtils';
 import { getMp3ListDuration } from '../utils/Mp3Utils';
-import { tokens } from '../auth';
+import { refresh, tokens } from '../auth';
 import {
   getCrossFadeFilters,
   percentageFromTimemark
@@ -225,7 +225,7 @@ export const upload = async (filepath, jobId) => {
   formData.append('filename', path.basename(filepath));
 
   try {
-    const axiosAsService = makeAxiosInstance();
+    const axiosAsService = makeAxiosInstance(refresh);
     const { data: savingFile } = await axiosAsService.post(
       `http://${STORAGE_SERVICE_NAME}:${STORAGE_SERVICE_PORT}/v1/crafts`,
       formData,
@@ -406,7 +406,7 @@ export const createTranscodeJob = async (
       });
     }
 
-    const axiosAsService = makeAxiosInstance();
+    const axiosAsService = makeAxiosInstance(refresh);
     const { data: savedCraft } = await axiosAsService.post(
       `http://${PODCAST_SERVICE_NAME}:${PODCAST_SERVICE_PORT}/v1/crafts`,
       payload,
@@ -444,7 +444,8 @@ export const createTranscodeJob = async (
       throw e;
     }
 
-    if (e.name !== 'Error') {
+    // Check if error is a custom error and not a native one
+    if (!_.isError(e)) {
       return ack({
         statusCode: e.code,
         errorName: e.name,
