@@ -1,8 +1,8 @@
 import _ from 'lodash';
 import Boom from '@hapi/boom';
 import calibrate from 'calibrate';
+import { logger } from '@cosy/logger';
 import Token, { projection, hiddenFields } from '../models/TokenBlaclistModel';
-import { logger } from '../utils/Logger';
 
 /**
  * Return a list of all Token

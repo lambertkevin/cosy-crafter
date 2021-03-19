@@ -5,10 +5,10 @@ import jwt from 'jsonwebtoken';
 import calibrate from 'calibrate';
 import { v4 as uuid } from 'uuid';
 import privateIp from 'private-ip';
+import { logger } from '@cosy/logger';
 import Service, { projection, hiddenFields } from '../models/ServiceModel';
 import * as TokenBlacklistController from './TokenBlacklistController';
 import tokensFactory from '../utils/TokensFactory';
-import { logger } from '../utils/Logger';
 
 /**
  * Return a list of all Services
