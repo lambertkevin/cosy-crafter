@@ -19,6 +19,7 @@
     "@babel/node": "^7.10.5",
     "@babel/preset-env": "^7.11.0",
     "@cosy/axios-utils": "file:../../lib/@cosy/axios-utils",
+    "@cosy/custom-error": "file:../../lib/@cosy/custom-error",
     "@cosy/logger": "file:../../lib/@cosy/logger",
     "@hapi/boom": "^9.1.0",
     "axios": "^0.19.2",
@@ -38,13 +39,13 @@
     "babel-eslint": "^10.1.0",
     "bson-objectid": "^2.0.1",
     "chai": "^4.3.3",
-    "chai-spies": "^1.0.0",
     "eslint": "^7.7.0",
     "eslint-config-airbnb-base": "^14.2.0",
     "eslint-config-prettier": "^6.11.0",
     "eslint-plugin-import": "^2.22.0",
     "mocha": "^8.3.1",
     "nodemon": "^2.0.4",
-    "prettier": "^2.0.5"
+    "prettier": "^2.0.5",
+    "proxyquire": "^2.1.3"
   }
 }
