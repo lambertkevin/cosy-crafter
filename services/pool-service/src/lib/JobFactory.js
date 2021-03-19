@@ -3,6 +3,7 @@ import { v4 as uuid } from 'uuid';
 import { logger } from '@cosy/logger';
 import { EventEmitter } from 'events';
 import humanizeDuration from 'humanize-duration';
+import CustomError from '@cosy/custom-error';
 import {
   JOB_STATES,
   JOB_STATUS_WAITING,
@@ -58,7 +59,12 @@ export const makeJob = (asyncAction, opts) => {
   const { error } = argsSchema.validate({ asyncAction, opts });
 
   if (error) {
-    throw new Error(`Arguments are invalid: ${error?.message}`);
+    throw new CustomError(
+      `Arguments are invalid: ${error?.message}`,
+      error?.name,
+      406,
+      error
+    );
   }
 
   let priority = opts?.priority ?? JOB_PRIORITY_MEDIUM;
@@ -107,7 +113,10 @@ export const makeJob = (asyncAction, opts) => {
           .validate(_status);
 
         if (statusError) {
-          throw new Error(`Unkown status: ${statusError.message}`);
+          throw new CustomError(
+            `Unknown status: ${statusError.message}`,
+            'StatusUnknownError'
+          );
         }
 
         status = _status;
@@ -137,7 +146,10 @@ export const makeJob = (asyncAction, opts) => {
           .validate(_priority);
 
         if (priorityError) {
-          throw new Error(`Invalid priority: ${priorityError.message}`);
+          throw new CustomError(
+            `Invalid priority: ${priorityError.message}`,
+            'PriorityInvalidError'
+          );
         }
 
         priority = _priority;
@@ -170,7 +182,10 @@ export const makeJob = (asyncAction, opts) => {
           .validate(_progress);
 
         if (progressError) {
-          throw new Error(`Invalid progress: ${progressError.message}`);
+          throw new CustomError(
+            `Invalid progress: ${progressError.message}`,
+            'ProgressInvalidError'
+          );
         }
 
         progress = _progress;
@@ -209,8 +224,10 @@ export const makeJob = (asyncAction, opts) => {
       const action = this.asyncAction(this, workerApi);
 
       if (!(action instanceof Promise)) {
-        const asyncActionNotAsync = new Error('asyncAction is not a Promise');
-        asyncActionNotAsync.name = 'AsyncActionNotAsync';
+        const asyncActionNotAsync = new CustomError(
+          'asyncAction is not a Promise',
+          'AsyncActionError'
+        );
 
         return Promise.reject(asyncActionNotAsync);
       }
@@ -252,17 +269,20 @@ export const makeJob = (asyncAction, opts) => {
           error: rejection
         });
 
-        const jobRetryError = new Error('Job failed but will retry');
-        jobRetryError.name = 'JobRetryError';
-
+        const jobRetryError = new CustomError(
+          'Job failed but will retry',
+          'JobRetryError'
+        );
         return jobRetryError;
       }
 
       this.status = JOB_STATUS_FAILED;
       logger.error('Job finally failed', { jobId: job.id, error: rejection });
-      const jobFailedError = new Error('Job finally failed');
-      jobFailedError.name = 'JobFailedError';
 
+      const jobFailedError = new CustomError(
+        'Job finally failed',
+        'JobFailedError'
+      );
       return jobFailedError;
     }
   };

@@ -1,7 +1,8 @@
 import _ from 'lodash';
 import spies from 'chai-spies';
-import chai, { AssertionError, expect } from 'chai';
 import { EventEmitter } from 'events';
+import CustomError from '@cosy/custom-error';
+import chai, { AssertionError, expect } from 'chai';
 import { makeJob } from '../../src/lib/JobFactory';
 import { makeQueue } from '../../src/lib/QueueFactory';
 import { makeSocketWorker } from '../../src/lib/SocketWorkerFactory';
@@ -32,7 +33,7 @@ describe('Queue Unit Test', () => {
       it('should fail to remove a job that is not in the queue', () => {
         const queue = makeQueue();
         const removal = queue.removeJob({});
-        expect(removal).to.be.an('error');
+        expect(removal).to.be.an('error').and.to.be.an.instanceOf(CustomError);
         expect(removal.name).to.be.equal('JobNotFound');
         expect(removal.message).to.be.equal(
           'This job is not existing in this queue'
@@ -46,7 +47,7 @@ describe('Queue Unit Test', () => {
         queue.addJob(job);
         const push = queue.addJob(job);
 
-        expect(push).to.be.an('error');
+        expect(push).to.be.an('error').and.to.be.an.instanceOf(CustomError);
         expect(push.name).to.be.equal('DuplicatedJobError');
         expect(push.message).to.be.equal('This job is already in queue');
       });
@@ -69,7 +70,7 @@ describe('Queue Unit Test', () => {
             throw e;
           }
 
-          expect(e).to.be.an('error');
+          expect(e).to.be.an('error').and.to.be.an.instanceOf(CustomError);
           expect(e.name).to.be.equal('JobHasNoEvents');
         }
       });
@@ -86,7 +87,7 @@ describe('Queue Unit Test', () => {
         queue.addJob(fakeJob);
 
         return queue.next().then((res) => {
-          expect(res).to.be.an('error');
+          expect(res).to.be.an('error').and.to.be.an.instanceOf(CustomError);
           expect(res.name).to.be.equal('JobHasNoStart');
         });
       });
@@ -104,7 +105,7 @@ describe('Queue Unit Test', () => {
         queue.addJob(fakeJob);
 
         return queue.next().then((res) => {
-          expect(res).to.be.an('error');
+          expect(res).to.be.an('error').and.to.be.an.instanceOf(CustomError);
           expect(res.name).to.be.equal('StartIsNotPromise');
         });
       });
@@ -118,7 +119,7 @@ describe('Queue Unit Test', () => {
         queue.addJob(job);
 
         return queue.next().then((res) => {
-          expect(res).to.be.an('error');
+          expect(res).to.be.an('error').and.to.be.an.instanceOf(CustomError);
           expect(res.name).to.be.equal('JobFailedError');
         });
       });

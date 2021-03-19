@@ -4,6 +4,7 @@ import axios from 'axios';
 import Boom from '@hapi/boom';
 import jwt from 'jsonwebtoken';
 import { logger } from '@cosy/logger';
+import CustomError from '@cosy/custom-error';
 import {
   makeRsaPublicEncrypter,
   makeRsaPublicDecrypter
@@ -45,7 +46,7 @@ export const register = async () => {
       );
       return;
     }
-    throw new Error("Couldn't get a key");
+    throw new CustomError("Couldn't get a key");
   } catch (e) {
     logger.error('Error while registering the service', e);
     process.exit();
@@ -112,7 +113,6 @@ export const socketJwtMiddleware = (socket, next) => {
     jwt.verify(token, process.env.SERVICE_JWT_SECRET);
     // eslint-disable-next-line no-param-reassign
     socket.handshake.decodedToken = jwt.decode(token);
-
     next();
   } catch (error) {
     if (['JsonWebTokenError', 'TokenExpiredError'].includes(error.name)) {
