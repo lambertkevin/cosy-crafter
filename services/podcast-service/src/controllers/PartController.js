@@ -4,12 +4,13 @@ import Boom from '@hapi/boom';
 import FormData from 'form-data';
 import calibrate from 'calibrate';
 import { logger } from '@cosy/logger';
+import CustomError from '@cosy/custom-error';
 import { makeAxiosInstance, axiosErrorBoomifier } from '@cosy/axios-utils';
-import * as PodcastController from './PodcastController';
-import * as SectionController from './SectionController';
 import { projection as podcastProjection } from '../models/PodcastModel';
 import { projection as sectionProjection } from '../models/SectionModel';
 import Part, { projection, hiddenFields } from '../models/PartModel';
+import * as PodcastController from './PodcastController';
+import * as SectionController from './SectionController';
 import { tokens, refresh } from '../auth';
 
 const { STORAGE_SERVICE_NAME, STORAGE_SERVICE_PORT } = process.env;
@@ -132,7 +133,10 @@ export const create = async (
     }
 
     if (_.isEmpty(savedFile)) {
-      throw new Error('An error occured while saving the file');
+      throw new CustomError(
+        'An error occured while saving the file',
+        'FileSavingError'
+      );
     }
 
     return Part.create({

@@ -19,6 +19,7 @@
     "@babel/preset-env": "^7.11.0",
     "@cosy/array-to-projection": "file:../../lib/@cosy/array-to-projection",
     "@cosy/axios-utils": "file:../../lib/@cosy/axios-utils",
+    "@cosy/custom-error": "file:../../lib/@cosy/custom-error",
     "@cosy/logger": "file:../../lib/@cosy/logger",
     "@hapi/boom": "^9.1.0",
     "@hapi/hapi": "^19.2.0",
