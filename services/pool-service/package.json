@@ -20,6 +20,7 @@
     "@babel/preset-env": "^7.11.0",
     "@cosy/custom-error": "file:../../lib/@cosy/custom-error",
     "@cosy/logger": "file:../../lib/@cosy/logger",
+    "@cosy/rsa-utils": "file:../../lib/@cosy/rsa-utils",
     "@hapi/boom": "^9.1.0",
     "axios": "^0.19.2",
     "dotenv": "^8.2.0",

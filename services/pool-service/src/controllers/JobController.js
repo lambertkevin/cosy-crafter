@@ -1,11 +1,11 @@
-import CustomError from '@cosy/custom-error';
 import { logger } from '@cosy/logger';
+import CustomError from '@cosy/custom-error';
+import { makeRsaPrivateEncrypter } from '@cosy/rsa-utils';
 import { makeJob } from '../lib/JobFactory';
-import { makeRsaPrivateEncrypter } from '../utils/RsaUtils';
 
 export const createTranscodingJob = ({ name, files }, ack) => {
   try {
-    const privateEncrypter = makeRsaPrivateEncrypter();
+    const privateEncrypter = makeRsaPrivateEncrypter('pool');
     const transcodingJob = makeJob(
       (job, workerSocket) =>
         new Promise((resolve, reject) => {
