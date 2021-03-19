@@ -1,6 +1,6 @@
 import stream from 'stream';
 import Boom from '@hapi/boom';
-import { logger } from './Logger';
+import { logger } from '@cosy/logger';
 
 /**
  * Async function that allows errors to be shown as

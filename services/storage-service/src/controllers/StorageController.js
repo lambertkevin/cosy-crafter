@@ -2,9 +2,9 @@ import _ from 'lodash';
 import Boom from '@hapi/boom';
 import calibrate from 'calibrate';
 import { v4 as uuid } from 'uuid';
+import { logger } from '@cosy/logger';
 import { axiosErrorBoomifier, makeAxiosInstance } from '@cosy/axios-utils';
 import StorageFactory from '../utils/StorageFactory';
-import { logger } from '../utils/Logger';
 import { tokens, refresh } from '../auth';
 
 const { PODCAST_SERVICE_NAME, PODCAST_SERVICE_PORT } = process.env;
