@@ -71,7 +71,7 @@ describe('Transcode Controller Unit tests', () => {
       it('should fail if file type is unknown', async () => {
         const file = {
           id: 'test-id',
-          type: 'unkown-type'
+          type: 'unknown-type'
         };
 
         try {
