@@ -19,11 +19,11 @@
     "@babel/preset-env": "^7.11.0",
     "@cosy/array-to-projection": "file:../../lib/@cosy/array-to-projection",
     "@cosy/axios-utils": "file:../../lib/@cosy/axios-utils",
+    "@cosy/logger": "file:../../lib/@cosy/logger",
     "@hapi/boom": "^9.1.0",
     "@hapi/hapi": "^19.2.0",
     "@hapi/inert": "^6.0.2",
     "@hapi/vision": "^6.0.1",
-    "@sentry/integrations": "^5.22.3",
     "axios": "^0.19.2",
     "calibrate": "^4.2.0",
     "dotenv": "^8.2.0",
@@ -38,11 +38,7 @@
     "mongodb-memory-server": "^6.9.3",
     "mongoose": "^5.10.0",
     "mongoose-unique-validator": "^2.0.3",
-    "node-rsa": "^1.1.1",
-    "triple-beam": "^1.3.0",
-    "winston": "^3.3.3",
-    "winston-daily-rotate-file": "^4.5.0",
-    "winston-transport-sentry-node": "^0.6.0"
+    "node-rsa": "^1.1.1"
   },
   "devDependencies": {
     "@babel/polyfill": "^7.12.1",

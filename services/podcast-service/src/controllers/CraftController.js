@@ -1,8 +1,8 @@
 import _ from 'lodash';
 import Boom from '@hapi/boom';
 import calibrate from 'calibrate';
+import { logger } from '@cosy/logger';
 import Craft, { projection, hiddenFields } from '../models/CraftModel';
-import { logger } from '../utils/Logger';
 
 /**
  * Return a list of all crafts

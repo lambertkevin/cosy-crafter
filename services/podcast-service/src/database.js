@@ -1,7 +1,7 @@
 import mongoose from 'mongoose';
+import { logger } from '@cosy/logger';
 import { MongoMemoryServer } from 'mongodb-memory-server';
 import { databaseConfig } from './config';
-import { logger } from './utils/Logger';
 
 export default async () => {
   const mongoURL = await (async () => {

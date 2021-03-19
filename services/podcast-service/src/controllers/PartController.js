@@ -3,13 +3,13 @@ import _ from 'lodash';
 import Boom from '@hapi/boom';
 import FormData from 'form-data';
 import calibrate from 'calibrate';
+import { logger } from '@cosy/logger';
 import { makeAxiosInstance, axiosErrorBoomifier } from '@cosy/axios-utils';
 import * as PodcastController from './PodcastController';
 import * as SectionController from './SectionController';
 import { projection as podcastProjection } from '../models/PodcastModel';
 import { projection as sectionProjection } from '../models/SectionModel';
 import Part, { projection, hiddenFields } from '../models/PartModel';
-import { logger } from '../utils/Logger';
 import { tokens, refresh } from '../auth';
 
 const { STORAGE_SERVICE_NAME, STORAGE_SERVICE_PORT } = process.env;
