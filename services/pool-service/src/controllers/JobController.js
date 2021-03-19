@@ -1,3 +1,4 @@
+import CustomError from '@cosy/custom-error';
 import { logger } from '@cosy/logger';
 import { makeJob } from '../lib/JobFactory';
 import { makeRsaPrivateEncrypter } from '../utils/RsaUtils';
@@ -21,7 +22,9 @@ export const createTranscodingJob = ({ name, files }, ack) => {
             if (response.statusCode !== 201) {
               logger.error('Transcode/Join in job controller failed', response);
               ack(response);
-              return reject(new Error('Transcode Failed'));
+              return reject(
+                new CustomError('Transcode Failed', 'TranscodingJobFailed')
+              );
             }
             logger.info('Transcode/Join in job controller finished', response);
             ack(response);

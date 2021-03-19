@@ -4,6 +4,7 @@ import path from 'path';
 import { logger } from '@cosy/logger';
 import { EventEmitter } from 'events';
 import stringify from 'fast-safe-stringify';
+import CustomError from '@cosy/custom-error';
 import { makeJob } from './JobFactory';
 import {
   WORKER_STATUS_AVAILABLE,
@@ -119,9 +120,10 @@ export const makeQueue = (registerEvents = true) => {
      */
     addJob(job) {
       if (jobs.includes(job)) {
-        const duplicatedJobError = new Error('This job is already in queue');
-        duplicatedJobError.name = 'DuplicatedJobError';
-
+        const duplicatedJobError = new CustomError(
+          'This job is already in queue',
+          'DuplicatedJobError'
+        );
         return duplicatedJobError;
       }
 
@@ -141,9 +143,10 @@ export const makeQueue = (registerEvents = true) => {
      */
     removeJob(job) {
       if (!jobs.includes(job)) {
-        const jobNotFound = new Error('This job is not existing in this queue');
-        jobNotFound.name = 'JobNotFound';
-
+        const jobNotFound = new CustomError(
+          'This job is not existing in this queue',
+          'JobNotFound'
+        );
         return jobNotFound;
       }
 
@@ -193,9 +196,10 @@ export const makeQueue = (registerEvents = true) => {
         // Let's imagine you feed this queue with jobs not made by the provided factory
         if (!job.events || !(job.events instanceof EventEmitter)) {
           this.removeJob(job);
-          const jobHasNoEvents = new Error('Job has no event emitter');
-          jobHasNoEvents.name = 'JobHasNoEvents';
-
+          const jobHasNoEvents = new CustomError(
+            'Job has no event emitter',
+            'JobHasNoEvents'
+          );
           throw jobHasNoEvents;
         }
 

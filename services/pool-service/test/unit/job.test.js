@@ -1,3 +1,4 @@
+import CustomError from '@cosy/custom-error';
 import { AssertionError, expect } from 'chai';
 import {
   JOB_STATUS_WAITING,
@@ -41,7 +42,8 @@ describe('Job Unit Test', () => {
             });
             expect(job).to.throw();
           } catch (e) {
-            expect(e).to.be.an('error');
+            expect(e).to.be.an('error').and.to.be.an.instanceOf(CustomError);
+            expect(e?.name).to.be.equal('ValidationError');
             expect(e?.message).to.be.equal(
               'Arguments are invalid: "opts.asyncAction" contains an invalid value'
             );
@@ -55,7 +57,8 @@ describe('Job Unit Test', () => {
             });
             expect(job).to.throw();
           } catch (e) {
-            expect(e).to.be.an('error');
+            expect(e).to.be.an('error').and.to.be.an.instanceOf(CustomError);
+            expect(e?.name).to.be.equal('ValidationError');
             expect(e?.message).to.be.equal(
               'Arguments are invalid: "asyncAction" is required'
             );
@@ -67,7 +70,8 @@ describe('Job Unit Test', () => {
             const job = makeJob();
             expect(job).to.throw();
           } catch (e) {
-            expect(e).to.be.an('error');
+            expect(e).to.be.an('error').and.to.be.an.instanceOf(CustomError);
+            expect(e?.name).to.be.equal('ValidationError');
             expect(e?.message).to.be.equal(
               'Arguments are invalid: "asyncAction" is required'
             );
@@ -79,7 +83,8 @@ describe('Job Unit Test', () => {
             const job = makeJob(null);
             expect(job).to.throw();
           } catch (e) {
-            expect(e).to.be.an('error');
+            expect(e).to.be.an('error').and.to.be.an.instanceOf(CustomError);
+            expect(e?.name).to.be.equal('ValidationError');
             expect(e?.message).to.be.equal(
               'Arguments are invalid: "opts" is required'
             );
@@ -91,7 +96,8 @@ describe('Job Unit Test', () => {
             const job = makeJob(null, {});
             expect(job).to.throw();
           } catch (e) {
-            expect(e).to.be.an('error');
+            expect(e).to.be.an('error').and.to.be.an.instanceOf(CustomError);
+            expect(e?.name).to.be.equal('ValidationError');
             expect(e?.message).to.be.equal(
               'Arguments are invalid: "opts.asyncAction" is required'
             );
@@ -106,7 +112,8 @@ describe('Job Unit Test', () => {
             });
             expect(job).to.throw();
           } catch (e) {
-            expect(e).to.be.an('error');
+            expect(e).to.be.an('error').and.to.be.an.instanceOf(CustomError);
+            expect(e?.name).to.be.equal('ValidationError');
             expect(e?.message).to.be.equal(
               'Arguments are invalid: "opts.priority" must be a number'
             );
@@ -121,7 +128,8 @@ describe('Job Unit Test', () => {
             });
             expect(job).to.throw();
           } catch (e) {
-            expect(e).to.be.an('error');
+            expect(e).to.be.an('error').and.to.be.an.instanceOf(CustomError);
+            expect(e?.name).to.be.equal('ValidationError');
             expect(e?.message).to.be.equal(
               'Arguments are invalid: "opts.progress" must be a number'
             );
@@ -136,7 +144,8 @@ describe('Job Unit Test', () => {
             });
             expect(job).to.throw();
           } catch (e) {
-            expect(e).to.be.an('error');
+            expect(e).to.be.an('error').and.to.be.an.instanceOf(CustomError);
+            expect(e?.name).to.be.equal('ValidationError');
             expect(e?.message).to.be.equal(
               'Arguments are invalid: "opts.progress" must be a positive number'
             );
@@ -151,7 +160,8 @@ describe('Job Unit Test', () => {
             });
             expect(job).to.throw();
           } catch (e) {
-            expect(e).to.be.an('error');
+            expect(e).to.be.an('error').and.to.be.an.instanceOf(CustomError);
+            expect(e?.name).to.be.equal('ValidationError');
             expect(e?.message).to.be.equal(
               'Arguments are invalid: "opts.progress" must be less than or equal to 100'
             );
@@ -166,7 +176,8 @@ describe('Job Unit Test', () => {
             });
             expect(job).to.throw();
           } catch (e) {
-            expect(e).to.be.an('error');
+            expect(e).to.be.an('error').and.to.be.an.instanceOf(CustomError);
+            expect(e?.name).to.be.equal('ValidationError');
             expect(e?.message).to.be.equal(
               'Arguments are invalid: "opts.status" must be one of [waiting, ongoing, done, failed]'
             );
@@ -181,7 +192,8 @@ describe('Job Unit Test', () => {
             });
             expect(job).to.throw();
           } catch (e) {
-            expect(e).to.be.an('error');
+            expect(e).to.be.an('error').and.to.be.an.instanceOf(CustomError);
+            expect(e?.name).to.be.equal('ValidationError');
             expect(e?.message).to.be.equal(
               'Arguments are invalid: "opts.status" must be one of [waiting, ongoing, done, failed]'
             );
@@ -196,7 +208,8 @@ describe('Job Unit Test', () => {
             });
             expect(job).to.throw();
           } catch (e) {
-            expect(e).to.be.an('error');
+            expect(e).to.be.an('error').and.to.be.an.instanceOf(CustomError);
+            expect(e?.name).to.be.equal('ValidationError');
             expect(e?.message).to.be.equal(
               'Arguments are invalid: "opts.addedAt" must be in timestamp or number of milliseconds format'
             );
@@ -211,7 +224,8 @@ describe('Job Unit Test', () => {
             });
             expect(job).to.throw();
           } catch (e) {
-            expect(e).to.be.an('error');
+            expect(e).to.be.an('error').and.to.be.an.instanceOf(CustomError);
+            expect(e?.name).to.be.equal('ValidationError');
             expect(e?.message).to.be.equal(
               'Arguments are invalid: "opts.startedAt" must be in timestamp or number of milliseconds format'
             );
@@ -226,7 +240,8 @@ describe('Job Unit Test', () => {
             });
             expect(job).to.throw();
           } catch (e) {
-            expect(e).to.be.an('error');
+            expect(e).to.be.an('error').and.to.be.an.instanceOf(CustomError);
+            expect(e?.name).to.be.equal('ValidationError');
             expect(e?.message).to.be.equal(
               'Arguments are invalid: "opts.finishedAt" must be in timestamp or number of milliseconds format'
             );
@@ -241,7 +256,8 @@ describe('Job Unit Test', () => {
             });
             expect(job).to.throw();
           } catch (e) {
-            expect(e).to.be.an('error');
+            expect(e).to.be.an('error').and.to.be.an.instanceOf(CustomError);
+            expect(e?.name).to.be.equal('ValidationError');
             expect(e?.message).to.be.equal(
               'Arguments are invalid: "opts.retries" must be a number'
             );
@@ -256,7 +272,8 @@ describe('Job Unit Test', () => {
             });
             expect(job).to.throw();
           } catch (e) {
-            expect(e).to.be.an('error');
+            expect(e).to.be.an('error').and.to.be.an.instanceOf(CustomError);
+            expect(e?.name).to.be.equal('ValidationError');
             expect(e?.message).to.be.equal(
               'Arguments are invalid: "opts.retries" must be a positive number'
             );
@@ -271,7 +288,8 @@ describe('Job Unit Test', () => {
             });
             expect(job).to.throw();
           } catch (e) {
-            expect(e).to.be.an('error');
+            expect(e).to.be.an('error').and.to.be.an.instanceOf(CustomError);
+            expect(e?.name).to.be.equal('ValidationError');
             expect(e?.message).to.be.equal(
               'Arguments are invalid: "opts.asyncAction" must be a string'
             );
@@ -332,7 +350,7 @@ describe('Job Unit Test', () => {
         });
 
         return job.start().catch((e) => {
-          expect(e).to.be.an('error');
+          expect(e).to.be.an('error').and.to.be.an.instanceOf(CustomError);
           expect(e.name).to.be.equal('JobFailedError');
           expect(e.message).to.be.equal('Job finally failed');
           expect(job.fails).to.be.equal(1);
@@ -349,7 +367,7 @@ describe('Job Unit Test', () => {
         });
 
         return job.start().catch((e) => {
-          expect(e).to.be.an('error');
+          expect(e).to.be.an('error').and.to.be.an.instanceOf(CustomError);
           expect(e.name).to.be.equal('JobFailedError');
           expect(e.message).to.be.equal('Job finally failed');
           expect(job.fails).to.be.equal(1);
@@ -366,7 +384,7 @@ describe('Job Unit Test', () => {
         });
 
         return job.start().catch((e) => {
-          expect(e).to.be.an('error');
+          expect(e).to.be.an('error').and.to.be.an.instanceOf(CustomError);
           expect(e.name).to.be.equal('JobRetryError');
           expect(e.message).to.be.equal('Job failed but will retry');
           expect(job.fails).to.be.equal(1);
@@ -386,8 +404,8 @@ describe('Job Unit Test', () => {
             throw e;
           }
 
-          expect(e).to.be.an('error');
-          expect(e.name).to.be.equal('AsyncActionNotAsync');
+          expect(e).to.be.an('error').and.to.be.an.instanceOf(CustomError);
+          expect(e.name).to.be.equal('AsyncActionError');
         }
       });
     });
@@ -429,12 +447,13 @@ describe('Job Unit Test', () => {
       it("should fail changing status if it's is unknown", () => {
         try {
           const job = makeJob(successAsyncAction);
-          job.status = 'unkown status';
+          job.status = 'unknown status';
           expect(job).to.throw();
         } catch (e) {
-          expect(e).to.be.an('error');
+          expect(e).to.be.an('error').and.to.be.an.instanceOf(CustomError);
+          expect(e?.name).to.be.equal('StatusUnknownError');
           expect(e.message).to.be.equal(
-            'Unkown status: "value" must be one of [waiting, ongoing, done, failed]'
+            'Unknown status: "value" must be one of [waiting, ongoing, done, failed]'
           );
         }
       });
@@ -445,7 +464,8 @@ describe('Job Unit Test', () => {
           job.priority = false;
           expect(job).to.throw();
         } catch (e) {
-          expect(e).to.be.an('error');
+          expect(e).to.be.an('error').and.to.be.an.instanceOf(CustomError);
+          expect(e?.name).to.be.equal('PriorityInvalidError');
           expect(e.message).to.be.equal(
             'Invalid priority: "value" must be a number'
           );
@@ -458,7 +478,8 @@ describe('Job Unit Test', () => {
           job.progress = false;
           expect(job).to.throw();
         } catch (e) {
-          expect(e).to.be.an('error');
+          expect(e).to.be.an('error').and.to.be.an.instanceOf(CustomError);
+          expect(e?.name).to.be.equal('ProgressInvalidError');
           expect(e.message).to.be.equal(
             'Invalid progress: "value" must be a number'
           );
@@ -471,7 +492,8 @@ describe('Job Unit Test', () => {
           job.progress = 101;
           expect(job).to.throw();
         } catch (e) {
-          expect(e).to.be.an('error');
+          expect(e).to.be.an('error').and.to.be.an.instanceOf(CustomError);
+          expect(e?.name).to.be.equal('ProgressInvalidError');
           expect(e.message).to.be.equal(
             'Invalid progress: "value" must be less than or equal to 100'
           );

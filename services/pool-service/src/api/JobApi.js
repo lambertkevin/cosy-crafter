@@ -1,6 +1,7 @@
 import joi from 'joi';
 import _ from 'lodash';
 import { logger } from '@cosy/logger';
+import CustomError from '@cosy/custom-error';
 import * as JobController from '../controllers/JobController';
 import { transcodingQueue } from '../queue';
 
@@ -41,9 +42,7 @@ export default (prefix, socket) => {
           await route.validation.validateAsync(data);
         }
         if (typeof ack !== 'function') {
-          const error = new Error('ack is not a function');
-          error.name = 'AckError';
-
+          const error = new CustomError('ack is not a function', 'AckError');
           throw error;
         }
         return route.handler.apply(null, [data, ack, socket]);
