@@ -1,8 +1,8 @@
 import _ from 'lodash';
+import { logger } from '@cosy/logger';
 import { createTranscodeJob } from '../controllers/TranscodeController';
 import { makeRsaPublicDecrypter } from '../utils/RsaUtils';
 import { transcodeJobPayloadSchema } from '../schemas';
-import { logger } from '../utils/Logger';
 
 const routes = [
   {

@@ -1,5 +1,5 @@
 import io from 'socket.io-client';
-import { logger } from './utils/Logger';
+import { logger } from '@cosy/logger';
 import { auth, refresh, tokens } from './auth';
 import apis from './api';
 
