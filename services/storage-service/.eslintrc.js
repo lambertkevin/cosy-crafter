@@ -27,7 +27,12 @@ module.exports = {
     'import/no-extraneous-dependencies': [
       'error',
       {
-        devDependencies: ['**/*.test.js', `${resolve('./')}/test/utils/*.js`]
+        devDependencies: [
+          '**/*.test.js',
+          `${resolve('./')}/test/utils/*.js`,
+          '**/*.spec.js',
+          '**/*.mocha.js'
+        ]
       }
     ]
   }

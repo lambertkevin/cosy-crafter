@@ -26,7 +26,7 @@ module.exports = {
     '@hapi/hapi/scope-start': 0,
     'import/no-extraneous-dependencies': [
       'error',
-      { devDependencies: ['**/*.test.js'] }
+      { devDependencies: ['**/*.test.js', '**/*.spec.js', '**/*.mocha.js'] }
     ]
   }
 };
