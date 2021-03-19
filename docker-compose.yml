@@ -28,7 +28,7 @@ services:
     working_dir: /home/node/app
     volumes:
       - ./services/podcast-service:/home/node/app
-      - ./lib:/home/lib
+      - ./shared:/home/shared
       - type: bind
         source: .keys/auth.pem
         target: /.keys/auth.pem
@@ -60,7 +60,7 @@ services:
     working_dir: /home/node/app
     volumes:
       - ./services/storage-service:/home/node/app
-      - ./lib:/home/lib
+      - ./shared:/home/shared
       - type: bind
         source: .keys/auth.pem
         target: /.keys/auth.pem
@@ -97,7 +97,7 @@ services:
     working_dir: /home/node/app
     volumes:
       - ./services/auth-service:/home/node/app
-      - ./lib:/home/lib
+      - ./shared:/home/shared
       - type: bind
         source: .keys
         target: /.keys
@@ -132,7 +132,7 @@ services:
     working_dir: /home/node/app
     volumes:
       - ./services/transcoder-service:/home/node/app
-      - ./lib:/home/lib
+      - ./shared:/home/shared
       - type: bind
         source: .keys/auth.pem
         target: /.keys/auth.pem
@@ -158,7 +158,7 @@ services:
     working_dir: /home/node/app
     volumes:
       - ./services/pool-service:/home/node/app
-      - ./lib:/home/lib
+      - ./shared:/home/shared
       - type: bind
         source: .keys/auth.pem
         target: /.keys/auth.pem
