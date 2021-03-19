@@ -1,5 +1,6 @@
 import joi from 'joi';
 import { v4 as uuid } from 'uuid';
+import { logger } from '@cosy/logger';
 import { EventEmitter } from 'events';
 import humanizeDuration from 'humanize-duration';
 import {
@@ -10,7 +11,6 @@ import {
   JOB_STATUS_FAILED,
   JOB_PRIORITY_MEDIUM
 } from './types/JobTypes';
-import { logger } from '../utils/Logger';
 
 const argsSchema = joi.object({
   asyncAction: joi.function().allow(null).required(),

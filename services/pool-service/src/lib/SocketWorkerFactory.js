@@ -1,11 +1,11 @@
 import joi from 'joi';
+import { logger } from '@cosy/logger';
 import { EventEmitter } from 'events';
 import {
   WORKER_STATES,
   WORKER_STATUS_AVAILABLE,
   WORKER_STATUS_BUSY
 } from './types/WorkerTypes';
-import { logger } from '../utils/Logger';
 
 /**
  * Factory for the WebSocket Worker with Socket.io

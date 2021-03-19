@@ -1,5 +1,5 @@
+import { logger } from '@cosy/logger';
 import { makeJob } from '../lib/JobFactory';
-import { logger } from '../utils/Logger';
 import { makeRsaPrivateEncrypter } from '../utils/RsaUtils';
 
 export const createTranscodingJob = ({ name, files }, ack) => {

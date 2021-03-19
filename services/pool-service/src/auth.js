@@ -3,12 +3,12 @@ import path from 'path';
 import axios from 'axios';
 import Boom from '@hapi/boom';
 import jwt from 'jsonwebtoken';
+import { logger } from '@cosy/logger';
 import {
   makeRsaPublicEncrypter,
   makeRsaPublicDecrypter
 } from './utils/RsaUtils';
 import { identifier } from './config';
-import { logger } from './utils/Logger';
 
 const { AUTH_SERVICE_NAME, AUTH_SERVICE_PORT } = process.env;
 const CREDENTIALS_PATH = path.resolve('./', '.credentials');

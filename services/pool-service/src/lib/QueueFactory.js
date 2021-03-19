@@ -1,9 +1,9 @@
 import fs from 'fs';
 import _ from 'lodash';
 import path from 'path';
+import { logger } from '@cosy/logger';
 import { EventEmitter } from 'events';
 import stringify from 'fast-safe-stringify';
-import { logger } from '../utils/Logger';
 import { makeJob } from './JobFactory';
 import {
   WORKER_STATUS_AVAILABLE,
