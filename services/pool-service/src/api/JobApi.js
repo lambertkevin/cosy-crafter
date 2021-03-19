@@ -1,8 +1,8 @@
 import joi from 'joi';
 import _ from 'lodash';
+import { logger } from '@cosy/logger';
 import * as JobController from '../controllers/JobController';
 import { transcodingQueue } from '../queue';
-import { logger } from '../utils/Logger';
 
 const routes = [
   {
