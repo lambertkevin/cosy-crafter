@@ -1,16 +1,15 @@
 import joi from 'joi';
 import Boom from '@hapi/boom';
+import { logger } from '@cosy/logger';
 import generatePassword from 'generate-password';
-import { responseSchema, creationSchema } from '../schemas/ServiceSchema';
-import * as ServiceController from '../controllers/ServiceController';
-import failValidationHandler from '../utils/FailValidationHandler';
-import axiosErrorBoomifier from '../utils/AxiosErrorBoomifier';
-import { calibrateSchema } from '../utils/SchemasUtils';
-import { logger } from '../utils/Logger';
+import { calibrateSchema } from '@cosy/schema-utils';
 import {
   makeRsaPrivateDecrypter,
   makeRsaPrivateEncrypter
-} from '../utils/RsaUtils';
+} from '@cosy/rsa-utils';
+import failValidationHandler from '@cosy/hapi-fail-validation-handler';
+import { responseSchema, creationSchema } from '../schemas/ServiceSchema';
+import * as ServiceController from '../controllers/ServiceController';
 import {
   checkSignature,
   checkIpWhiteList
@@ -112,8 +111,9 @@ export default {
                 'Service Creation Handler Error: Service creation failed',
                 service
               );
-              return axiosErrorBoomifier(service);
+              return Boom.boomify(service);
             }
+
             const encryptor = makeRsaPrivateEncrypter();
             return encryptor(password);
           } catch (error) {

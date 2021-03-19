@@ -1,8 +1,8 @@
 import _ from 'lodash';
 import Boom from '@hapi/boom';
 import calibrate from 'calibrate';
+import { logger } from '@cosy/logger';
 import Section, { projection, hiddenFields } from '../models/SectionModel';
-import { logger } from '../utils/Logger';
 
 /**
  * Return a list of all sections

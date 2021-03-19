@@ -1,5 +1,6 @@
 import fs from 'fs';
 import ffmpeg from 'fluent-ffmpeg';
+import CustomError from '@cosy/custom-error';
 
 /**
  * Promise returning the duration of an
@@ -14,26 +15,27 @@ export const getMp3Duration = (file) =>
     if (typeof file === 'string') {
       const fileExist = fs.existsSync(file);
       if (!fileExist) {
-        const notFound = new Error("File doesn't exist");
-        notFound.name = 'NotFound';
-
+        const notFound = new CustomError("File doesn't exist", 'NotFound');
         return reject(notFound);
       }
     }
 
     return ffmpeg(file).ffprobe((err, data) => {
       if (err) {
-        const ffmpegError = new Error('FFmpeg failed to anaylize the file');
-        ffmpegError.name = 'FFmpegError';
-        ffmpeg.details = err;
-
+        const ffmpegError = new CustomError(
+          'FFmpeg failed to anaylize the file',
+          'FFmpegError',
+          null,
+          err
+        );
         return reject(ffmpegError);
       }
 
       if (data.format.format_name !== 'mp3') {
-        const fileFormatError = new Error('File format is not suppported');
-        fileFormatError.name = 'FileFormatError';
-
+        const fileFormatError = new CustomError(
+          'File format is not suppported',
+          'FileFormatError'
+        );
         return reject(fileFormatError);
       }
 

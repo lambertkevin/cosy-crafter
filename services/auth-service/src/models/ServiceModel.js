@@ -1,8 +1,8 @@
 import mongoose from 'mongoose';
 import joigoose from 'joigoose';
+import arrayToProjection from '@cosy/array-to-projection';
 import mongooseUniqueValidator from 'mongoose-unique-validator';
 import ServiceSchema, { hiddenProperties } from '../schemas/ServiceSchema';
-import arrayToProjection from '../utils/ArrayToProjection';
 
 export const hiddenFields = [
   ...hiddenProperties,

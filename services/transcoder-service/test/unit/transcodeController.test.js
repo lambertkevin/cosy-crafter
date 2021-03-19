@@ -1,14 +1,12 @@
 import fs from 'fs';
 import path from 'path';
-import axios from 'axios';
-import spies from 'chai-spies';
+import proxyquire from 'proxyquire';
 import objectID from 'bson-objectid';
-import chai, { AssertionError, expect } from 'chai';
+import CustomError from '@cosy/custom-error';
+import { AssertionError, expect } from 'chai';
 import * as TranscodeController from '../../src/controllers/TranscodeController';
 import { getMp3Duration } from '../../src/utils/Mp3Utils';
-import { mockAxios } from '../utils/AxiosUtils';
-
-chai.use(spies);
+import { mockAxiosGet, mockAxiosCreate } from '../utils/AxiosUtils';
 
 const makeFakeSocket = (killJob = false) => ({
   id: 'fake-socket',
@@ -51,7 +49,7 @@ describe('Transcode Controller Unit tests', () => {
             throw e;
           }
 
-          expect(e).to.be.an('error');
+          expect(e).to.be.an('error').and.to.be.an.instanceOf(CustomError);
           expect(e.name).to.be.equal('FileTypeError');
         }
       });
@@ -65,7 +63,7 @@ describe('Transcode Controller Unit tests', () => {
             throw e;
           }
 
-          expect(e).to.be.an('error');
+          expect(e).to.be.an('error').and.to.be.an.instanceOf(CustomError);
           expect(e.name).to.be.equal('FileTypeError');
         }
       });
@@ -73,7 +71,7 @@ describe('Transcode Controller Unit tests', () => {
       it('should fail if file type is unknown', async () => {
         const file = {
           id: 'test-id',
-          type: 'unkown-type'
+          type: 'unknown-type'
         };
 
         try {
@@ -84,8 +82,12 @@ describe('Transcode Controller Unit tests', () => {
             throw e;
           }
 
-          expect(e).to.be.an('error');
+          expect(e).to.be.an('error').and.to.be.an.instanceOf(CustomError);
           expect(e.name).to.be.equal('FileTypeError');
+        } finally {
+          if (fs.existsSync(path.resolve('./', 'cache', `${file.id}`))) {
+            fs.unlinkSync(path.resolve('./', 'cache', `${file.id}`));
+          }
         }
       });
 
@@ -95,23 +97,33 @@ describe('Transcode Controller Unit tests', () => {
           type: 'podcast-part'
         };
 
-        mockAxios(false, true);
+        const mockedTranscodeController = proxyquire(
+          '../../src/controllers/TranscodeController.js',
+          {
+            axios: {
+              get: mockAxiosGet({ getFileSuccess: false })
+            }
+          }
+        );
 
         try {
-          await TranscodeController.getFile(file);
+          await mockedTranscodeController.getFile(file);
           expect.fail('Promise should have failed');
         } catch (e) {
           if (e instanceof AssertionError) {
             throw e;
           }
 
-          expect(e).to.be.an('error');
+          expect(e).to.be.an('error').and.to.be.an.instanceOf(CustomError);
           expect(e.name).to.be.equal('StorageServiceError');
           expect(e.details).to.include({ code: 404 });
           expect(e.details.message).to.be.equal(
             'Error: Request failed with status code 404'
           );
-          chai.spy.restore();
+        } finally {
+          if (fs.existsSync(path.resolve('./', 'cache', `${file.id}`))) {
+            fs.unlinkSync(path.resolve('./', 'cache', `${file.id}`));
+          }
         }
       });
     });
@@ -124,29 +136,32 @@ describe('Transcode Controller Unit tests', () => {
       const testFilePath = path.resolve(`./cache/${file.id}`);
 
       before(async () => {
-        const fileExists = fs.existsSync(testFilePath);
-        if (fileExists) {
+        if (fs.existsSync(testFilePath)) {
           fs.unlinkSync(testFilePath);
         }
       });
 
       after(async () => {
-        const fileExists = fs.existsSync(testFilePath);
-        if (fileExists) {
+        if (fs.existsSync(testFilePath)) {
           fs.unlinkSync(testFilePath);
         }
       });
 
-      it('should succeed getting an existing file and saving it', async () => {
-        chai.spy.on(axios, 'get', () =>
-          fs.promises.readFile(
-            path.resolve('./test/files/10-seconds-of-silence.mp3')
-          )
+      it('should succeed getting a cached file and saving it', async () => {
+        const mockedTranscodeController = proxyquire(
+          '../../src/controllers/TranscodeController.js',
+          {
+            axios: {
+              get: () =>
+                fs.promises.readFile(
+                  path.resolve('./test/files/10-seconds-of-silence.mp3')
+                )
+            }
+          }
         );
 
-        const filepath = await TranscodeController.getFile(file);
+        const filepath = await mockedTranscodeController.getFile(file);
         const fileExists = fs.existsSync(filepath);
-        chai.spy.restore(axios);
 
         expect(fileExists).to.be.equal(true);
       });
@@ -163,7 +178,7 @@ describe('Transcode Controller Unit tests', () => {
           if (e instanceof AssertionError) {
             throw e;
           }
-          expect(e).to.be.an('error');
+          expect(e).to.be.an('error').and.to.be.an.instanceOf(CustomError);
           expect(e.name).to.be.equal('ValidationError');
           expect(e.message).to.be.equal('"files" is required');
         }
@@ -177,7 +192,7 @@ describe('Transcode Controller Unit tests', () => {
           if (e instanceof AssertionError) {
             throw e;
           }
-          expect(e).to.be.an('error');
+          expect(e).to.be.an('error').and.to.be.an.instanceOf(CustomError);
           expect(e.name).to.be.equal('ValidationError');
           expect(e.message).to.be.equal('"files" must be an array');
         }
@@ -191,7 +206,7 @@ describe('Transcode Controller Unit tests', () => {
           if (e instanceof AssertionError) {
             throw e;
           }
-          expect(e).to.be.an('error');
+          expect(e).to.be.an('error').and.to.be.an.instanceOf(CustomError);
           expect(e.name).to.be.equal('ValidationError');
           expect(e.message).to.be.equal('"files[0].id" is required');
         }
@@ -207,7 +222,7 @@ describe('Transcode Controller Unit tests', () => {
           if (e instanceof AssertionError) {
             throw e;
           }
-          expect(e).to.be.an('error');
+          expect(e).to.be.an('error').and.to.be.an.instanceOf(CustomError);
           expect(e.name).to.be.equal('ValidationError');
           expect(e.message).to.be.equal('"files[0].path" is required');
         }
@@ -223,7 +238,7 @@ describe('Transcode Controller Unit tests', () => {
           if (e instanceof AssertionError) {
             throw e;
           }
-          expect(e).to.be.an('error');
+          expect(e).to.be.an('error').and.to.be.an.instanceOf(CustomError);
           expect(e.name).to.be.equal('ValidationError');
           expect(e.message).to.be.equal('"jobId" is required');
         }
@@ -246,7 +261,7 @@ describe('Transcode Controller Unit tests', () => {
           if (e instanceof AssertionError) {
             throw e;
           }
-          expect(e).to.be.an('error');
+          expect(e).to.be.an('error').and.to.be.an.instanceOf(CustomError);
           expect(e.name).to.be.equal('ValidationError');
           expect(e.message).to.be.equal('"jobId" must be a string');
         }
@@ -269,7 +284,7 @@ describe('Transcode Controller Unit tests', () => {
           if (e instanceof AssertionError) {
             throw e;
           }
-          expect(e).to.be.an('error');
+          expect(e).to.be.an('error').and.to.be.an.instanceOf(CustomError);
           expect(e.name).to.be.equal('ValidationError');
           expect(e.message).to.be.equal('"jobId" must be a valid GUID');
         }
@@ -286,7 +301,7 @@ describe('Transcode Controller Unit tests', () => {
           if (e instanceof AssertionError) {
             throw e;
           }
-          expect(e).to.be.an('error');
+          expect(e).to.be.an('error').and.to.be.an.instanceOf(CustomError);
           expect(e.name).to.be.equal('ValidationError');
           expect(e.message).to.be.equal('"socket" is required');
         }
@@ -380,7 +395,7 @@ describe('Transcode Controller Unit tests', () => {
             throw e;
           }
 
-          expect(e).to.be.an('error');
+          expect(e).to.be.an('error').and.to.be.an.instanceOf(CustomError);
           expect(e.name).to.be.equal('FilePathError');
         }
       });
@@ -394,7 +409,7 @@ describe('Transcode Controller Unit tests', () => {
             throw e;
           }
 
-          expect(e).to.be.an('error');
+          expect(e).to.be.an('error').and.to.be.an.instanceOf(CustomError);
           expect(e.name).to.be.equal('FilePathError');
         }
       });
@@ -408,7 +423,7 @@ describe('Transcode Controller Unit tests', () => {
             throw e;
           }
 
-          expect(e).to.be.an('error');
+          expect(e).to.be.an('error').and.to.be.an.instanceOf(CustomError);
           expect(e.name).to.be.equal('FileNotFound');
         }
       });
@@ -424,7 +439,7 @@ describe('Transcode Controller Unit tests', () => {
             throw e;
           }
 
-          expect(e).to.be.an('error');
+          expect(e).to.be.an('error').and.to.be.an.instanceOf(CustomError);
           expect(e.name).to.be.equal('JobIdError');
         }
       });
@@ -440,16 +455,23 @@ describe('Transcode Controller Unit tests', () => {
             throw e;
           }
 
-          expect(e).to.be.an('error');
+          expect(e).to.be.an('error').and.to.be.an.instanceOf(CustomError);
           expect(e.name).to.be.equal('JobIdError');
         }
       });
 
       it('should fail if storage service returns a 404', async () => {
-        mockAxios(true, false);
+        const mockedTranscodeController = proxyquire(
+          '../../src/controllers/TranscodeController.js',
+          {
+            '@cosy/axios-utils': {
+              makeAxiosInstance: mockAxiosCreate({ uploadFileSuccess: false })
+            }
+          }
+        );
 
         try {
-          await TranscodeController.upload(
+          await mockedTranscodeController.upload(
             path.resolve('./test/files/'),
             'test-id'
           );
@@ -458,28 +480,28 @@ describe('Transcode Controller Unit tests', () => {
           if (e instanceof AssertionError) {
             throw e;
           }
-
-          expect(e).to.be.an('error');
+          expect(e).to.be.an('error').and.to.be.an.instanceOf(CustomError);
           expect(e.name).to.be.equal('UploadServiceError');
           expect(e.details.code).to.be.equal(404);
           expect(e.details.isAxiosError).to.be.equal(true);
-        } finally {
-          chai.spy.restore();
         }
       });
 
       it('should fail if storage service returns an empty savedFile', async () => {
-        chai.spy.on(axios, 'create', () => ({
-          interceptors: {
-            request: {
-              use: () => {}
+        const mockedTranscodeController = proxyquire(
+          '../../src/controllers/TranscodeController.js',
+          {
+            '@cosy/axios-utils': {
+              makeAxiosInstance: mockAxiosCreate({
+                uploadFileSuccess: true,
+                savedFileEmpty: true
+              })
             }
-          },
-          post: () => Promise.resolve({ savedFile: null })
-        }));
+          }
+        );
 
         try {
-          await TranscodeController.upload(
+          await mockedTranscodeController.upload(
             path.resolve('./test/files/'),
             'test-id'
           );
@@ -489,22 +511,25 @@ describe('Transcode Controller Unit tests', () => {
             throw e;
           }
 
-          expect(e).to.be.an('error');
+          expect(e).to.be.an('error').and.to.be.an.instanceOf(CustomError);
           expect(e.name).to.be.equal('SaveError');
-        } finally {
-          chai.spy.restore();
         }
       });
     });
 
     describe('Success', () => {
       it('should succeed uploading a craft', async () => {
-        mockAxios(false, true, false);
+        const mockedTranscodeController = proxyquire(
+          '../../src/controllers/TranscodeController.js',
+          {
+            '@cosy/axios-utils': {
+              makeAxiosInstance: mockAxiosCreate({ uploadFileSuccess: true })
+            }
+          }
+        );
 
-        return TranscodeController.upload(
-          path.resolve('./test/files/'),
-          'test-id'
-        )
+        return mockedTranscodeController
+          .upload(path.resolve('./test/files/'), 'test-id')
           .then((response) => {
             expect(response).to.deep.include({
               filename: 'integration-craft-filename.mp3',
@@ -512,9 +537,6 @@ describe('Transcode Controller Unit tests', () => {
               storageType: 'local',
               publicLink: undefined
             });
-          })
-          .finally(() => {
-            chai.spy.restore();
           });
       });
     });
@@ -531,7 +553,7 @@ describe('Transcode Controller Unit tests', () => {
             throw e;
           }
 
-          expect(e).to.be.an('error');
+          expect(e).to.be.an('error').and.to.be.an.instanceOf(CustomError);
           expect(e.name).to.be.equal('PayloadError');
           expect(e.message).to.be.equal('Payload invalid: "files" is required');
         }
@@ -568,26 +590,31 @@ describe('Transcode Controller Unit tests', () => {
           }
         ];
 
-        mockAxios(false, false);
-
-        return TranscodeController.createTranscodeJob(
+        const mockedTranscodeController = proxyquire(
+          '../../src/controllers/TranscodeController.js',
           {
-            files,
-            name: 'test-name',
-            jobId: 'C56a418065aa426ca9455fd21deC0538'
-          },
-          fakeAck,
-          fakeSocket
-        )
+            axios: {
+              get: mockAxiosGet({ getFileSuccess: false })
+            }
+          }
+        );
+
+        return mockedTranscodeController
+          .createTranscodeJob(
+            {
+              files,
+              name: 'test-name',
+              jobId: 'C56a418065aa426ca9455fd21deC0538'
+            },
+            fakeAck,
+            fakeSocket
+          )
           .then(() => {
             expect(response.value).to.deep.include({
               statusCode: 424,
               errorName: 'StorageServiceError',
               message: 'Failed to fetch a file from storage service'
             });
-          })
-          .finally(() => {
-            chai.spy.restore();
           });
       });
 
@@ -613,17 +640,28 @@ describe('Transcode Controller Unit tests', () => {
           }
         ];
 
-        mockAxios(true, false);
-
-        return TranscodeController.createTranscodeJob(
+        const mockedTranscodeController = proxyquire(
+          '../../src/controllers/TranscodeController.js',
           {
-            files,
-            name: 'test-name',
-            jobId: 'C56a418065aa426ca9455fd21deC0538'
-          },
-          fakeAck,
-          fakeSocket
-        )
+            axios: {
+              get: mockAxiosGet({ getFileSuccess: true })
+            },
+            '@cosy/axios-utils': {
+              makeAxiosInstance: mockAxiosCreate({ uploadFileSuccess: false })
+            }
+          }
+        );
+
+        return mockedTranscodeController
+          .createTranscodeJob(
+            {
+              files,
+              name: 'test-name',
+              jobId: 'C56a418065aa426ca9455fd21deC0538'
+            },
+            fakeAck,
+            fakeSocket
+          )
           .then(() => {
             expect(response.value).to.deep.include({
               statusCode: 417,
@@ -632,9 +670,12 @@ describe('Transcode Controller Unit tests', () => {
             });
           })
           .finally(() => {
-            chai.spy.restore();
-            fs.unlinkSync(path.resolve(`./cache/${files[0].id}`));
-            fs.unlinkSync(path.resolve(`./cache/${files[1].id}`));
+            if (fs.existsSync(path.resolve(`./cache/${files[0].id}`))) {
+              fs.unlinkSync(path.resolve(`./cache/${files[0].id}`));
+            }
+            if (fs.existsSync(path.resolve(`./cache/${files[1].id}`))) {
+              fs.unlinkSync(path.resolve(`./cache/${files[1].id}`));
+            }
           });
       });
     });
@@ -662,17 +703,31 @@ describe('Transcode Controller Unit tests', () => {
           }
         ];
 
-        mockAxios(true, true, true);
-
-        return TranscodeController.createTranscodeJob(
+        const mockedTranscodeController = proxyquire(
+          '../../src/controllers/TranscodeController.js',
           {
-            files,
-            name: 'test-name',
-            jobId: 'C56a418065aa426ca9455fd21deC0538'
-          },
-          fakeAck,
-          fakeSocket
-        )
+            axios: {
+              get: mockAxiosGet({ getFileSuccess: true })
+            },
+            '@cosy/axios-utils': {
+              makeAxiosInstance: mockAxiosCreate({
+                uploadFileSuccess: true,
+                saveCraftSuccess: true
+              })
+            }
+          }
+        );
+
+        return mockedTranscodeController
+          .createTranscodeJob(
+            {
+              files,
+              name: 'test-name',
+              jobId: 'C56a418065aa426ca9455fd21deC0538'
+            },
+            fakeAck,
+            fakeSocket
+          )
           .then(() => {
             expect(response.value).to.deep.include({
               statusCode: 201,
@@ -682,9 +737,12 @@ describe('Transcode Controller Unit tests', () => {
             });
           })
           .finally(() => {
-            chai.spy.restore();
-            fs.unlinkSync(path.resolve(`./cache/${files[0].id}`));
-            fs.unlinkSync(path.resolve(`./cache/${files[1].id}`));
+            if (fs.existsSync(path.resolve(`./cache/${files[0].id}`))) {
+              fs.unlinkSync(path.resolve(`./cache/${files[0].id}`));
+            }
+            if (fs.existsSync(path.resolve(`./cache/${files[1].id}`))) {
+              fs.unlinkSync(path.resolve(`./cache/${files[1].id}`));
+            }
           });
       });
     });

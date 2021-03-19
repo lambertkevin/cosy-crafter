@@ -2,10 +2,10 @@ import _ from 'lodash';
 import Hapi from '@hapi/hapi';
 import Inert from '@hapi/inert';
 import Vision from '@hapi/vision';
-import HapiSwagger from 'hapi-swagger';
 import HapiJWT from 'hapi-auth-jwt2';
+import { logger } from '@cosy/logger';
+import HapiSwagger from 'hapi-swagger';
 import { nodeConfig, swaggerConfig } from './config';
-import { logger } from './utils/Logger';
 import { auth } from './auth';
 import apis from './api';
 

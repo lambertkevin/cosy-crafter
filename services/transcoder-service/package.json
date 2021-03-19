@@ -4,7 +4,7 @@
   "description": "Service Transcoder",
   "main": "index.js",
   "scripts": {
-    "start": "babel-node ./src/index.js",
+    "start": "babel-node --ignore='../../**/node_modules' ./src/index.js",
     "dev": "nodemon --exec npm start -e js",
     "lint": "eslint ./src",
     "debug": "npm run start --inspect",
@@ -18,11 +18,13 @@
     "@babel/core": "^7.11.4",
     "@babel/node": "^7.10.5",
     "@babel/preset-env": "^7.11.0",
+    "@cosy/axios-utils": "file:../../shared/@cosy/axios-utils",
+    "@cosy/custom-error": "file:../../shared/@cosy/custom-error",
+    "@cosy/logger": "file:../../shared/@cosy/logger",
+    "@cosy/rsa-utils": "file:../../shared/@cosy/rsa-utils",
     "@hapi/boom": "^9.1.0",
-    "@sentry/integrations": "^5.22.3",
     "axios": "^0.19.2",
     "dotenv": "^8.2.0",
-    "fast-safe-stringify": "^2.0.7",
     "fluent-ffmpeg": "^2.1.2",
     "form-data": "^3.0.0",
     "joi": "^17.2.1",
@@ -30,24 +32,21 @@
     "lodash": "^4.17.20",
     "node-rsa": "^1.1.1",
     "socket.io-client": "^3.1.1",
-    "triple-beam": "^1.3.0",
-    "uuid": "^8.3.0",
-    "winston": "^3.3.3",
-    "winston-daily-rotate-file": "^4.5.0",
-    "winston-transport-sentry-node": "^0.6.0"
+    "uuid": "^8.3.0"
   },
   "devDependencies": {
     "@babel/polyfill": "^7.12.1",
+    "@babel/register": "^7.13.8",
     "babel-eslint": "^10.1.0",
     "bson-objectid": "^2.0.1",
     "chai": "^4.3.3",
-    "chai-spies": "^1.0.0",
     "eslint": "^7.7.0",
     "eslint-config-airbnb-base": "^14.2.0",
     "eslint-config-prettier": "^6.11.0",
     "eslint-plugin-import": "^2.22.0",
     "mocha": "^8.3.1",
     "nodemon": "^2.0.4",
-    "prettier": "^2.0.5"
+    "prettier": "^2.0.5",
+    "proxyquire": "^2.1.3"
   }
 }

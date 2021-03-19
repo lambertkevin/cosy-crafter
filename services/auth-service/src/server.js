@@ -2,9 +2,9 @@ import Hapi from '@hapi/hapi';
 import Inert from '@hapi/inert';
 import mongoose from 'mongoose';
 import Vision from '@hapi/vision';
+import { logger } from '@cosy/logger';
 import HapiSwagger from 'hapi-swagger';
 import { nodeConfig, swaggerConfig } from './config';
-import { logger } from './utils/Logger';
 import db from './database';
 import apis from './api';
 

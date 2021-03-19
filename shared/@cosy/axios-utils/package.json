@@ -1,0 +1,14 @@
+{
+  "name": "@cosy/axios-utils",
+  "version": "1.0.0",
+  "description": "Axios utitilies made for Cosy-Crafter",
+  "main": "index.js",
+  "private": "true",
+  "author": "Kévin Lambert",
+  "license": "MIT",
+  "dependencies": {
+    "@hapi/boom": "^9.1.2",
+    "axios": "^0.21.1",
+    "jsonwebtoken": "^8.5.1"
+  }
+}
