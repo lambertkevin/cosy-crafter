@@ -19,7 +19,7 @@ export default async () => {
       {
         plugin: jsonApiStandardize,
         options: {
-          ignorePlugins: 'hapi-swagger'
+          ignorePlugins: ['hapi-swagger']
         }
       },
       {
