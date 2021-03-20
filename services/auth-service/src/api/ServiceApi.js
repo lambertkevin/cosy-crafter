@@ -49,22 +49,21 @@ export default {
      * Get one service
      *
      * @method GET
-     * @param {String} identifier
+     * @param {String} id
      */
     server.route({
       method: 'GET',
-      path: '/{identifier}',
+      path: '/{id}',
       options: {
         // @TODO User Auth needed here
-        handler: (request) =>
-          ServiceController.findOne(request.params.identifier),
+        handler: (request) => ServiceController.findOne(request.params.id),
         tags: ['api', 'services'],
         description: 'Get a Service',
         notes: 'Returns a specific service',
         validate: {
           failAction: failValidationHandler,
           params: joi.object({
-            identifier: joi.string().required()
+            id: joi.string().required()
           })
         },
         plugins: {
@@ -91,7 +90,7 @@ export default {
       options: {
         // @TODO User Auth might be possible instead of whitelist and sign
         pre: [checkIpWhiteList, checkSignature],
-        handler: async (request) => {
+        handler: async (request, h) => {
           try {
             const password = generatePassword.generate({
               length: 64,
@@ -115,7 +114,7 @@ export default {
             }
 
             const encryptor = makeRsaPrivateEncrypter();
-            return encryptor(password);
+            return h.response(encryptor(password)).code(201);
           } catch (error) {
             logger.error('Service Creation Handler Error', error);
             return Boom.boomify(error);
@@ -134,7 +133,7 @@ export default {
         plugins: {
           'hapi-swagger': {
             responses: {
-              200: {
+              201: {
                 schema: calibrateSchema(responseSchema)
               }
             }
@@ -153,14 +152,19 @@ export default {
       method: 'DELETE',
       path: '/',
       options: {
-        // @TODO User Auth needed here
+        // @WARNING User Auth needed here
         pre: [checkIpWhiteList],
-        handler: (request) =>
-          ServiceController.remove(request.payload.identifiers),
+        handler: async (request, h) => {
+          const deletion = await ServiceController.remove(request.payload.ids);
+          if (deletion instanceof Error) {
+            return deletion;
+          }
+          return h.response(deletion).code(202);
+        },
         validate: {
           failAction: failValidationHandler,
           payload: joi.object({
-            identifiers: joi
+            ids: joi
               .array()
               .items(joi.string().required().example('podcast-service-john'))
               .required()
@@ -172,7 +176,7 @@ export default {
         plugins: {
           'hapi-swagger': {
             responses: {
-              200: {
+              202: {
                 schema: calibrateSchema(
                   joi.object({
                     deleted: joi
