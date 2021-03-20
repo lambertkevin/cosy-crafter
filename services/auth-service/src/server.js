@@ -17,10 +17,15 @@ export default async () => {
       Inert,
       Vision,
       {
+        plugin: jsonApiStandardize,
+        options: {
+          ignorePlugins: 'hapi-swagger'
+        }
+      },
+      {
         plugin: HapiSwagger,
         options: swaggerConfig
-      },
-      { plugin: jsonApiStandardize }
+      }
     ]);
     await server.register(apis);
     await server.start();
@@ -32,6 +37,7 @@ export default async () => {
 
     return server;
   } catch (err) {
+    console.error(err);
     /** @WARNING Change this to fatal when feature available in winston + sentry */
     logger.error('Fatal Error while starting the service', err);
     return process.exit(1);
