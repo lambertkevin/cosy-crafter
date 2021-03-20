@@ -1,6 +1,7 @@
 import axios from "axios";
 import Boom from "@hapi/boom";
 import jwt from "jsonwebtoken";
+import CustomError from "@cosy/custom-error";
 
 /**
  * Turn an Axios error as a Boom error
@@ -17,7 +18,7 @@ export const axiosErrorBoomifier = (error) => {
     }
     return Boom.badRequest(error.message);
   }
-  return Boom.boomify(error);
+  return Boom.boomify(error, error);
 };
 
 /**
@@ -32,8 +33,14 @@ export const axiosErrorBoomifier = (error) => {
  * @return {Promise}
  */
 export const makeAxiosInstance = (refreshFunc) => {
-  const axiosInstance = axios.create();
+  if (typeof refreshFunc !== "function") {
+    throw new CustomError(
+      "RefreshFunc must be a function returning a Promise",
+      "RefreshFuncInvalidError"
+    );
+  }
 
+  const axiosInstance = axios.create();
   /**
    * Before each request, we'll add a possible retry if the
    * request need a refreshed token
