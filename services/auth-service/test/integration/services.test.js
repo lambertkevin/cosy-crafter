@@ -327,7 +327,7 @@ describe('Services API tests', () => {
         });
 
         it('fail refreshing without accessToken. HTTP 400', async () => {
-          const { data } = await ServiceController.login(
+          const service = await ServiceController.login(
             {
               identifier: '2e2-service-login',
               key: '123'
@@ -340,7 +340,7 @@ describe('Services API tests', () => {
               method: 'POST',
               url: '/services/refresh',
               payload: {
-                refreshToken: data.refreshToken
+                refreshToken: service.refreshToken
               }
             })
             .then((response) => {
@@ -355,7 +355,7 @@ describe('Services API tests', () => {
         });
 
         it('fail refreshing without refreshToken. HTTP 400', async () => {
-          const { data } = await ServiceController.login(
+          const service = await ServiceController.login(
             {
               identifier: '2e2-service-login',
               key: '123'
@@ -368,7 +368,7 @@ describe('Services API tests', () => {
               method: 'POST',
               url: '/services/refresh',
               payload: {
-                accessToken: data.accessToken
+                accessToken: service.accessToken
               }
             })
             .then((response) => {
@@ -399,8 +399,8 @@ describe('Services API tests', () => {
           })
           .then((response) => {
             expect(response).to.be.a('object');
-            expect(response).to.include({ statusCode: 200 });
-            expect(response?.result)
+            expect(response).to.include({ statusCode: 201 });
+            expect(response?.result?.data)
               .to.be.a('string')
               .and.to.have.lengthOf(684);
           });
@@ -429,7 +429,7 @@ describe('Services API tests', () => {
       });
 
       it("should succeed refreshing service's tokens", async () => {
-        const { data } = await ServiceController.login(
+        const service = await ServiceController.login(
           {
             identifier: '2e2-service-login',
             key: '123'
@@ -442,8 +442,8 @@ describe('Services API tests', () => {
             method: 'POST',
             url: '/services/refresh',
             payload: {
-              accessToken: data.accessToken,
-              refreshToken: data.refreshToken
+              accessToken: service.accessToken,
+              refreshToken: service.refreshToken
             }
           })
           .then((response) => {
@@ -477,7 +477,7 @@ describe('Services API tests', () => {
             method: 'DELETE',
             url: `/services`,
             payload: {
-              identifiers: [service?.data?.identifier]
+              identifiers: [service?._id]
             },
             headers: {
               // @TODO Add user login when feature available
@@ -501,7 +501,7 @@ describe('Services API tests', () => {
             method: 'DELETE',
             url: `/services`,
             payload: {
-              identifiers: [service?.data?.identifier]
+              ids: [service?._id?.toString()]
             },
             remoteAddress: '1.2.3.4'
           })
@@ -512,6 +512,29 @@ describe('Services API tests', () => {
               statusCode: 401,
               error: 'Unauthorized',
               message: 'Remote not authorized'
+            });
+          });
+      });
+    });
+
+    describe('Success', () => {
+      it('should succeed to delete a service', () => {
+        return server
+          .inject({
+            method: 'DELETE',
+            url: `/services`,
+            payload: {
+              ids: [service?._id?.toString()]
+            }
+          })
+          .then((response) => {
+            expect(response).to.be.a('object');
+            expect(response).to.include({ statusCode: 202 });
+            expect(response.result).to.deep.include({
+              statusCode: 202,
+              data: {
+                deleted: [service._id.toString()]
+              }
             });
           });
       });
