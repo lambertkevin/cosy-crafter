@@ -2,8 +2,9 @@
 node_modules
 .initialized
 .credentials
+.nyc_output
 
-services/*/logs/*
+logs
 
 #auth
 .keys
