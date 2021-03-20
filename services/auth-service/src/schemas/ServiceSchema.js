@@ -22,6 +22,9 @@ export const validationSchema = creationSchema.append({
 });
 
 export const responseSchema = validationSchema
+  .append({
+    _id: joi.string().length(24).required().example('5f3ec14cb2d104269d3c3282')
+  })
   .fork(hiddenProperties, (x) =>
     x.optional().description('Only if not sanitized')
   )
