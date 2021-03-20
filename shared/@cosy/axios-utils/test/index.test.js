@@ -148,6 +148,12 @@ describe("Axios utils unit tests", () => {
         expect(instance).to.have.interface(AxiosInstanceInterface);
       });
 
+      it("should succeed make a request", () => {
+        const mockRefresh = () => {};
+        const instance = makeAxiosInstance(mockRefresh);
+        return instance.get("http://google.com");
+      });
+
       it("should not throw if refreshFunc is not async", async () => {
         let triggered = false;
         const fakeToken = jwt.sign({}, process.env.SERVICE_JWT_SECRET, {
