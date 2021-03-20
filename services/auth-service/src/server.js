@@ -4,6 +4,7 @@ import mongoose from 'mongoose';
 import Vision from '@hapi/vision';
 import { logger } from '@cosy/logger';
 import HapiSwagger from 'hapi-swagger';
+import jsonApiStandardize from '@cosy/json-api-standardize';
 import { nodeConfig, swaggerConfig } from './config';
 import db from './database';
 import apis from './api';
@@ -18,7 +19,8 @@ export default async () => {
       {
         plugin: HapiSwagger,
         options: swaggerConfig
-      }
+      },
+      { plugin: jsonApiStandardize }
     ]);
     await server.register(apis);
     await server.start();
