@@ -23,7 +23,7 @@ export const register = async () => {
   try {
     const publicEncrypter = makeRsaPublicEncrypter('auth');
     const publicDecrypter = makeRsaPublicDecrypter('auth');
-    const { data: encryptedKey } = await axios.post(
+    const { data: response } = await axios.post(
       `http://${AUTH_SERVICE_NAME}:${AUTH_SERVICE_PORT}/services`,
       {
         identifier
@@ -34,6 +34,7 @@ export const register = async () => {
         }
       }
     );
+    const { data: encryptedKey } = response;
     const key = publicDecrypter(encryptedKey);
 
     if (encryptedKey) {
