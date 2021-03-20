@@ -2,7 +2,7 @@ import joi from 'joi';
 import Boom from '@hapi/boom';
 import { logger } from '@cosy/logger';
 import generatePassword from 'generate-password';
-import { calibrateSchema } from '@cosy/schema-utils';
+import { standardizeSchema } from '@cosy/schema-utils';
 import {
   makeRsaPrivateDecrypter,
   makeRsaPrivateEncrypter
@@ -37,7 +37,7 @@ export default {
           'hapi-swagger': {
             responses: {
               200: {
-                schema: calibrateSchema(responseSchema)
+                schema: standardizeSchema(responseSchema)
               }
             }
           }
@@ -70,7 +70,7 @@ export default {
           'hapi-swagger': {
             responses: {
               200: {
-                schema: calibrateSchema(responseSchema, false)
+                schema: standardizeSchema(responseSchema, false)
               }
             }
           }
@@ -134,7 +134,7 @@ export default {
           'hapi-swagger': {
             responses: {
               201: {
-                schema: calibrateSchema(responseSchema)
+                schema: standardizeSchema(responseSchema)
               }
             }
           }
@@ -177,7 +177,7 @@ export default {
           'hapi-swagger': {
             responses: {
               202: {
-                schema: calibrateSchema(
+                schema: standardizeSchema(
                   joi.object({
                     deleted: joi
                       .array()
@@ -246,7 +246,7 @@ export default {
           'hapi-swagger': {
             responses: {
               200: {
-                schema: calibrateSchema(
+                schema: standardizeSchema(
                   joi.object({
                     accessToken: joi
                       .string()
@@ -292,7 +292,7 @@ export default {
           'hapi-swagger': {
             responses: {
               200: {
-                schema: calibrateSchema(
+                schema: standardizeSchema(
                   joi.object({
                     accessToken: joi
                       .string()

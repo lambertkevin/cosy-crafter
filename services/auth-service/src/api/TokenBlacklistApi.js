@@ -1,5 +1,5 @@
 import joi from 'joi';
-import { calibrateSchema } from '@cosy/schema-utils';
+import { standardizeSchema } from '@cosy/schema-utils';
 import failValidationHandler from '@cosy/hapi-fail-validation-handler';
 import * as TokenBlacklistController from '../controllers/TokenBlacklistController';
 import {
@@ -28,7 +28,7 @@ export default {
           'hapi-swagger': {
             responses: {
               200: {
-                schema: calibrateSchema(responseSchema)
+                schema: standardizeSchema(responseSchema)
               }
             }
           }
@@ -66,7 +66,7 @@ export default {
           'hapi-swagger': {
             responses: {
               200: {
-                schema: calibrateSchema(responseSchema, false)
+                schema: standardizeSchema(responseSchema, false)
               }
             }
           }
@@ -97,7 +97,7 @@ export default {
           'hapi-swagger': {
             responses: {
               200: {
-                schema: calibrateSchema(responseSchema)
+                schema: standardizeSchema(responseSchema)
               }
             }
           }
@@ -139,7 +139,7 @@ export default {
           'hapi-swagger': {
             responses: {
               200: {
-                schema: calibrateSchema(
+                schema: standardizeSchema(
                   joi.object({
                     deleted: joi
                       .array()
@@ -192,7 +192,7 @@ export default {
           'hapi-swagger': {
             responses: {
               200: {
-                schema: calibrateSchema(
+                schema: standardizeSchema(
                   joi.object({
                     deleted: joi
                       .array()
