@@ -156,7 +156,7 @@ describe('Sections API V1 tests', () => {
         return server
           .inject({
             method: 'PATCH',
-            url: `/v1/sections/${sectionToUpdate?.data?._id?.toString()}`,
+            url: `/v1/sections/${sectionToUpdate?._id?.toString()}`,
             payload: {
               name: 'integration-section-to-update-2'
             },
@@ -208,7 +208,7 @@ describe('Sections API V1 tests', () => {
         return server
           .inject({
             method: 'DELETE',
-            url: `/v1/sections/${sectionToDelete?.data?._id?.toString()}`,
+            url: `/v1/sections/${sectionToDelete?._id?.toString()}`,
             headers: {
               authorization: accessToken
             }
@@ -220,7 +220,7 @@ describe('Sections API V1 tests', () => {
               statusCode: 200
             });
             expect(response?.result?.data?.deleted[0]).to.equal(
-              sectionToDelete?.data?._id.toString()
+              sectionToDelete?._id.toString()
             );
           });
       });
