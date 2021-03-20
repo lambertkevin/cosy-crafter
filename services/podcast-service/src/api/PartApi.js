@@ -1,5 +1,5 @@
 import joi from 'joi';
-import { calibrateSchema, schemaKeys } from '@cosy/schema-utils';
+import { standardizeSchema, schemaKeys } from '@cosy/schema-utils';
 import failValidationHandler from '@cosy/hapi-fail-validation-handler';
 import { creationSchema, responseSchema } from '../schemas/PartSchema';
 import * as partController from '../controllers/PartController';
@@ -36,7 +36,7 @@ export default {
           'hapi-swagger': {
             responses: {
               200: {
-                schema: calibrateSchema(responseSchema)
+                schema: standardizeSchema(responseSchema)
               }
             }
           }
@@ -81,7 +81,7 @@ export default {
           'hapi-swagger': {
             responses: {
               200: {
-                schema: calibrateSchema(responseSchema, false)
+                schema: standardizeSchema(responseSchema, false)
               }
             }
           }
@@ -129,7 +129,7 @@ export default {
           'hapi-swagger': {
             responses: {
               200: {
-                schema: calibrateSchema(responseSchema)
+                schema: standardizeSchema(responseSchema)
               },
               400: {
                 description:
@@ -190,7 +190,7 @@ export default {
           'hapi-swagger': {
             responses: {
               200: {
-                schema: calibrateSchema(responseSchema)
+                schema: standardizeSchema(responseSchema)
               }
             },
             payloadType: 'form'
@@ -240,7 +240,7 @@ export default {
           'hapi-swagger': {
             responses: {
               200: {
-                schema: calibrateSchema(
+                schema: standardizeSchema(
                   joi.object({
                     deleted: joi
                       .array()
@@ -294,7 +294,7 @@ export default {
           'hapi-swagger': {
             responses: {
               200: {
-                schema: calibrateSchema(
+                schema: standardizeSchema(
                   joi.object({
                     deleted: joi
                       .array()

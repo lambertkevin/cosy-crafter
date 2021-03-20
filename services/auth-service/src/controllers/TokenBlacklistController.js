@@ -1,6 +1,5 @@
 import _ from 'lodash';
 import Boom from '@hapi/boom';
-import calibrate from 'calibrate';
 import { logger } from '@cosy/logger';
 import Token, { projection, hiddenFields } from '../models/TokenBlaclistModel';
 
@@ -14,7 +13,6 @@ import Token, { projection, hiddenFields } from '../models/TokenBlaclistModel';
 export const find = (sanitized = true) =>
   Token.find({}, sanitized ? projection : {})
     .exec()
-    .then(calibrate.response)
     .catch((error) => {
       logger.error('Token Find Error', error);
       return Boom.boomify(error);
@@ -31,7 +29,6 @@ export const find = (sanitized = true) =>
 export const findOne = (id, sanitized = true) =>
   Token.findOne({ _id: id }, sanitized ? projection : {})
     .exec()
-    .then(calibrate.response)
     .catch((error) => {
       logger.error('Token FindOne Error', error);
       return Boom.boomify(error);
@@ -48,7 +45,6 @@ export const findOne = (id, sanitized = true) =>
 export const findOneByJwtId = (jwtid, sanitized = true) =>
   Token.findOne({ jwtid }, sanitized ? projection : {})
     .exec()
-    .then(calibrate.response)
     .catch((error) => {
       logger.error('Token FindOneByJwtId Error', error);
       return Boom.boomify(error);
@@ -67,9 +63,7 @@ export const findOneByJwtId = (jwtid, sanitized = true) =>
 export const create = ({ jwtid, type }, sanitized = true) =>
   Token.create({ jwtid, type })
     .then((token) =>
-      calibrate.response(
-        sanitized ? _.omit(token.toObject(), hiddenFields) : token
-      )
+      sanitized ? _.omit(token.toObject(), hiddenFields) : token
     )
     .catch((error) => {
       if (error.name === 'ValidationError') {
@@ -137,9 +131,9 @@ export const remove = (ids) =>
         return Boom.notFound();
       }
 
-      return calibrate.response({
+      return {
         deleted: ids
-      });
+      };
     })
     .catch((error) => {
       logger.error('Token Remove Error', error);

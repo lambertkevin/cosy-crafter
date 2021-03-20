@@ -42,7 +42,7 @@ describe('Podcasts API V1 tests', () => {
           .then((response) => {
             expect(response).to.be.a('object');
             expect(response).to.include({ statusCode: 401 });
-            expect(response.result).to.include({
+            expect(response?.result).to.include({
               statusCode: 401,
               error: 'Unauthorized',
               message: 'Missing authentication'
@@ -66,7 +66,7 @@ describe('Podcasts API V1 tests', () => {
             .then((response) => {
               expect(response).to.be.a('object');
               expect(response).to.include({ statusCode: 400 });
-              expect(response.result).to.include({
+              expect(response?.result).to.include({
                 statusCode: 400,
                 error: 'Bad Request',
                 message: '"name" is required'
@@ -89,7 +89,7 @@ describe('Podcasts API V1 tests', () => {
             .then((response) => {
               expect(response).to.be.a('object');
               expect(response).to.include({ statusCode: 400 });
-              expect(response.result).to.include({
+              expect(response?.result).to.include({
                 statusCode: 400,
                 error: 'Bad Request',
                 message: '"edition" is required'
@@ -113,7 +113,7 @@ describe('Podcasts API V1 tests', () => {
             .then((response) => {
               expect(response).to.be.a('object');
               expect(response).to.include({ statusCode: 400 });
-              expect(response.result).to.include({
+              expect(response?.result).to.include({
                 statusCode: 400,
                 error: 'Bad Request',
                 message: '"edition" must be a positive number'
@@ -139,7 +139,7 @@ describe('Podcasts API V1 tests', () => {
             .then((response) => {
               expect(response).to.be.a('object');
               expect(response).to.include({ statusCode: 400 });
-              expect(response.result).to.include({
+              expect(response?.result).to.include({
                 statusCode: 400,
                 error: 'Bad Request',
                 message:
@@ -167,10 +167,10 @@ describe('Podcasts API V1 tests', () => {
           .then((response) => {
             expect(response).to.be.a('object');
             expect(response).to.include({ statusCode: 200 });
-            expect(response.result).to.include({
+            expect(response?.result).to.include({
               statusCode: 200
             });
-            expect(response.result.data).to.include({
+            expect(response?.result?.data).to.include({
               name: 'integration-test-podcast'
             });
           });
@@ -189,7 +189,7 @@ describe('Podcasts API V1 tests', () => {
           .then((response) => {
             expect(response).to.be.a('object');
             expect(response).to.include({ statusCode: 401 });
-            expect(response.result).to.include({
+            expect(response?.result).to.include({
               statusCode: 401,
               error: 'Unauthorized',
               message: 'Missing authentication'
@@ -208,7 +208,7 @@ describe('Podcasts API V1 tests', () => {
         return server
           .inject({
             method: 'PATCH',
-            url: `/v1/podcasts/${podcastToUpdate?.data?._id?.toString()}`,
+            url: `/v1/podcasts/${podcastToUpdate?._id?.toString()}`,
             payload: {
               name: 'integration-podcast-to-update-2',
               edition: 101
@@ -243,7 +243,7 @@ describe('Podcasts API V1 tests', () => {
           .then((response) => {
             expect(response).to.be.a('object');
             expect(response).to.include({ statusCode: 401 });
-            expect(response.result).to.include({
+            expect(response?.result).to.include({
               statusCode: 401,
               error: 'Unauthorized',
               message: 'Missing authentication'
@@ -262,7 +262,7 @@ describe('Podcasts API V1 tests', () => {
         return server
           .inject({
             method: 'DELETE',
-            url: `/v1/podcasts/${podcastToDelete?.data?._id?.toString()}`,
+            url: `/v1/podcasts/${podcastToDelete?._id?.toString()}`,
             headers: {
               authorization: accessToken
             }
@@ -274,7 +274,7 @@ describe('Podcasts API V1 tests', () => {
               statusCode: 200
             });
             expect(response?.result?.data?.deleted[0]).to.equal(
-              podcastToDelete?.data?._id.toString()
+              podcastToDelete?._id.toString()
             );
           });
       });

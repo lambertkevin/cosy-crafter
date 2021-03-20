@@ -1,6 +1,5 @@
 import _ from 'lodash';
 import Boom from '@hapi/boom';
-import calibrate from 'calibrate';
 import { logger } from '@cosy/logger';
 import Podcast, { projection, hiddenFields } from '../models/PodcastModel';
 import { projection as partProjection } from '../models/PartModel';
@@ -19,7 +18,6 @@ export const find = (sanitized = true) =>
       sanitized ? { ...partProjection, podcast: false } : { podcast: false }
     )
     .exec()
-    .then(calibrate.response)
     .catch((error) => {
       logger.error('Podcast Find Error', error);
       return Boom.boomify(error);
@@ -39,7 +37,6 @@ export const findOne = (id, sanitized = true) =>
       sanitized ? { ...partProjection, podcast: false } : { podcast: false }
     )
     .exec()
-    .then(calibrate.response)
     .catch((error) => {
       logger.error('Podcast FindOne', error);
       return Boom.boomify(error);
@@ -68,9 +65,7 @@ export const create = (
     tags
   })
     .then((podcast) =>
-      calibrate.response(
-        sanitized ? _.omit(podcast.toObject(), hiddenFields) : podcast
-      )
+      sanitized ? _.omit(podcast.toObject(), hiddenFields) : podcast
     )
     .catch((error) => {
       if (error.name === 'ValidationError') {
@@ -151,9 +146,9 @@ export const remove = (ids) =>
         return Boom.notFound();
       }
 
-      return calibrate.response({
+      return {
         deleted: ids
-      });
+      };
     })
     .catch((error) => {
       logger.error('Podcast Remove Error', error);

@@ -6,6 +6,7 @@ import Vision from '@hapi/vision';
 import HapiJWT from 'hapi-auth-jwt2';
 import { logger } from '@cosy/logger';
 import HapiSwagger from 'hapi-swagger';
+import jsonApiStandardize from '@cosy/json-api-standardize';
 import { nodeConfig, swaggerConfig } from './config';
 import { auth } from './auth';
 import apis from './api';
@@ -19,6 +20,12 @@ export default async () => {
     await server.register([
       Inert,
       Vision,
+      {
+        plugin: jsonApiStandardize,
+        options: {
+          ignorePlugins: ['hapi-swagger']
+        }
+      },
       {
         plugin: HapiSwagger,
         options: swaggerConfig

@@ -6,7 +6,6 @@ import ServiceSchema, { hiddenProperties } from '../schemas/ServiceSchema';
 
 export const hiddenFields = [
   ...hiddenProperties,
-  '_id',
   'createdAt',
   'updatedAt',
   '__v'
