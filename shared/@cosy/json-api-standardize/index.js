@@ -54,8 +54,12 @@ export const standardizeResponse = (response) => {
 
 export default {
   name: "json-api-standardize",
-  register(server) {
+  register(server, { ignorePlugins = [] }) {
     const preResponse = (request, h) => {
+      if (ignorePlugins.includes(request?.route?.realm?.plugin)) {
+        return h.continue;
+      }
+
       if (request?.response instanceof Error) {
         return standardizeError(request.response);
       }
