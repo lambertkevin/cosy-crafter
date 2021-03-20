@@ -4,6 +4,7 @@ import mongoose from 'mongoose';
 import Vision from '@hapi/vision';
 import { logger } from '@cosy/logger';
 import HapiSwagger from 'hapi-swagger';
+import jsonApiStandardize from '@cosy/json-api-standardize';
 import { nodeConfig, swaggerConfig } from './config';
 import db from './database';
 import apis from './api';
@@ -15,6 +16,12 @@ export default async () => {
     await server.register([
       Inert,
       Vision,
+      {
+        plugin: jsonApiStandardize,
+        options: {
+          ignorePlugins: ['hapi-swagger']
+        }
+      },
       {
         plugin: HapiSwagger,
         options: swaggerConfig
@@ -30,6 +37,7 @@ export default async () => {
 
     return server;
   } catch (err) {
+    console.error(err);
     /** @WARNING Change this to fatal when feature available in winston + sentry */
     logger.error('Fatal Error while starting the service', err);
     return process.exit(1);

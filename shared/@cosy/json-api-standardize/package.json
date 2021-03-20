@@ -1,0 +1,15 @@
+{
+  "name": "@cosy/json-api-standardize",
+  "version": "1.0.0",
+  "description": "Helpers and hapi plugin to standardize the responses",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Kévin Lambert",
+  "license": "MIT",
+  "dependencies": {
+    "@hapi/boom": "^9.1.2",
+    "lodash.isnil": "^4.0.0"
+  }
+}

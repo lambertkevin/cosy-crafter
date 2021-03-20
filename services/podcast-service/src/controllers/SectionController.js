@@ -1,6 +1,5 @@
 import _ from 'lodash';
 import Boom from '@hapi/boom';
-import calibrate from 'calibrate';
 import { logger } from '@cosy/logger';
 import Section, { projection, hiddenFields } from '../models/SectionModel';
 
@@ -14,7 +13,6 @@ import Section, { projection, hiddenFields } from '../models/SectionModel';
 export const find = (sanitized = true) =>
   Section.find({}, sanitized ? projection : {})
     .exec()
-    .then(calibrate.response)
     .catch((error) => {
       logger.error('Section Find Error', error);
       return Boom.boomify(error);
@@ -31,7 +29,6 @@ export const find = (sanitized = true) =>
 export const findOne = (id, sanitized = true) =>
   Section.findOne({ _id: id }, sanitized ? projection : {})
     .exec()
-    .then(calibrate.response)
     .catch((error) => {
       logger.error('Section FindOne Error', error);
       return Boom.boomify(error);
@@ -49,9 +46,7 @@ export const findOne = (id, sanitized = true) =>
 export const create = ({ name }, sanitized = true) =>
   Section.create({ name })
     .then((section) =>
-      calibrate.response(
-        sanitized ? _.omit(section.toObject(), hiddenFields) : section
-      )
+      sanitized ? _.omit(section.toObject(), hiddenFields) : section
     )
     .catch((error) => {
       if (error.name === 'ValidationError') {
@@ -118,9 +113,9 @@ export const remove = (ids) =>
         return Boom.notFound();
       }
 
-      return calibrate.response({
+      return {
         deleted: ids
-      });
+      };
     })
     .catch((error) => {
       logger.error('Section Remove Error', error);

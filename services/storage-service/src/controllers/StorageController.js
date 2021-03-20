@@ -1,6 +1,5 @@
 import _ from 'lodash';
 import Boom from '@hapi/boom';
-import calibrate from 'calibrate';
 import { v4 as uuid } from 'uuid';
 import { logger } from '@cosy/logger';
 import CustomError from '@cosy/custom-error';
@@ -63,12 +62,12 @@ export const addPodcastPartFile = async ({
       `${location}/${filename}`
     );
 
-    return calibrate.response({
+    return {
       filename,
       location,
       storageType: storedFile.storageName,
       publicLink: storedFile.publicLink
-    });
+    };
   } catch (error) {
     if (error.isBoom) {
       logger.error(`Add Podcast Part File Error: ${error.message}`, {
@@ -153,7 +152,7 @@ export const removePodcastPartFile = async ({
 }) => {
   try {
     await storages.removeFile(storageType, storagePath, storageFilename);
-    return calibrate.response({ deleted: storageFilename });
+    return { deleted: storageFilename };
   } catch (error) {
     logger.error('Remove Podcast Part File Error', error);
     if (error.isBoom) {
@@ -211,12 +210,12 @@ export const addCraftFile = async ({
       location
     );
 
-    return calibrate.response({
+    return {
       filename,
       location,
       storageType: storedFile.storageName,
       publicLink: storedFile.publicLink
-    });
+    };
   } catch (error) {
     if (error.isBoom) {
       logger.error(`Add Craft File Error: ${error.message}`, {
@@ -307,7 +306,7 @@ export const removeCraftFile = async ({
 }) => {
   try {
     await storages.removeFile(storageType, storagePath, storageFilename);
-    return calibrate.response({ deleted: storageFilename });
+    return { deleted: storageFilename };
   } catch (error) {
     logger.error('Remove Craft File Error', error);
     if (error.isBoom) {

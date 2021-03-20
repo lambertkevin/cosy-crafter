@@ -2,7 +2,6 @@ import _ from 'lodash';
 import Boom from '@hapi/boom';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
-import calibrate from 'calibrate';
 import { v4 as uuid } from 'uuid';
 import privateIp from 'private-ip';
 import { logger } from '@cosy/logger';
@@ -20,9 +19,24 @@ import tokensFactory from '../utils/TokensFactory';
 export const find = (sanitized = true) =>
   Service.find({}, sanitized ? projection : {})
     .exec()
-    .then(calibrate.response)
     .catch((error) => {
       logger.error('Service Find Error', error);
+      return Boom.boomify(error);
+    });
+
+/**
+ * Return a specific Service
+ *
+ * @param {String} id
+ * @param {Boolean} sanitized
+ *
+ * @return {Promise<Object>} {Service}
+ */
+export const findOne = (id, sanitized = true) =>
+  Service.findOne({ _id: id }, sanitized ? projection : {})
+    .exec()
+    .catch((error) => {
+      logger.error('Service FindOne Error', error);
       return Boom.boomify(error);
     });
 
@@ -34,10 +48,9 @@ export const find = (sanitized = true) =>
  *
  * @return {Promise<Object>} {Service}
  */
-export const findOne = (identifier, sanitized = true) =>
+export const findOneByIndentifier = (identifier, sanitized = true) =>
   Service.findOne({ identifier }, sanitized ? projection : {})
     .exec()
-    .then(calibrate.response)
     .catch((error) => {
       logger.error('Service FindOne Error', error);
       return Boom.boomify(error);
@@ -63,9 +76,7 @@ export const create = async (
 
   return Service.create({ identifier, key: hashedKey, ip })
     .then((service) =>
-      calibrate.response(
-        sanitized ? _.omit(service.toObject(), hiddenFields) : service
-      )
+      sanitized ? _.omit(service.toObject(), hiddenFields) : service
     )
     .catch((error) => {
       if (error.toString().includes('ValidationError')) {
@@ -84,7 +95,7 @@ export const create = async (
 /**
  * Update a specific Service
  *
- * @param {String} identifier
+ * @param {String} id
  * @param {Object} data
  * @param {String} data.key
  * @param {String} data.ip
@@ -93,8 +104,8 @@ export const create = async (
  * @return {Promise<Object[]>} {Service}
  */
 export const update = async (
-  identifier,
-  { key, ip: _ip },
+  id,
+  { identifier, key, ip: _ip },
   sanitized = true
 ) => {
   const hashedKey = key ? await bcrypt.hash(key, 10) : undefined;
@@ -102,7 +113,7 @@ export const update = async (
   const ip = _ip ? ipPrivatizer(_ip) : undefined;
 
   return Service.updateOne(
-    { identifier },
+    { _id: id },
     _.omitBy({ identifier, key: hashedKey, ip }, _.isUndefined)
   )
     .exec()
@@ -134,21 +145,21 @@ export const update = async (
 /**
  * Remove Services
  *
- * @param {Arrays} identifiers
+ * @param {Arrays} ids
  *
  * @return {Promise<void>}
  */
-export const remove = (identifiers = []) =>
-  Service.deleteMany({ identifier: { $in: identifiers.filter((x) => x) } })
+export const remove = (ids = []) =>
+  Service.deleteMany({ _id: { $in: ids.filter((x) => x) } })
     .exec()
     .then((res) => {
       if (!res.deletedCount) {
         return Boom.notFound();
       }
 
-      return calibrate.response({
-        deleted: identifiers
-      });
+      return {
+        deleted: ids
+      };
     })
     .catch((error) => {
       logger.error('Service Remove Error', error);
@@ -193,7 +204,7 @@ export const login = async ({ identifier, key }, ip) => {
         [uuid(), uuid()]
       );
 
-      return calibrate.response(tokens);
+      return tokens;
     }
     throw Boom.unauthorized("Service isn't matching ip or key");
   } catch (error) {
@@ -235,14 +246,12 @@ export const refresh = async ({ accessToken, refreshToken }) => {
     if (decodedAccessToken.service === decodedRefreshToken.service) {
       try {
         // Check if the token isn't blacklisted
-        const {
-          data: isBlackListed
-        } = await TokenBlacklistController.findOneByJwtId(
+        const isBlackListed = await TokenBlacklistController.findOneByJwtId(
           decodedRefreshToken.jti
         );
 
         // Check if the service is still registered
-        const { data: service } = await (() => {
+        const service = await (() => {
           if (process.env.NODE_ENV === 'mock') {
             return {
               data: {
@@ -250,7 +259,7 @@ export const refresh = async ({ accessToken, refreshToken }) => {
               }
             };
           }
-          return findOne(decodedAccessToken.service);
+          return findOneByIndentifier(decodedAccessToken.service);
         })();
 
         if (!isBlackListed && !_.isEmpty(service)) {
@@ -261,7 +270,7 @@ export const refresh = async ({ accessToken, refreshToken }) => {
             _.omit(decodedRefreshToken, jwtProperties),
             [uuid(), uuid()]
           );
-          return calibrate.response(tokens);
+          return tokens;
         }
         // if blacklisting or not found, go to catch
         throw new Error();

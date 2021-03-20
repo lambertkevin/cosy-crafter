@@ -1,5 +1,5 @@
 import joi from 'joi';
-import { calibrateSchema } from '@cosy/schema-utils';
+import { standardizeSchema } from '@cosy/schema-utils';
 import failValidationHandler from '@cosy/hapi-fail-validation-handler';
 import * as StorageController from '../controllers/StorageController';
 
@@ -61,7 +61,7 @@ export default {
           'hapi-swagger': {
             responses: {
               200: {
-                schema: calibrateSchema(
+                schema: standardizeSchema(
                   joi.object({
                     storagePath: joi.string().example('path/to/the').required(),
                     storageFilename: joi
@@ -166,7 +166,7 @@ export default {
           'hapi-swagger': {
             responses: {
               200: {
-                schema: calibrateSchema(
+                schema: standardizeSchema(
                   joi.object({
                     deleted: joi
                       .array()

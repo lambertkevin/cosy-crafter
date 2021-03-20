@@ -2,7 +2,7 @@ import joi from 'joi';
 import Boom from '@hapi/boom';
 import { logger } from '@cosy/logger';
 import generatePassword from 'generate-password';
-import { calibrateSchema } from '@cosy/schema-utils';
+import { standardizeSchema } from '@cosy/schema-utils';
 import {
   makeRsaPrivateDecrypter,
   makeRsaPrivateEncrypter
@@ -37,7 +37,7 @@ export default {
           'hapi-swagger': {
             responses: {
               200: {
-                schema: calibrateSchema(responseSchema)
+                schema: standardizeSchema(responseSchema)
               }
             }
           }
@@ -49,29 +49,28 @@ export default {
      * Get one service
      *
      * @method GET
-     * @param {String} identifier
+     * @param {String} id
      */
     server.route({
       method: 'GET',
-      path: '/{identifier}',
+      path: '/{id}',
       options: {
         // @TODO User Auth needed here
-        handler: (request) =>
-          ServiceController.findOne(request.params.identifier),
+        handler: (request) => ServiceController.findOne(request.params.id),
         tags: ['api', 'services'],
         description: 'Get a Service',
         notes: 'Returns a specific service',
         validate: {
           failAction: failValidationHandler,
           params: joi.object({
-            identifier: joi.string().required()
+            id: joi.string().required()
           })
         },
         plugins: {
           'hapi-swagger': {
             responses: {
               200: {
-                schema: calibrateSchema(responseSchema, false)
+                schema: standardizeSchema(responseSchema, false)
               }
             }
           }
@@ -91,7 +90,7 @@ export default {
       options: {
         // @TODO User Auth might be possible instead of whitelist and sign
         pre: [checkIpWhiteList, checkSignature],
-        handler: async (request) => {
+        handler: async (request, h) => {
           try {
             const password = generatePassword.generate({
               length: 64,
@@ -115,7 +114,7 @@ export default {
             }
 
             const encryptor = makeRsaPrivateEncrypter();
-            return encryptor(password);
+            return h.response(encryptor(password)).code(201);
           } catch (error) {
             logger.error('Service Creation Handler Error', error);
             return Boom.boomify(error);
@@ -134,8 +133,8 @@ export default {
         plugins: {
           'hapi-swagger': {
             responses: {
-              200: {
-                schema: calibrateSchema(responseSchema)
+              201: {
+                schema: standardizeSchema(responseSchema)
               }
             }
           }
@@ -153,14 +152,19 @@ export default {
       method: 'DELETE',
       path: '/',
       options: {
-        // @TODO User Auth needed here
+        // @WARNING User Auth needed here
         pre: [checkIpWhiteList],
-        handler: (request) =>
-          ServiceController.remove(request.payload.identifiers),
+        handler: async (request, h) => {
+          const deletion = await ServiceController.remove(request.payload.ids);
+          if (deletion instanceof Error) {
+            return deletion;
+          }
+          return h.response(deletion).code(202);
+        },
         validate: {
           failAction: failValidationHandler,
           payload: joi.object({
-            identifiers: joi
+            ids: joi
               .array()
               .items(joi.string().required().example('podcast-service-john'))
               .required()
@@ -172,8 +176,8 @@ export default {
         plugins: {
           'hapi-swagger': {
             responses: {
-              200: {
-                schema: calibrateSchema(
+              202: {
+                schema: standardizeSchema(
                   joi.object({
                     deleted: joi
                       .array()
@@ -242,7 +246,7 @@ export default {
           'hapi-swagger': {
             responses: {
               200: {
-                schema: calibrateSchema(
+                schema: standardizeSchema(
                   joi.object({
                     accessToken: joi
                       .string()
@@ -288,7 +292,7 @@ export default {
           'hapi-swagger': {
             responses: {
               200: {
-                schema: calibrateSchema(
+                schema: standardizeSchema(
                   joi.object({
                     accessToken: joi
                       .string()

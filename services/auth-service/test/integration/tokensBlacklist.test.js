@@ -145,7 +145,7 @@ describe('Tokens Blacklist API tests', () => {
         return server
           .inject({
             method: 'DELETE',
-            url: `/tokens/${token?.data?._id}`,
+            url: `/tokens/${token?._id}`,
             headers: {
               // @TODO Add user login when feature available
               // authorization: ???
@@ -168,7 +168,7 @@ describe('Tokens Blacklist API tests', () => {
         return server
           .inject({
             method: 'DELETE',
-            url: `/tokens/${token?.data?._id.toString()}`,
+            url: `/tokens/${token?._id.toString()}`,
             headers: {
               // @TODO Add user login when feature available
               // authorization: ???
@@ -181,7 +181,7 @@ describe('Tokens Blacklist API tests', () => {
               statusCode: 200
             });
             expect(response.result?.data?.deleted[0]).to.be.equal(
-              token?.data?._id.toString()
+              token?._id.toString()
             );
           });
       });

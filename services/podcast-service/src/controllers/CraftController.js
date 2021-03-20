@@ -1,6 +1,5 @@
 import _ from 'lodash';
 import Boom from '@hapi/boom';
-import calibrate from 'calibrate';
 import { logger } from '@cosy/logger';
 import Craft, { projection, hiddenFields } from '../models/CraftModel';
 
@@ -14,7 +13,6 @@ import Craft, { projection, hiddenFields } from '../models/CraftModel';
 export const find = (sanitized = true) =>
   Craft.find({}, sanitized ? projection : {})
     .exec()
-    .then(calibrate.response)
     .catch((error) => {
       logger.error('Craft Find Error', error);
       return Boom.boomify(error);
@@ -31,7 +29,6 @@ export const find = (sanitized = true) =>
 export const findOne = (id, sanitized = true) =>
   Craft.findOne({ _id: id }, sanitized ? projection : {})
     .exec()
-    .then(calibrate.response)
     .catch((error) => {
       logger.error('Craft FindOne Error', error);
       return Boom.boomify(error);
@@ -57,9 +54,7 @@ export const create = (
 ) =>
   Craft.create({ name, jobId, user, storageType, storagePath, storageFilename })
     .then((craft) =>
-      calibrate.response(
-        sanitized ? _.omit(craft.toObject(), hiddenFields) : craft
-      )
+      sanitized ? _.omit(craft.toObject(), hiddenFields) : craft
     )
     .catch((error) => {
       if (error.name === 'ValidationError') {
@@ -141,9 +136,9 @@ export const remove = (ids) =>
         return Boom.notFound();
       }
 
-      return calibrate.response({
+      return {
         deleted: ids
-      });
+      };
     })
     .catch((error) => {
       logger.error('Craft Remove Error', error);

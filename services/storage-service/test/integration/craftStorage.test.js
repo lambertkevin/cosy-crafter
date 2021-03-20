@@ -36,7 +36,7 @@ describe('Craft Storage API V1 tests', () => {
         .then((response) => {
           expect(response).to.be.a('object');
           expect(response).to.include({ statusCode: 200 });
-          expect(response.result).to.be.equal('pong');
+          expect(response?.result?.data).to.be.equal('pong');
         });
     });
   });
@@ -344,9 +344,9 @@ describe('Craft Storage API V1 tests', () => {
             method: 'DELETE',
             url: '/v1/crafts',
             payload: {
-              storageType: localStoredFile?.data?.storageType,
-              storagePath: localStoredFile?.data?.location,
-              storageFilename: localStoredFile?.data?.filename
+              storageType: localStoredFile?.storageType,
+              storagePath: localStoredFile?.location,
+              storageFilename: localStoredFile?.filename
             }
           })
           .then((response) => {
@@ -367,8 +367,8 @@ describe('Craft Storage API V1 tests', () => {
               method: 'DELETE',
               url: '/v1/crafts',
               payload: {
-                storageFilename: localStoredFile?.data?.filename,
-                storageFilename: localStoredFile?.data?.filename
+                storageFilename: localStoredFile?.filename,
+                storageFilename: localStoredFile?.filename
               },
               headers: {
                 authorization: accessToken
@@ -391,8 +391,8 @@ describe('Craft Storage API V1 tests', () => {
               method: 'DELETE',
               url: '/v1/crafts',
               payload: {
-                storageType: localStoredFile?.data?.storageType,
-                storageFilename: localStoredFile?.data?.filename
+                storageType: localStoredFile?.storageType,
+                storageFilename: localStoredFile?.filename
               },
               headers: {
                 authorization: accessToken
@@ -415,8 +415,8 @@ describe('Craft Storage API V1 tests', () => {
               method: 'DELETE',
               url: '/v1/crafts',
               payload: {
-                storageType: localStoredFile?.data?.storageType,
-                storagePath: localStoredFile?.data?.location
+                storageType: localStoredFile?.storageType,
+                storagePath: localStoredFile?.location
               },
               headers: {
                 authorization: accessToken
@@ -442,9 +442,9 @@ describe('Craft Storage API V1 tests', () => {
             method: 'DELETE',
             url: '/v1/crafts',
             payload: {
-              storageType: localStoredFile?.data?.storageType,
-              storagePath: localStoredFile?.data?.location,
-              storageFilename: localStoredFile?.data?.filename
+              storageType: localStoredFile?.storageType,
+              storagePath: localStoredFile?.location,
+              storageFilename: localStoredFile?.filename
             },
             headers: {
               authorization: accessToken
@@ -455,7 +455,7 @@ describe('Craft Storage API V1 tests', () => {
             expect(response).to.include({ statusCode: 200 });
             expect(response?.result).to.deep.include({
               statusCode: 200,
-              data: { deleted: localStoredFile?.data?.filename }
+              data: { deleted: localStoredFile?.filename }
             });
           });
       });
@@ -466,9 +466,9 @@ describe('Craft Storage API V1 tests', () => {
             method: 'DELETE',
             url: '/v1/crafts',
             payload: {
-              storageType: awsStoredFile?.data?.storageType,
-              storagePath: awsStoredFile?.data?.location,
-              storageFilename: awsStoredFile?.data?.filename
+              storageType: awsStoredFile?.storageType,
+              storagePath: awsStoredFile?.location,
+              storageFilename: awsStoredFile?.filename
             },
             headers: {
               authorization: accessToken
@@ -480,7 +480,7 @@ describe('Craft Storage API V1 tests', () => {
             expect(response?.result).to.deep.include({
               statusCode: 200,
               data: {
-                deleted: awsStoredFile?.data?.filename
+                deleted: awsStoredFile?.filename
               }
             });
           });
@@ -492,9 +492,9 @@ describe('Craft Storage API V1 tests', () => {
             method: 'DELETE',
             url: '/v1/crafts',
             payload: {
-              storageType: scalewayStoredFile?.data?.storageType,
-              storagePath: scalewayStoredFile?.data?.location,
-              storageFilename: scalewayStoredFile?.data?.filename
+              storageType: scalewayStoredFile?.storageType,
+              storagePath: scalewayStoredFile?.location,
+              storageFilename: scalewayStoredFile?.filename
             },
             headers: {
               authorization: accessToken
@@ -506,7 +506,7 @@ describe('Craft Storage API V1 tests', () => {
             expect(response?.result).to.deep.include({
               statusCode: 200,
               data: {
-                deleted: scalewayStoredFile?.data?.filename
+                deleted: scalewayStoredFile?.filename
               }
             });
           });

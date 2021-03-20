@@ -303,7 +303,7 @@ describe('Crafts API V1 tests', () => {
           return server
             .inject({
               method: 'PATCH',
-              url: `/v1/crafts/${craft?.data?._id.toString()}`,
+              url: `/v1/crafts/${craft?._id.toString()}`,
               payload: {
                 storageType: 'abc'
               },
@@ -326,7 +326,7 @@ describe('Crafts API V1 tests', () => {
           return server
             .inject({
               method: 'PATCH',
-              url: `/v1/crafts/${craft?.data?._id.toString()}`,
+              url: `/v1/crafts/${craft?._id.toString()}`,
               payload: {
                 name:
                   'fNmp9CCRAPkAyPEDPZJJyNJ91eghbVpW97IORoeDO0rCvkABooqwrEyK5vxKJGHoV4kGAba3gUourcXmKQgsN7OdDx7X0RJ4R8cVR'
@@ -364,7 +364,7 @@ describe('Crafts API V1 tests', () => {
         return server
           .inject({
             method: 'PATCH',
-            url: `/v1/crafts/${craft?.data?._id?.toString()}`,
+            url: `/v1/crafts/${craft?._id?.toString()}`,
             payload: updatedCraftPayload,
             headers: {
               authorization: accessToken
@@ -423,7 +423,7 @@ describe('Crafts API V1 tests', () => {
         return server
           .inject({
             method: 'DELETE',
-            url: `/v1/crafts/${craft?.data?._id?.toString()}`,
+            url: `/v1/crafts/${craft?._id?.toString()}`,
             headers: {
               authorization: accessToken
             }
@@ -435,7 +435,7 @@ describe('Crafts API V1 tests', () => {
               statusCode: 200
             });
             expect(response?.result?.data?.deleted[0]).to.equal(
-              craft?.data?._id.toString()
+              craft?._id.toString()
             );
           });
       });
