@@ -54,8 +54,8 @@ describe('Parts API V1 tests', () => {
     before(async () => {
       partPayload = {
         name: 'part',
-        section: section.data._id.toString(),
-        podcast: podcast.data._id.toString(),
+        section: section._id.toString(),
+        podcast: podcast._id.toString(),
         // Be carefull, you can't spread this stream after it being consumed.
         // You'll have to have to manually add this property again.
         file: fs.createReadStream(
@@ -384,10 +384,10 @@ describe('Parts API V1 tests', () => {
               contentType: 'audio/mpeg'
             });
             expect(response?.result?.data?.section?.toString()).to.be.equal(
-              section?.data?._id?.toString()
+              section?._id?.toString()
             );
             expect(response?.result?.data?.podcast?.toString()).to.be.equal(
-              podcast?.data?._id?.toString()
+              podcast?._id?.toString()
             );
           });
       });
@@ -405,8 +405,8 @@ describe('Parts API V1 tests', () => {
 
       part = await PartController.create({
         name: 'partToUpdate',
-        section: section.data._id.toString(),
-        podcast: podcast.data._id.toString(),
+        section: section._id.toString(),
+        podcast: podcast._id.toString(),
         tags: 'tag1',
         file: {
           path: path.resolve('./', 'test', 'files', 'blank.mp3'),
@@ -426,7 +426,7 @@ describe('Parts API V1 tests', () => {
         return server
           .inject({
             method: 'PATCH',
-            url: `/v1/parts/${part?.data?._id}`,
+            url: `/v1/parts/${part?._id}`,
             payload: {
               name: 'partToUpdateRename'
             }
@@ -446,7 +446,7 @@ describe('Parts API V1 tests', () => {
         return server
           .inject({
             method: 'PATCH',
-            url: `/v1/parts/${part?.data?._id}`,
+            url: `/v1/parts/${part?._id}`,
             payload: {
               name: 'partToUpdateRename'
             },
@@ -500,7 +500,7 @@ describe('Parts API V1 tests', () => {
         return server
           .inject({
             method: 'PATCH',
-            url: `/v1/parts/${part?.data?._id}`,
+            url: `/v1/parts/${part?._id}`,
             payload: payloadUpdateFormData.getBuffer(),
             headers: {
               ...payloadUpdateFormData.getHeaders(),
@@ -526,7 +526,7 @@ describe('Parts API V1 tests', () => {
         return server
           .inject({
             method: 'PATCH',
-            url: `/v1/parts/${part?.data?._id}`,
+            url: `/v1/parts/${part?._id}`,
             payload: payloadUpdateFormData.getBuffer(),
             headers: {
               ...payloadUpdateFormData.getHeaders(),
@@ -555,7 +555,7 @@ describe('Parts API V1 tests', () => {
         return server
           .inject({
             method: 'PATCH',
-            url: `/v1/parts/${part?.data?._id}`,
+            url: `/v1/parts/${part?._id}`,
             payload: payloadFormData.getBuffer(),
             headers: {
               ...payloadFormData.getHeaders(),
@@ -587,14 +587,14 @@ describe('Parts API V1 tests', () => {
           edition: 3
         });
         const payloadFormData = objectToFormData({
-          section: newSection.data._id.toString(),
-          podcast: newPodcast.data._id.toString()
+          section: newSection._id.toString(),
+          podcast: newPodcast._id.toString()
         });
 
         return server
           .inject({
             method: 'PATCH',
-            url: `/v1/parts/${part?.data?._id}`,
+            url: `/v1/parts/${part?._id}`,
             payload: payloadFormData.getBuffer(),
             headers: {
               ...payloadFormData.getHeaders(),
@@ -611,10 +611,10 @@ describe('Parts API V1 tests', () => {
               name: 'partNameUpdated'
             });
             expect(response?.result?.data?.section?._id.toString()).to.equal(
-              newSection.data._id.toString()
+              newSection._id.toString()
             );
             expect(response?.result?.data?.podcast?._id.toString()).to.equal(
-              newPodcast.data._id.toString()
+              newPodcast._id.toString()
             );
           });
       });
@@ -630,7 +630,7 @@ describe('Parts API V1 tests', () => {
         return server
           .inject({
             method: 'PATCH',
-            url: `/v1/parts/${part?.data?._id}`,
+            url: `/v1/parts/${part?._id}`,
             payload: payloadUpdateStream,
             headers: {
               ...payloadUpdateFormData.getHeaders(),
@@ -675,8 +675,8 @@ describe('Parts API V1 tests', () => {
       it('should succeed deleting part', async () => {
         const partToDelete = await PartController.create({
           name: `partToDelete`,
-          section: section?.data?._id?.toString(),
-          podcast: podcast?.data?._id?.toString(),
+          section: section?._id?.toString(),
+          podcast: podcast?._id?.toString(),
           tags: 'tag1',
           file: {
             path: path.resolve('./', 'test', 'files', 'blank.mp3'),
@@ -694,7 +694,7 @@ describe('Parts API V1 tests', () => {
           .inject({
             method: 'DELETE',
             url: '/v1/parts',
-            payload: { ids: [partToDelete?.data?._id?.toString()] },
+            payload: { ids: [partToDelete?._id?.toString()] },
             headers: {
               authorization: accessToken
             }
@@ -706,7 +706,7 @@ describe('Parts API V1 tests', () => {
               statusCode: 200
             });
             expect(response?.result?.data?.deleted[0]).to.be.equal(
-              partToDelete?.data?._id?.toString()
+              partToDelete?._id?.toString()
             );
           });
       });
@@ -718,8 +718,8 @@ describe('Parts API V1 tests', () => {
         });
         const partToDelete = await PartController.create({
           name: `partToDelete`,
-          section: section?.data?._id?.toString(),
-          podcast: podcastToDelete?.data?._id?.toString(),
+          section: section?._id?.toString(),
+          podcast: podcastToDelete?._id?.toString(),
           tags: 'tag1',
           file: {
             path: path.resolve('./', 'test', 'files', 'blank.mp3'),
@@ -732,12 +732,12 @@ describe('Parts API V1 tests', () => {
             }
           }
         });
-        await PodcastController.remove([podcastToDelete.data._id]);
+        await PodcastController.remove([podcastToDelete._id]);
 
         return server
           .inject({
             method: 'GET',
-            url: `/v1/parts/${partToDelete.data._id.toString()}`,
+            url: `/v1/parts/${partToDelete._id.toString()}`,
             headers: {
               authorization: accessToken
             }
@@ -754,8 +754,8 @@ describe('Parts API V1 tests', () => {
         });
         const partToDelete = await PartController.create({
           name: `part2`,
-          section: sectionToDelete?.data?._id?.toString(),
-          podcast: podcast?.data?._id?.toString(),
+          section: sectionToDelete?._id?.toString(),
+          podcast: podcast?._id?.toString(),
           tags: 'tag1',
           file: {
             path: path.resolve('./', 'test', 'files', 'blank.mp3'),
@@ -768,12 +768,12 @@ describe('Parts API V1 tests', () => {
             }
           }
         });
-        await PodcastController.remove([podcast.data._id]);
+        await PodcastController.remove([podcast._id]);
 
         return server
           .inject({
             method: 'GET',
-            url: `/v1/parts/${partToDelete.data._id.toString()}`,
+            url: `/v1/parts/${partToDelete._id.toString()}`,
             headers: {
               authorization: accessToken
             }
