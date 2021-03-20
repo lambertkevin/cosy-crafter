@@ -2,7 +2,6 @@ import fs from 'fs';
 import _ from 'lodash';
 import Boom from '@hapi/boom';
 import FormData from 'form-data';
-import calibrate from 'calibrate';
 import { logger } from '@cosy/logger';
 import CustomError from '@cosy/custom-error';
 import { makeAxiosInstance, axiosErrorBoomifier } from '@cosy/axios-utils';
@@ -27,7 +26,6 @@ export const find = (sanitized = true) =>
     .populate('podcast', { ...podcastProjection, parts: false })
     .populate('section', sectionProjection)
     .exec()
-    .then(calibrate.response)
     .catch((error) => {
       logger.error('Part Find Error', error);
       return Boom.boomify(error);
@@ -46,7 +44,6 @@ export const findOne = (id, sanitized = true) =>
     .populate('podcast', { ...podcastProjection, parts: false })
     .populate('section', sectionProjection)
     .exec()
-    .then(calibrate.response)
     .catch((error) => {
       logger.error('Part FindOne Error', error);
       return Boom.boomify(error);
@@ -57,7 +54,7 @@ export const findOne = (id, sanitized = true) =>
  *
  * @param {Object} data
  * @param {String} data.name
- * @param {String} data.type
+ * @param {String} data.section
  * @param {String} data.podcast
  * @param {Array<String>|String} data.tags
  * @param {Object} data.file [Result of file upload]
@@ -66,18 +63,18 @@ export const findOne = (id, sanitized = true) =>
  * @return {Promise<Object>} {Part}
  */
 export const create = async (
-  { name, section, podcast: podcastId, tags: _tags = [], file },
+  { name, section: sectionId, podcast: podcastId, tags: _tags = [], file },
   sanitized = true
 ) => {
   let podcast;
 
   try {
     const dependencies = await Promise.all([
-      SectionController.findOne(section),
+      SectionController.findOne(sectionId),
       PodcastController.findOne(podcastId)
     ]);
     // eslint-disable-next-line prefer-destructuring
-    podcast = dependencies[1].data;
+    podcast = dependencies[1];
     const dependenciesErrors = dependencies.filter((x) => x instanceof Error);
     if (dependenciesErrors.length) {
       return Boom.notAcceptable("At least one dependency doesn't exist");
@@ -141,7 +138,7 @@ export const create = async (
 
     return Part.create({
       name,
-      section,
+      section: sectionId,
       podcast: podcastId,
       tags,
       originalFilename: filename,
@@ -152,9 +149,7 @@ export const create = async (
       contentType: headers['content-type']
     })
       .then((part) =>
-        calibrate.response(
-          sanitized ? _.omit(part.toObject(), hiddenFields) : part
-        )
+        sanitized ? _.omit(part.toObject(), hiddenFields) : part
       )
       .catch((error) => {
         if (error.name === 'ValidationError') {
@@ -218,7 +213,13 @@ export const update = async (id, payload, sanitized = true) => {
     return Boom.expectationFailed('No changes required');
   }
 
-  const { name, section, podcast: podcastId, tags: _tags, file } = payload;
+  const {
+    name,
+    section: sectionId,
+    podcast: podcastId,
+    tags: _tags,
+    file
+  } = payload;
   // Test part existence
   let part;
   try {
@@ -234,10 +235,13 @@ export const update = async (id, payload, sanitized = true) => {
 
   // Test dependencies existence
   let podcast;
-  // We get the new or old podcast (we'll need its name later on)
   try {
-    const { data } = await PodcastController.findOne(podcastId || part.podcast);
-    podcast = data;
+    // We get the desired podcast to use its name later on
+    podcast = await PodcastController.findOne(podcastId || part.podcast);
+
+    if (podcast instanceof Error) {
+      throw podcast;
+    }
 
     if (!podcast) {
       throw Boom.notFound();
@@ -250,11 +254,15 @@ export const update = async (id, payload, sanitized = true) => {
     return Boom.notAcceptable("At least one dependency doesn't exist");
   }
 
-  if (section) {
+  if (sectionId) {
     try {
-      const { data: sectionExists } = await SectionController.findOne(section);
+      const section = await SectionController.findOne(sectionId);
 
-      if (!sectionExists) {
+      if (section instanceof Error) {
+        throw section;
+      }
+
+      if (!section) {
         throw Boom.notFound();
       }
     } catch (error) {
@@ -370,7 +378,7 @@ export const update = async (id, payload, sanitized = true) => {
     _.omitBy(
       {
         name,
-        section,
+        section: sectionId,
         podcast: podcastId,
         tags,
         ...fileInfos
@@ -418,9 +426,9 @@ export const remove = (ids) =>
         return Boom.notFound();
       }
 
-      return calibrate.response({
+      return {
         deleted: ids
-      });
+      };
     })
     .catch((error) => {
       logger.error('Part Remove Error', error);
