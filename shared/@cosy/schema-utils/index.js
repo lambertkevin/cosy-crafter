@@ -1,15 +1,15 @@
-import joi from "joi";
+import joi, { ObjectSchema } from "joi";
 
 /**
  * Returns a JSON API Spec compliant Joi object from a given schema
  *
- * @param {joi.ObjectSchema} schema
+ * @param {ObjectSchema} schema
  * @param {Boolean} isArray
  * @param {Number} statusCode
  *
- * @return {joi.ObjectSchema}
+ * @return {ObjectSchema}
  */
-export const calibrateSchema = (schema, isArray = true, statusCode = 200) =>
+export const standardizeSchema = (schema, isArray = true, statusCode = 200) =>
   joi
     .object({
       statusCode: joi.number().required().example(statusCode),
@@ -21,7 +21,7 @@ export const calibrateSchema = (schema, isArray = true, statusCode = 200) =>
 /**
  * Get an array containing a schema's keys
  *
- * @param {joi.ObjectSchema} schema
+ * @param {ObjectSchema} schema
  *
  * @return {Array}
  */

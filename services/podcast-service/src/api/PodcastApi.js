@@ -1,5 +1,5 @@
 import joi from 'joi';
-import { calibrateSchema, schemaKeys } from '@cosy/schema-utils';
+import { standardizeSchema, schemaKeys } from '@cosy/schema-utils';
 import failValidationHandler from '@cosy/hapi-fail-validation-handler';
 import { responseSchema, creationSchema } from '../schemas/PodcastSchema';
 import * as podcastController from '../controllers/PodcastController';
@@ -36,7 +36,7 @@ export default {
           'hapi-swagger': {
             responses: {
               200: {
-                schema: calibrateSchema(responseSchema)
+                schema: standardizeSchema(responseSchema)
               }
             }
           }
@@ -81,7 +81,7 @@ export default {
           'hapi-swagger': {
             responses: {
               200: {
-                schema: calibrateSchema(responseSchema, false)
+                schema: standardizeSchema(responseSchema, false)
               }
             }
           }
@@ -124,7 +124,7 @@ export default {
           'hapi-swagger': {
             responses: {
               200: {
-                schema: calibrateSchema(responseSchema)
+                schema: standardizeSchema(responseSchema)
               }
             }
           }
@@ -174,7 +174,7 @@ export default {
           'hapi-swagger': {
             responses: {
               200: {
-                schema: calibrateSchema(responseSchema)
+                schema: standardizeSchema(responseSchema)
               }
             }
           }
@@ -223,7 +223,7 @@ export default {
           'hapi-swagger': {
             responses: {
               200: {
-                schema: calibrateSchema(
+                schema: standardizeSchema(
                   joi.object({
                     deleted: joi
                       .array()
@@ -278,7 +278,7 @@ export default {
           'hapi-swagger': {
             responses: {
               200: {
-                schema: calibrateSchema(
+                schema: standardizeSchema(
                   joi.object({
                     deleted: joi
                       .array()
