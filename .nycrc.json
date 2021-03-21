@@ -1,0 +1,10 @@
+{
+  "all": true,
+  "check-coverage": true,
+  "reporter": ["lcov", "text"],
+  "sourceMap": false,
+  "useInlineSourceMaps": false,
+  "instrument": false,
+  "require": ["@babel/register"],
+  "exclude": ["**/node_modules", "**/*.test.js", "**/*.mocha.js", "**/coverage", "**/.*"]
+}
