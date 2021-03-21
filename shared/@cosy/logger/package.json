@@ -13,5 +13,8 @@
     "winston": "^3.3.3",
     "winston-daily-rotate-file": "^4.5.1",
     "winston-transport-sentry-node": "^1.0.2"
+  },
+  "devDependencies": {
+    "babel-plugin-istanbul": "^6.0.0"
   }
 }
