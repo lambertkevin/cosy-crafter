@@ -11,5 +11,8 @@
   "dependencies": {
     "@hapi/boom": "^9.1.2",
     "lodash.isnil": "^4.0.0"
+  },
+  "devDependencies": {
+    "babel-plugin-istanbul": "^6.0.0"
   }
 }
