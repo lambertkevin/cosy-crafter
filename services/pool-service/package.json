@@ -18,6 +18,7 @@
     "@babel/core": "^7.11.4",
     "@babel/node": "^7.10.5",
     "@babel/preset-env": "^7.11.0",
+    "@cosy/auth": "file:../../shared/@cosy/auth",
     "@cosy/custom-error": "file:../../shared/@cosy/custom-error",
     "@cosy/logger": "file:../../shared/@cosy/logger",
     "@cosy/rsa-utils": "file:../../shared/@cosy/rsa-utils",

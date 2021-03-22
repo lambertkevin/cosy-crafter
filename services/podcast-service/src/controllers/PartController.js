@@ -4,13 +4,13 @@ import Boom from '@hapi/boom';
 import FormData from 'form-data';
 import { logger } from '@cosy/logger';
 import CustomError from '@cosy/custom-error';
+import { tokens, refresh } from '@cosy/auth';
 import { makeAxiosInstance, axiosErrorBoomifier } from '@cosy/axios-utils';
 import { projection as podcastProjection } from '../models/PodcastModel';
 import { projection as sectionProjection } from '../models/SectionModel';
 import Part, { projection, hiddenFields } from '../models/PartModel';
 import * as PodcastController from './PodcastController';
 import * as SectionController from './SectionController';
-import { tokens, refresh } from '../auth';
 
 const { STORAGE_SERVICE_NAME, STORAGE_SERVICE_PORT } = process.env;
 

@@ -3,9 +3,9 @@ import Boom from '@hapi/boom';
 import { v4 as uuid } from 'uuid';
 import { logger } from '@cosy/logger';
 import CustomError from '@cosy/custom-error';
+import { tokens, refresh } from '@cosy/auth';
 import { axiosErrorBoomifier, makeAxiosInstance } from '@cosy/axios-utils';
 import StorageFactory from '../utils/StorageFactory';
-import { tokens, refresh } from '../auth';
 
 const { PODCAST_SERVICE_NAME, PODCAST_SERVICE_PORT } = process.env;
 const storages = StorageFactory();

@@ -1,6 +1,6 @@
 import io from 'socket.io-client';
 import { logger } from '@cosy/logger';
-import { auth, refresh, tokens } from './auth';
+import { auth, refresh, tokens } from '@cosy/auth';
 import apis from './api';
 
 export default async () => {
@@ -38,7 +38,6 @@ export default async () => {
         }
       });
   } catch (err) {
-    console.log(err);
     /** @WARNING Change this to fatal when feature available in winston + sentry */
     logger.error('Fatal Error while starting the service', err);
     process.exit(0);
@@ -46,7 +45,6 @@ export default async () => {
 };
 
 process.on('unhandledRejection', (err) => {
-  console.log(err);
   logger.error('unhandledRejection', err);
   process.exit(1);
 });
