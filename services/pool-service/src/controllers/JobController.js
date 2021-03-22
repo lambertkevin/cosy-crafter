@@ -9,14 +9,11 @@ export const createTranscodingJob = ({ name, files }, ack) => {
     const transcodingJob = makeJob(
       (job, workerSocket) =>
         new Promise((resolve, reject) => {
-          const payload = privateEncrypter(
-            {
-              jobId: job.id,
-              name,
-              files
-            },
-            'base64'
-          );
+          const payload = privateEncrypter({
+            jobId: job.id,
+            name,
+            files
+          });
 
           workerSocket.emit('transcode/join', payload, (response) => {
             if (response.statusCode !== 201) {
