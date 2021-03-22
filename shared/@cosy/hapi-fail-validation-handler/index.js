@@ -11,6 +11,13 @@ import { logger } from "@cosy/logger";
  * @return {Promise}
  */
 export default async (request, h, error) => {
+  if (!(error instanceof Error)) {
+    return h.continue;
+  }
+
+  if (!error?._original) {
+    throw error;
+  }
   // Some destruc to avoid trying to log Buffer from file.
   // If logged, it stuck the Node main process and makes the service unavailable
   const safeOriginal = Object.keys(error._original).reduce((acc, key) => {

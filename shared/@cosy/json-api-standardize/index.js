@@ -14,17 +14,19 @@ export const standardizeError = (err) => {
     return err;
   }
 
-  return Boom.badImplementation(err);
+  return Boom.badImplementation(null, err);
 };
 
-export const reformat = (payload, statusCode = 200) => {
-  if (payload[standardized]) {
+export const reformat = (payload = {}, _statusCode = 200) => {
+  if (payload?.[standardized]) {
     return payload;
   }
 
+  const statusCode = Number(_statusCode);
+
   return {
     [standardized]: true,
-    statusCode,
+    statusCode: !Number.isNaN(statusCode) ? statusCode : 200,
     data: payload,
     meta: {},
   };
@@ -38,7 +40,11 @@ export const reformat = (payload, statusCode = 200) => {
  *
  * @return {Object|Boom} response
  */
-export const standardizeResponse = (response) => {
+export const standardizeResponse = (response = {}) => {
+  if (!response?.hasOwnProperty("source")) {
+    return Boom.badImplementation("Response is invalid");
+  }
+
   const { source } = response;
   const { statusCode = 200 } = response;
 
@@ -54,9 +60,9 @@ export const standardizeResponse = (response) => {
 
 export default {
   name: "json-api-standardize",
-  register(server, { ignorePlugins = [] }) {
+  register(server, { ignorePlugins = [] } = {}) {
     const preResponse = (request, h) => {
-      if (ignorePlugins.includes(request?.route?.realm?.plugin)) {
+      if (ignorePlugins?.includes(request?.route?.realm?.plugin)) {
         return h.continue;
       }
 

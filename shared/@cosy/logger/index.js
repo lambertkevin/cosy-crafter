@@ -10,18 +10,20 @@ let pkg;
 try {
   pkg = require(`${path.resolve("./package.json")}`);
 } catch (e) {
+  // istanbul ignore next
   pkg = { version: "unknown" };
 }
 
 let identifier;
 try {
   const config = require(`${path.resolve("./src/config.js")}`);
+  // istanbul ignore next
   identifier = config.identifier;
 } catch (e) {
   identifier = "unknown";
 }
 
-const raw = format((info) => {
+export const raw = format((info) => {
   // eslint-disable-next-line no-param-reassign
   info.raw = safeStringify(info, null, 2);
 
@@ -52,6 +54,7 @@ const consoleTransport = new transports.Console({
     format.simple(),
     format.printf((log) => {
       return `${format
+        // necessary redundance
         .colorize()
         .colorize(log.level, `${log.level}: ${log.message}`)}${
         log[SPLAT] ? `\n${safeStringify(log[SPLAT], null, 2)}` : ""
@@ -76,14 +79,24 @@ export const logger = createLogger({
   ),
   transports: [
     new DailyRotateFile({
-      filename: path.resolve("./", "logs", "%DATE%-errors.log"),
+      filename: path.resolve(
+        "./",
+        "logs",
+        process.env.NODE_ENV,
+        "%DATE%-errors.log"
+      ),
       level: "error",
       datePattern: "DD-MM-YYYY",
       zippedArchive: true,
       maxSize: "20m",
     }),
     new DailyRotateFile({
-      filename: path.resolve("./", "logs", "%DATE%-combined.log"),
+      filename: path.resolve(
+        "./",
+        "logs",
+        process.env.NODE_ENV,
+        "%DATE%-combined.log"
+      ),
       datePattern: "DD-MM-YYYY",
       zippedArchive: true,
       maxSize: "20m",

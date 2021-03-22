@@ -1,9 +1,11 @@
 .env
 node_modules
+coverage
 .initialized
 .credentials
+.nyc_output
 
-services/*/logs/*
+logs
 
 #auth
 .keys

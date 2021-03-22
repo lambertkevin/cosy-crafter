@@ -4,11 +4,24 @@
   "description": "Axios utitilies made for Cosy-Crafter",
   "main": "index.js",
   "private": "true",
+  "scripts": {
+    "test": "NODE_ENV=test mocha test/**/*.test.js"
+  },
   "author": "Kévin Lambert",
   "license": "MIT",
   "dependencies": {
+    "@cosy/custom-error": "file:../custom-error",
     "@hapi/boom": "^9.1.2",
     "axios": "^0.21.1",
     "jsonwebtoken": "^8.5.1"
+  },
+  "devDependencies": {
+    "@babel/polyfill": "^7.12.1",
+    "@babel/preset-env": "^7.13.10",
+    "@babel/register": "^7.13.8",
+    "babel-plugin-istanbul": "^6.0.0",
+    "chai": "^4.3.4",
+    "chai-interface": "^2.0.3",
+    "mocha": "^8.3.2"
   }
 }

@@ -5,10 +5,16 @@
  * @return {Object}
  */
 export default (fields) => {
+  if (!Array.isArray(fields)) {
+    return {};
+  }
+
   const hiddenFields = {};
 
   fields.forEach((field) => {
-    hiddenFields[field] = false;
+    if (typeof field === "string") {
+      hiddenFields[field] = false;
+    }
   });
   return hiddenFields;
 };

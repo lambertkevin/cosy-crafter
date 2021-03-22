@@ -1,6 +1,41 @@
 import fs from "fs";
 import path from "path";
 import NodeRsa from "node-rsa";
+import CustomError from "@cosy/custom-error";
+
+const {
+  RSA_KEYS_LOCATION,
+  AUTH_RSA_KEYS_NAME,
+  POOL_RSA_KEYS_NAME,
+} = process.env;
+
+const keysMap = {
+  auth: AUTH_RSA_KEYS_NAME,
+  pool: POOL_RSA_KEYS_NAME,
+};
+
+const keyFileNotFoundError = new CustomError(
+  "Key file not found",
+  "KeyFileNotFound"
+);
+
+/**
+ * Return a key filename from the keyMap
+ *
+ * @param {String} keyType
+ *
+ * @return {String}
+ * @throws {CustomError}
+ */
+const keyByType = (keyType) => {
+  const key = keysMap[keyType] ?? keysMap["auth"];
+
+  if (typeof key !== "string" || typeof RSA_KEYS_LOCATION !== "string") {
+    throw new CustomError("Env variables are not set", "EnvVariableNotSet");
+  }
+
+  return key;
+};
 
 /**
  * Factory of function capable of decrypting
@@ -11,18 +46,22 @@ import NodeRsa from "node-rsa";
  * @return {Function}
  */
 export const makeRsaPrivateDecrypter = (keyType) => {
-  const keys = {
-    auth: `${process.env.AUTH_RSA_KEYS_NAME}`,
-    pool: `${process.env.POOL_RSA_KEYS_NAME}`,
-  };
-  const privateKey = new NodeRsa(
-    fs.readFileSync(
-      path.join(process.env.RSA_KEYS_LOCATION, keys[keyType] || keys["auth"])
-    ),
-    "pkcs1-private-pem"
-  );
+  const key = keyByType(keyType);
+  const keyPath = path.join(RSA_KEYS_LOCATION, key);
+  const fileStats = fs.existsSync(keyPath) && fs.statSync(keyPath);
 
-  return (data, format = "utf8") => privateKey.decrypt(data, format);
+  if (fileStats?.isFile?.()) {
+    const privateKey = new NodeRsa(
+      fs.readFileSync(keyPath),
+      "pkcs1-private-pem"
+    );
+
+    // Format returned can also be 'buffer', 'json' or 'utf8'
+    return (data, formatReturned = "utf8") =>
+      privateKey.decrypt(data, formatReturned);
+  }
+
+  throw keyFileNotFoundError;
 };
 
 /**
@@ -34,18 +73,22 @@ export const makeRsaPrivateDecrypter = (keyType) => {
  * @return {Function}
  */
 export const makeRsaPrivateEncrypter = (keyType) => {
-  const keys = {
-    auth: `${process.env.AUTH_RSA_KEYS_NAME}`,
-    pool: `${process.env.POOL_RSA_KEYS_NAME}`,
-  };
-  const privateKey = new NodeRsa(
-    fs.readFileSync(
-      path.join(process.env.RSA_KEYS_LOCATION, keys[keyType] || keys["auth"])
-    ),
-    "pkcs1-private-pem"
-  );
+  const key = keyByType(keyType);
+  const keyPath = path.join(RSA_KEYS_LOCATION, key);
+  const fileStats = fs.existsSync(keyPath) && fs.statSync(keyPath);
 
-  return (data, format = "base64") => privateKey.encryptPrivate(data, format);
+  if (fileStats?.isFile?.()) {
+    const privateKey = new NodeRsa(
+      fs.readFileSync(keyPath),
+      "pkcs1-private-pem"
+    );
+
+    // Format returned can be 'buffer', 'binary', 'hex' or 'base64'
+    return (data, formatReturned = "base64") =>
+      privateKey.encryptPrivate(data, formatReturned);
+  }
+
+  throw keyFileNotFoundError;
 };
 
 /**
@@ -57,18 +100,19 @@ export const makeRsaPrivateEncrypter = (keyType) => {
  * @return {Function}
  */
 export const makeRsaPublicDecrypter = (keyType) => {
-  const keys = {
-    auth: `${process.env.AUTH_RSA_KEYS_NAME}.pem`,
-    pool: `${process.env.POOL_RSA_KEYS_NAME}.pem`,
-  };
-  const publicKey = new NodeRsa(
-    fs.readFileSync(
-      path.join(process.env.RSA_KEYS_LOCATION, keys[keyType] || keys["auth"])
-    ),
-    "pkcs8-public-pem"
-  );
+  const key = keyByType(keyType);
+  const keyPath = path.join(RSA_KEYS_LOCATION, `${key}.pem`);
+  const fileStats = fs.existsSync(keyPath) && fs.statSync(keyPath);
 
-  return (data, format = "utf8") => publicKey.decryptPublic(data, format);
+  if (fileStats?.isFile?.()) {
+    const publicKey = new NodeRsa(fs.readFileSync(keyPath), "pkcs8-public-pem");
+
+    // Format returned can be 'buffer', 'json' or 'utf8'
+    return (data, formatReturned = "utf8") =>
+      publicKey.decryptPublic(data, formatReturned);
+  }
+
+  throw keyFileNotFoundError;
 };
 
 /**
@@ -80,16 +124,17 @@ export const makeRsaPublicDecrypter = (keyType) => {
  * @return {Function}
  */
 export const makeRsaPublicEncrypter = (keyType) => {
-  const keys = {
-    auth: `${process.env.AUTH_RSA_KEYS_NAME}.pem`,
-    pool: `${process.env.POOL_RSA_KEYS_NAME}.pem`,
-  };
-  const publicKey = new NodeRsa(
-    fs.readFileSync(
-      path.join(process.env.RSA_KEYS_LOCATION, keys[keyType] || keys["auth"])
-    ),
-    "pkcs8-public-pem"
-  );
+  const key = keyByType(keyType);
+  const keyPath = path.join(RSA_KEYS_LOCATION, `${key}.pem`);
+  const fileStats = fs.existsSync(keyPath) && fs.statSync(keyPath);
 
-  return (data, format = "utf8") => publicKey.encrypt(data, format);
+  if (fileStats?.isFile?.()) {
+    const publicKey = new NodeRsa(fs.readFileSync(keyPath), "pkcs8-public-pem");
+
+    // Format returned can be 'buffer', 'binary', 'hex' or 'base64'
+    return (data, formatReturned = "base64") =>
+      publicKey.encrypt(data, formatReturned);
+  }
+
+  throw keyFileNotFoundError;
 };

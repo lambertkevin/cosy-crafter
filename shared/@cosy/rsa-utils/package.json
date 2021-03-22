@@ -6,7 +6,21 @@
   "private": true,
   "author": "Kévin Lambert",
   "license": "MIT",
+  "scripts": {
+    "test": "NODE_ENV=test mocha test/**/*.test.js"
+  },
   "dependencies": {
+    "@cosy/custom-error": "file:../custom-error",
     "node-rsa": "^1.1.1"
+  },
+  "devDependencies": {
+    "@babel/polyfill": "^7.12.1",
+    "@babel/preset-env": "^7.13.10",
+    "@babel/register": "^7.13.8",
+    "babel-plugin-istanbul": "^6.0.0",
+    "chai": "^4.3.4",
+    "fs-extra": "^9.1.0",
+    "mocha": "^8.3.2",
+    "resnap": "^1.0.1"
   }
 }
