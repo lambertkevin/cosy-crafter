@@ -4,12 +4,20 @@
   "description": "Helpers and hapi plugin to standardize the responses",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "NODE_ENV=test mocha test/**/*.test.js"
   },
   "author": "Kévin Lambert",
   "license": "MIT",
   "dependencies": {
     "@hapi/boom": "^9.1.2",
     "lodash.isnil": "^4.0.0"
+  },
+  "devDependencies": {
+    "@babel/polyfill": "^7.12.1",
+    "@babel/preset-env": "^7.13.10",
+    "@babel/register": "^7.13.8",
+    "babel-plugin-istanbul": "^6.0.0",
+    "chai": "^4.3.4",
+    "mocha": "^8.3.2"
   }
 }
