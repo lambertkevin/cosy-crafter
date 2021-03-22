@@ -9,10 +9,14 @@ import { spawn } from 'child_process';
  */
 export const startAuthService = () =>
   // Promise starting the auth-service locally
-  new Promise((resolve) => {
+  new Promise((resolve, reject) => {
     const child = spawn('npm', ['run', 'mock'], {
       cwd: path.resolve('./', '..', 'auth-service')
     });
+
+    child.on('exit', () => {
+      reject(new Error('You must kill the process running on the auth-service port'));
+    })
 
     child.stdout.on('data', (data) => {
       // Service is ready when it logs 'Server running'
