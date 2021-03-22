@@ -13,13 +13,18 @@ import {
 const { AUTH_SERVICE_NAME, AUTH_SERVICE_PORT } = process.env;
 const CREDENTIALS_PATH = path.resolve("./", ".credentials");
 
-let identifier;
+if (typeof AUTH_SERVICE_NAME !== 'string' || typeof AUTH_SERVICE_PORT !== 'string') {
+  throw new CustomError("Env variables are not set", "EnvVariableNotSet");
+}
+
+let config;
 try {
-  const config = require(path.resolve("./src/config"));
-  identifier = config.identifier;
+  config = require(path.resolve("./src/config"));
 } catch (e) {
   throw new CustomError("Config file is missing", "RequireConfigError");
 }
+
+const { identifier } = config;
 
 /**
  * Exposed object contaning tokens
@@ -40,7 +45,7 @@ export const register = async () => {
   try {
     const publicEncrypter = makeRsaPublicEncrypter("auth");
     const publicDecrypter = makeRsaPublicDecrypter("auth");
-    const { data: response } = await axios.post(
+    const { data: encryptedKey } = await axios.post(
       `http://${AUTH_SERVICE_NAME}:${AUTH_SERVICE_PORT}/services`,
       {
         identifier,
@@ -50,24 +55,28 @@ export const register = async () => {
           "X-Authorization": publicEncrypter(Date.now()),
         },
       }
-    );
-    const { data: encryptedKey } = response;
-    const key = publicDecrypter(encryptedKey);
+    ).then(({ data }) => data)
 
-    if (encryptedKey) {
+    const key = publicDecrypter(encryptedKey);
+    if (key) {
       fs.writeFileSync(
         CREDENTIALS_PATH,
         JSON.stringify({
           identifier,
           key,
         })
-      );
-      return;
-    }
+        );
+        return;
+      }
     throw new CustomError("Couldn't get a key");
   } catch (e) {
     logger.error("Error while registering the service", e);
-    process.exit();
+    // istanbul ignore else
+    if (process.env.NODE_ENV === 'test') {
+      throw new CustomError('Process would have exited', 'ProcessExitError', null, e);
+    } else {
+      process.exit(1);
+    }
   }
 };
 
@@ -94,7 +103,12 @@ export const login = async () => {
   } catch (e) {
     /** @WARNING Change this to fatal when feature available in winston + sentry */
     logger.error("Error while loging the service", e);
-    process.exit(1);
+    // istanbul ignore else
+    if (process.env.NODE_ENV === 'test') {
+      throw new CustomError('Process would have exited', 'ProcessExitError');
+    } else {
+      process.exit(1);
+    }
   }
 };
 
@@ -166,7 +180,6 @@ export const socketJwtMiddleware = (socket, next) => {
 
       next(error);
     } else {
-      console.log(error);
       setTimeout(() => {
         socket.disconnect();
       }, 200);
