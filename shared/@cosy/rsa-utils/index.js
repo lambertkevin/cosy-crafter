@@ -56,7 +56,9 @@ export const makeRsaPrivateDecrypter = (keyType) => {
       "pkcs1-private-pem"
     );
 
-    return (data, format = "utf8") => privateKey.decrypt(data, format);
+    // Format returned can also be 'buffer', 'json' or 'utf8'
+    return (data, formatReturned = "utf8") =>
+      privateKey.decrypt(data, formatReturned);
   }
 
   throw keyFileNotFoundError;
@@ -81,7 +83,9 @@ export const makeRsaPrivateEncrypter = (keyType) => {
       "pkcs1-private-pem"
     );
 
-    return (data, format = "utf8") => privateKey.encryptPrivate(data, format);
+    // Format returned can be 'buffer', 'binary', 'hex' or 'base64'
+    return (data, formatReturned = "base64") =>
+      privateKey.encryptPrivate(data, formatReturned);
   }
 
   throw keyFileNotFoundError;
@@ -103,7 +107,9 @@ export const makeRsaPublicDecrypter = (keyType) => {
   if (fileStats?.isFile?.()) {
     const publicKey = new NodeRsa(fs.readFileSync(keyPath), "pkcs8-public-pem");
 
-    return (data, format = "utf8") => publicKey.decryptPublic(data, format);
+    // Format returned can be 'buffer', 'json' or 'utf8'
+    return (data, formatReturned = "utf8") =>
+      publicKey.decryptPublic(data, formatReturned);
   }
 
   throw keyFileNotFoundError;
@@ -125,7 +131,9 @@ export const makeRsaPublicEncrypter = (keyType) => {
   if (fileStats?.isFile?.()) {
     const publicKey = new NodeRsa(fs.readFileSync(keyPath), "pkcs8-public-pem");
 
-    return (data, format = "utf8") => publicKey.encrypt(data, format);
+    // Format returned can be 'buffer', 'binary', 'hex' or 'base64'
+    return (data, formatReturned = "base64") =>
+      publicKey.encrypt(data, formatReturned);
   }
 
   throw keyFileNotFoundError;
