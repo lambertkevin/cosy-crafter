@@ -21,11 +21,21 @@ try {
   throw new CustomError("Config file is missing", "RequireConfigError");
 }
 
+/**
+ * Exposed object contaning tokens
+ * @type {Object}
+ */
 export const tokens = {
   accessToken: null,
   refreshToken: null,
 };
 
+/**
+ * Register a service to the auth-service
+ * and save credentials to local file
+ *
+ * @return {Promise}
+ */
 export const register = async () => {
   try {
     const publicEncrypter = makeRsaPublicEncrypter("auth");
@@ -61,6 +71,11 @@ export const register = async () => {
   }
 };
 
+/**
+ * Log a service to get tokens
+ *
+ * @return {Promise}
+ */
 export const login = async () => {
   try {
     const publicEncrypter = makeRsaPublicEncrypter("auth");
@@ -83,6 +98,13 @@ export const login = async () => {
   }
 };
 
+/**
+ * Helper to authenticate a service by either
+ * registering + logging
+ * or just logging
+ *
+ * @return {Promise}
+ */
 export const auth = async () => {
   if (!fs.existsSync(CREDENTIALS_PATH)) {
     await register();
@@ -92,6 +114,11 @@ export const auth = async () => {
   }
 };
 
+/**
+ * Refresh the service tokens
+ *
+ * @return {Promise<Object>} [tokens]
+ */
 export const refresh = async () => {
   try {
     const { data: freshTokens } = await axios
@@ -115,7 +142,17 @@ export const refresh = async () => {
   }
 };
 
-
+/**
+ * Middleware in charge of checking weither a socket
+ * client is using auth through handshake or not.
+ * Will disconnect the socket if
+ * it is not authorized
+ *
+ * @param {Object} socket
+ * @param {Function} next
+ *
+ * @return {void}
+ */
 export const socketJwtMiddleware = (socket, next) => {
   try {
     const { token } = socket.handshake.auth;
