@@ -114,7 +114,7 @@ export default {
             }
 
             const encryptor = makeRsaPrivateEncrypter();
-            return h.response(encryptor(password, 'base64')).code(201);
+            return h.response(encryptor(password)).code(201);
           } catch (error) {
             logger.error('Service Creation Handler Error', error);
             return Boom.boomify(error);

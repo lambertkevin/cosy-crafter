@@ -29,7 +29,7 @@ export const register = async () => {
       },
       {
         headers: {
-          'X-Authorization': publicEncrypter(Date.now(), 'base64')
+          'X-Authorization': publicEncrypter(Date.now())
         }
       }
     );
@@ -62,7 +62,7 @@ export const login = async () => {
     const { data: freshTokens } = await axios
       .post(`http://${AUTH_SERVICE_NAME}:${AUTH_SERVICE_PORT}/services/login`, {
         identifier: savedIdentifier,
-        key: publicEncrypter(key, 'base64')
+        key: publicEncrypter(key)
       })
       .then(({ data }) => data);
 
