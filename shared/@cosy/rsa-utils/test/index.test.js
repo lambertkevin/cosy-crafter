@@ -1,8 +1,8 @@
 import fs from "fs";
-import fsExtra from "fs-extra";
 import path from "path";
-import NodeRsa from "node-rsa";
 import resnap from "resnap";
+import fsExtra from "fs-extra";
+import NodeRsa from "node-rsa";
 import { expect, AssertionError } from "chai";
 import CustomError from "@cosy/custom-error";
 
@@ -277,7 +277,7 @@ describe("@cosy/rsa-utils", () => {
       const decrypter = makeRsaPrivateDecrypter();
       const encrypter = makeRsaPublicEncrypter();
 
-      const test = encrypter("test", "base64");
+      const test = encrypter("test");
       const result = decrypter(test, "utf8");
 
       expect(result).to.be.equal("test");
@@ -294,7 +294,7 @@ describe("@cosy/rsa-utils", () => {
       const decrypter = makeRsaPublicDecrypter();
       const encrypter = makeRsaPrivateEncrypter();
 
-      const test = encrypter("test", "base64");
+      const test = encrypter("test");
       const result = decrypter(test, "utf8");
 
       expect(result).to.be.equal("test");
@@ -312,7 +312,7 @@ describe("@cosy/rsa-utils", () => {
       const encrypter = makeRsaPublicEncrypter();
 
       try {
-        const test = encrypter("test", "base64");
+        const test = encrypter("test");
         decrypter(test, "utf8");
         expect.fail("Function should have been thrown");
       } catch (e) {
@@ -338,7 +338,7 @@ describe("@cosy/rsa-utils", () => {
       const encrypter = makeRsaPrivateEncrypter();
 
       try {
-        const test = encrypter("test", "base64");
+        const test = encrypter("test");
         decrypter(test, "utf8");
         expect.fail("Function should have been thrown");
       } catch (e) {
@@ -352,7 +352,7 @@ describe("@cosy/rsa-utils", () => {
       }
     });
 
-    it("should encrypt and decrypt returning utf8", () => {
+    it("should encrypt in base64 and decrypt returning utf8", () => {
       process.env.RSA_KEYS_LOCATION = path.resolve("./.keys/");
       process.env.AUTH_RSA_KEYS_NAME = "auth";
       const {
@@ -363,9 +363,9 @@ describe("@cosy/rsa-utils", () => {
       } = require("../index");
 
       const publicEncrypter = makeRsaPublicEncrypter();
+      const privateDecrypter = makeRsaPrivateDecrypter();
       const publicDecrypter = makeRsaPublicDecrypter();
       const privateEncrypter = makeRsaPrivateEncrypter();
-      const privateDecrypter = makeRsaPrivateDecrypter();
 
       const test1 = publicEncrypter("test1");
       const test2 = privateEncrypter("test2");
