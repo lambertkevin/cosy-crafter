@@ -1,5 +1,4 @@
 import path from 'path';
-import jwt from 'jsonwebtoken';
 import { spawn } from 'child_process';
 
 /**
@@ -11,7 +10,14 @@ export const startAuthService = () =>
   // Promise starting the auth-service locally
   new Promise((resolve, reject) => {
     const child = spawn('npm', ['run', 'mock'], {
-      cwd: path.resolve('./', '..', 'auth-service')
+      detached: false,
+      cwd: path.resolve('./', '..', '..', '..', 'services', 'auth-service'),
+      stdio: 'pipe',
+      env: {
+        ...process.env,
+        RSA_KEYS_LOCATION: path.resolve('./test/config/keys/'),
+        AUTH_RSA_KEYS_NAME: 'test',
+      }
     });
 
     child.on('exit', () => {
@@ -26,34 +32,6 @@ export const startAuthService = () =>
     });
   });
 
-/**
- * Create an access token
- *
- * @param {String|Object|Buffer} payload
- * @param {String} expire
- *
- * @return {Promise<String>}
- */
-export const accessTokenFactory = (payload, expire) =>
-  jwt.sign(payload, process.env.SERVICE_JWT_SECRET, {
-    expiresIn: expire
-  });
-
-export const accessToken = accessTokenFactory(
-  {
-    service: 'integration-service'
-  },
-  '10m'
-);
-
-export const accessTokenExpired = accessTokenFactory(
-  {
-    service: 'integration-service'
-  },
-  '-1s'
-);
-
 export default {
   startAuthService,
-  accessToken
 };
