@@ -7,6 +7,7 @@ import FormData from 'form-data';
 import { v4 as uuid } from 'uuid';
 import ffmpeg from 'fluent-ffmpeg';
 import CustomError from '@cosy/custom-error';
+import { refresh, tokens } from '@cosy/auth';
 import { sentry, logger } from '@cosy/logger';
 import { makeAxiosInstance } from '@cosy/axios-utils';
 import {
@@ -17,7 +18,6 @@ import {
   socketSchema
 } from '../schemas';
 import { getMp3ListDuration } from '../utils/Mp3Utils';
-import { refresh, tokens } from '../auth';
 import {
   getCrossFadeFilters,
   percentageFromTimemark

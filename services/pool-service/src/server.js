@@ -2,9 +2,9 @@ import os from 'os';
 import express from 'express';
 import socket from 'socket.io';
 import { logger } from '@cosy/logger';
-import { nodeConfig } from './config';
+import { auth, socketJwtMiddleware } from '@cosy/auth';
 import { workerHandler, transcodingQueue } from './queue';
-import { auth, socketJwtMiddleware } from './auth';
+import { nodeConfig } from './config';
 import apis from './api';
 
 export default async () => {

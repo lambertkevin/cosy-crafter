@@ -2,11 +2,11 @@ import _ from 'lodash';
 import axios from 'axios';
 import mongoose from 'mongoose';
 import joigoose from 'joigoose';
+import { tokens } from '@cosy/auth';
 import { logger } from '@cosy/logger';
 import arrayToProjection from '@cosy/array-to-projection';
 import mongooseUniqueValidator from 'mongoose-unique-validator';
 import CraftSchema, { hiddenProperties } from '../schemas/CraftSchema';
-import { tokens } from '../auth';
 
 export const hiddenFields = [...hiddenProperties, 'updatedAt', '__v'];
 
