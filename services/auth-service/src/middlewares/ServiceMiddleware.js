@@ -8,13 +8,12 @@ import { makeRsaPrivateDecrypter } from '@cosy/rsa-utils';
 export const checkSignature = (request, h) => {
   try {
     const { headers } = request;
-    const decrypter = makeRsaPrivateDecrypter();
-    const decrypted = decrypter(headers['x-authorization']);
+    const privateDecrypter = makeRsaPrivateDecrypter();
+    const decrypted = privateDecrypter(headers['x-authorization']);
     const decryptedTimestamp = new Date(Number(decrypted)).getTime();
     const now = Date.now();
-    // Date.now from signature must be less than 1 sec in prod and 12 hours in dev
-    const timing =
-      process.env.NODE_ENV === 'production' ? 1000 : 12 * 60 * 60 * 1000;
+    // Date.now from signature must be less than 1 sec
+    const timing = 1000;
 
     if (now - decryptedTimestamp > timing) {
       throw Boom.unauthorized();
