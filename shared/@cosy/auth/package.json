@@ -4,7 +4,7 @@
   "description": "Helpers to handle authenticating with the auth-service",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "NODE_ENV=test mocha test/**/*.test.js"
   },
   "author": "Kévin Lambert",
   "license": "MIT",
@@ -15,5 +15,14 @@
     "@hapi/boom": "^9.1.2",
     "axios": "^0.21.1",
     "jsonwebtoken": "^8.5.1"
+  },
+  "devDependencies": {
+    "@babel/polyfill": "^7.12.1",
+    "@babel/preset-env": "^7.13.12",
+    "@babel/register": "^7.13.8",
+    "chai": "^4.3.4",
+    "mocha": "^8.3.2",
+    "proxyquire": "^2.1.3",
+    "resnap": "^1.0.1"
   }
 }
