@@ -90,14 +90,14 @@ export const create = ({ jwtid, type }, sanitized = true) =>
  * @return {Promise<Object[]>} {Token}
  */
 export const update = (id, { jwtid, type }, sanitized = true) =>
-  Token.updateOne({ _id: id }, _.omitBy({ jwtid, type }, _.isUndefined))
+  Token.updateOne({ _id: id }, _.omitBy({ jwtid, type }, _.isUndefined), {
+    runValidators: true,
+    context: 'query'
+  })
     .exec()
     .then(async (res) => {
       if (!res.n) {
         return Boom.notFound();
-      }
-      if (!res.nModified) {
-        return Boom.expectationFailed('No changes required');
       }
 
       const token = await findOne(id, sanitized);
@@ -119,7 +119,7 @@ export const update = (id, { jwtid, type }, sanitized = true) =>
 /**
  * Remove Tokens
  *
- * @param {Arrays} ids
+ * @param {Array} ids
  *
  * @return {Promise<void>}
  */
