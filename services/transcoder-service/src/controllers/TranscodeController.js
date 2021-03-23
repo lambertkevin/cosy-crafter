@@ -153,6 +153,7 @@ export const joinFiles = async (files, jobId, socket) => {
     }
 
     ff.on('start', () => {
+      /* istanbul ignore if  */
       if (process.env.NODE_ENV === 'development') {
         console.time('merge');
       }
@@ -170,6 +171,7 @@ export const joinFiles = async (files, jobId, socket) => {
     })
       .on('progress', ({ timemark }) => {
         const percent = percentageFromTimemark(timemark, duration);
+        /* istanbul ignore if  */
         if (process.env.NODE_ENV === 'development') {
           console.log(percent);
         }
@@ -178,6 +180,7 @@ export const joinFiles = async (files, jobId, socket) => {
         });
       })
       .on('end', () => {
+        /* istanbul ignore if  */
         if (process.env.NODE_ENV === 'development') {
           console.timeEnd('merge');
         }
@@ -319,6 +322,7 @@ export const createTranscodeJob = async (
 
     busyFlag = true;
 
+    /* istanbul ignore if  */
     if (process.env.NODE_ENV === 'production') {
       sentry.setTag('jobId', jobId);
       transaction = sentry.startTransaction({
@@ -333,6 +337,7 @@ export const createTranscodeJob = async (
 
     // --- Start Download Files
     let downloadFilesSpan;
+    /* istanbul ignore if  */
     if (process.env.NODE_ENV === 'production') {
       downloadFilesSpan = transaction.startChild({
         data: {
@@ -355,6 +360,7 @@ export const createTranscodeJob = async (
 
     // --- Start Transcoding
     let transcodingSpan;
+    /* istanbul ignore if  */
     if (process.env.NODE_ENV === 'production') {
       transcodingSpan = transaction.startChild({
         data: {
@@ -373,6 +379,7 @@ export const createTranscodeJob = async (
 
     // --- Start Uploading
     let uploadingSpan;
+    /* istanbul ignore if  */
     if (process.env.NODE_ENV === 'production') {
       uploadingSpan = transaction.startChild({
         data: {
@@ -411,6 +418,7 @@ export const createTranscodeJob = async (
     };
 
     let savingCraftSpan;
+    /* istanbul ignore if  */
     if (process.env.NODE_ENV === 'production') {
       savingCraftSpan = transaction.startChild({
         data: payload,
@@ -434,6 +442,7 @@ export const createTranscodeJob = async (
 
     // Delete old file
     fs.unlink(mergedFilePath, (error) => {
+      /* istanbul ignore if  */
       if (error) {
         logger.error(`Error while deleting temp merge file`, {
           error,
@@ -458,6 +467,7 @@ export const createTranscodeJob = async (
     }
 
     // Check if error is a custom error and not a native one
+    /* istanbul ignore else  */
     if (e instanceof CustomError) {
       return ack({
         statusCode: e.code,
@@ -466,6 +476,7 @@ export const createTranscodeJob = async (
       });
     }
 
+    /* istanbul ignore next  */
     return ack({
       statusCode: 500,
       errorName: e.name,
