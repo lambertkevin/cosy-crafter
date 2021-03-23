@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "description": "Generate an object containing hidden fields to be used as projection for mongoose",
   "scripts": {
-    "test": "NODE_ENV=test mocha test/**/*.js"
+    "test": "NODE_ENV=test mocha test/**/*.spec.js"
   },
   "main": "index.js",
   "private": "true",
