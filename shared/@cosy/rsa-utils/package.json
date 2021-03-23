@@ -7,7 +7,7 @@
   "author": "Kévin Lambert",
   "license": "MIT",
   "scripts": {
-    "test": "NODE_ENV=test mocha test/**/*.test.js"
+    "test": "NODE_ENV=test mocha test/**/*.spec.js"
   },
   "dependencies": {
     "@cosy/custom-error": "file:../custom-error",
