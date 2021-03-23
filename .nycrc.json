@@ -6,5 +6,5 @@
   "useInlineSourceMaps": false,
   "instrument": false,
   "require": ["@babel/register"],
-  "exclude": ["**/node_modules", "**/*.test.js", "**/*.mocha.js", "**/coverage", "**/.*", "services/**/schemas/**/*.js"]
+  "exclude": ["**/node_modules", "**/test/*", "**/coverage", "**/.*"]
 }

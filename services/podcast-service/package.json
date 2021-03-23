@@ -18,6 +18,7 @@
     "@babel/node": "^7.10.5",
     "@babel/preset-env": "^7.11.0",
     "@cosy/array-to-projection": "file:../../shared/@cosy/array-to-projection",
+    "@cosy/auth": "file:../../shared/@cosy/auth",
     "@cosy/axios-utils": "file:../../shared/@cosy/axios-utils",
     "@cosy/custom-error": "file:../../shared/@cosy/custom-error",
     "@cosy/hapi-fail-validation-handler": "file:../../shared/@cosy/hapi-fail-validation-handler",

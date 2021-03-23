@@ -8,6 +8,7 @@ set +e
 (cd ./shared/@cosy/logger && npm run test  -- --bail false)
 (cd ./shared/@cosy/rsa-utils && npm run test  -- --bail false  --timeout 30000)
 (cd ./shared/@cosy/schema-utils && npm run test  -- --bail false)
+(cd ./shared/@cosy/auth && npm run test  -- --bail false  --timeout 30000)
 (cd ./services/auth-service && npm run test  -- --bail false --timeout 30000)
 (cd ./services/podcast-service && npm run test  -- --bail false --timeout 30000)
 (cd ./services/pool-service && npm run test-unit  -- --bail false)

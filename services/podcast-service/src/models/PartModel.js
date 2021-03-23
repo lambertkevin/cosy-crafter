@@ -3,12 +3,12 @@ import axios from 'axios';
 import Boom from '@hapi/boom';
 import mongoose from 'mongoose';
 import joigoose from 'joigoose';
+import { tokens } from '@cosy/auth';
 import { logger } from '@cosy/logger';
 import arrayToProjection from '@cosy/array-to-projection';
 import mongooseUniqueValidator from 'mongoose-unique-validator';
 import PartSchema, { hiddenProperties } from '../schemas/PartSchema';
 import Podcast from './PodcastModel';
-import { tokens } from '../auth';
 
 export const hiddenFields = [
   ...hiddenProperties,
