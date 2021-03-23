@@ -205,7 +205,6 @@ describe("@cosy/auth unit tests", () => {
       const { login } = proxyquire.noCallThru().load("../index", {
         [path.resolve("./src/config")]: {
           identifier: "test-identifier",
-          "@NoCallThru": true,
         },
         fs: {
           existsSync: (path) => {
@@ -236,7 +235,6 @@ describe("@cosy/auth unit tests", () => {
       const { login } = proxyquire.noCallThru().load("../index", {
         [path.resolve("./src/config")]: {
           identifier: "test-identifier",
-          "@NoCallThru": true,
         },
         fs: {
           existsSync: (path) => {
@@ -267,7 +265,6 @@ describe("@cosy/auth unit tests", () => {
       const { login } = proxyquire.noCallThru().load("../index", {
         [path.resolve("./src/config")]: {
           identifier: "test-identifier",
-          "@NoCallThru": true,
         },
       });
 
@@ -322,6 +319,110 @@ describe("@cosy/auth unit tests", () => {
       await register();
 
       return auth().then((res) => {
+        expect(res).to.have.keys("accessToken", "refreshToken");
+      });
+    });
+  });
+
+  describe("refresh", () => {
+    let authServiceChild;
+    before(async () => {
+      process.env.AUTH_SERVICE_NAME = "localhost";
+      process.env.AUTH_SERVICE_PORT = "3002";
+      process.env.RSA_KEYS_LOCATION = path.resolve("./test/config/keys/");
+      process.env.AUTH_RSA_KEYS_NAME = "test";
+      authServiceChild = await startAuthService();
+    });
+
+    after(() => {
+      authServiceChild.kill("SIGINT");
+    });
+
+    it("should fail refreshing if the tokens are empty", async () => {
+      const { refresh } = proxyquire.noCallThru().load("../index", {
+        [path.resolve("./src/config")]: {
+          identifier: "test-identifier",
+        },
+      });
+
+      try {
+        await refresh();
+        expect.fail("Promise should have been rejected");
+      } catch (e) {
+        if (e instanceof AssertionError) {
+          throw e;
+        }
+
+        expect(e).to.be.an("error").and.to.be.an.instanceOf(CustomError);
+        expect(e?.name).to.be.equal("RefreshUnauthorizedError");
+        expect(e?.code).to.be.equal(401);
+        expect(e?.details?.response?.status).to.be.equal(400);
+      }
+    });
+
+    it("should fail refreshing if the tokens are invalid", async () => {
+      const { refresh, tokens } = proxyquire.noCallThru().load("../index", {
+        [path.resolve("./src/config")]: {
+          identifier: "test-identifier",
+        },
+      });
+
+      tokens.accessToken = "123";
+      tokens.refreshToken = "456";
+
+      try {
+        await refresh();
+        expect.fail("Promise should have been rejected");
+      } catch (e) {
+        if (e instanceof AssertionError) {
+          throw e;
+        }
+
+        expect(e).to.be.an("error").and.to.be.an.instanceOf(CustomError);
+        expect(e?.name).to.be.equal("RefreshUnauthorizedError");
+        expect(e?.code).to.be.equal(401);
+        expect(e?.details?.response?.status).to.be.equal(401);
+      }
+    });
+
+    it("should fail refreshing if the auth-service returned no tokens", async () => {
+      const { refresh } = proxyquire.noCallThru().load("../index", {
+        [path.resolve("./src/config")]: {
+          identifier: "test-identifier",
+        },
+        axios: {
+          post: () =>
+            Promise.resolve({
+              data: {
+                data: {},
+              },
+            }),
+        },
+      });
+
+      try {
+        await refresh();
+        expect.fail("Promise should have been rejected");
+      } catch (e) {
+        if (e instanceof AssertionError) {
+          throw e;
+        }
+
+        expect(e).to.be.an("error").and.to.be.an.instanceOf(CustomError);
+        expect(e?.name).to.be.equal("AuthServiceFailedError");
+        expect(e?.code).to.be.equal(503);
+      }
+    });
+
+    it("should succeed refreshing", async () => {
+      const { auth, refresh } = proxyquire.noCallThru().load("../index", {
+        [path.resolve("./src/config")]: {
+          identifier: "test-identifier",
+        },
+      });
+
+      await auth();
+      return refresh().then((res) => {
         expect(res).to.have.keys("accessToken", "refreshToken");
       });
     });

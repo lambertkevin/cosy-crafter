@@ -169,17 +169,29 @@ export const refresh = async () => {
       )
       .then(({ data }) => data);
 
-    if (freshTokens) {
+    if (freshTokens?.accessToken && freshTokens?.refreshToken) {
       tokens.accessToken = freshTokens.accessToken;
       tokens.refreshToken = freshTokens.refreshToken;
 
       return tokens;
     }
-    throw Boom.serverUnavailable();
+    throw new CustomError(
+      "Auth-Service failed to return tokens",
+      "AuthServiceFailedError",
+      503
+    );
   } catch (e) {
     /** @WARNING Change this to fatal when feature available in winston + sentry */
     logger.error("Error while refreshing the service", e);
-    throw Boom.preconditionFailed();
+    if (e instanceof CustomError) {
+      throw e;
+    }
+    throw new CustomError(
+      "Failed refreshing tokens",
+      "RefreshUnauthorizedError",
+      401,
+      e
+    );
   }
 };
 
