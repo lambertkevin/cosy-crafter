@@ -14,6 +14,12 @@ if (fs.existsSync(credentialsPath)) {
 }
 
 describe("@cosy/auth unit tests", () => {
+  after(() => {
+    if (fs.existsSync(credentialsPath)) {
+      fs.unlinkSync(credentialsPath);
+    }
+  });
+
   describe("Require", () => {
     beforeEach(() => {
       reset();
