@@ -1,8 +1,9 @@
 import os from 'os';
 import express from 'express';
 import socket from 'socket.io';
+import { auth } from '@cosy/auth';
 import { logger } from '@cosy/logger';
-import { auth, socketJwtMiddleware } from '@cosy/auth';
+import { jwtMiddleware } from './middlewares/JwtMiddleware';
 import { workerHandler, transcodingQueue } from './queue';
 import { nodeConfig } from './config';
 import apis from './api';
@@ -23,7 +24,7 @@ export default async () => {
     });
 
     io.of('/clients')
-      .use(socketJwtMiddleware)
+      .use(jwtMiddleware)
       .on('connection', (client) => {
         if (client?.handshake?.decodedToken?.service) {
           apis(client);
@@ -31,7 +32,7 @@ export default async () => {
       });
 
     io.of('/workers')
-      .use(socketJwtMiddleware)
+      .use(jwtMiddleware)
       .on('connection', (worker) => {
         if (worker?.handshake?.decodedToken?.service) {
           workerHandler(worker);
