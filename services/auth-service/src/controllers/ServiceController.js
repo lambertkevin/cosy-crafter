@@ -145,7 +145,7 @@ export const update = async (
 /**
  * Remove Services
  *
- * @param {Arrays} ids
+ * @param {Array} ids
  *
  * @return {Promise<void>}
  */

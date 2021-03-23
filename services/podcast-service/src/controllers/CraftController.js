@@ -124,7 +124,7 @@ export const update = (
 /**
  * Delete crafts
  *
- * @param {Arrays} ids
+ * @param {Array} ids
  *
  * @return {Promise<Object[]>}
  */
