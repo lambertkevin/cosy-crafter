@@ -2,7 +2,7 @@ import fs from "fs";
 import path from "path";
 import axios from "axios";
 import Boom from "@hapi/boom";
-import jwt from 'jsonwebtoken';
+import jwt from "jsonwebtoken";
 import { logger } from "@cosy/logger";
 import CustomError from "@cosy/custom-error";
 import {
@@ -13,7 +13,10 @@ import {
 const { AUTH_SERVICE_NAME, AUTH_SERVICE_PORT } = process.env;
 const CREDENTIALS_PATH = path.resolve("./", ".credentials");
 
-if (typeof AUTH_SERVICE_NAME !== 'string' || typeof AUTH_SERVICE_PORT !== 'string') {
+if (
+  typeof AUTH_SERVICE_NAME !== "string" ||
+  typeof AUTH_SERVICE_PORT !== "string"
+) {
   throw new CustomError("Env variables are not set", "EnvVariableNotSet");
 }
 
@@ -45,35 +48,42 @@ export const register = async () => {
   try {
     const publicEncrypter = makeRsaPublicEncrypter("auth");
     const publicDecrypter = makeRsaPublicDecrypter("auth");
-    const { data: encryptedKey } = await axios.post(
-      `http://${AUTH_SERVICE_NAME}:${AUTH_SERVICE_PORT}/services`,
-      {
-        identifier,
-      },
-      {
-        headers: {
-          "X-Authorization": publicEncrypter(Date.now()),
+    const { data: encryptedKey } = await axios
+      .post(
+        `http://${AUTH_SERVICE_NAME}:${AUTH_SERVICE_PORT}/services`,
+        {
+          identifier,
         },
-      }
-    ).then(({ data }) => data)
+        {
+          headers: {
+            "X-Authorization": publicEncrypter(Date.now()),
+          },
+        }
+      )
+      .then(({ data }) => data);
 
     const key = publicDecrypter(encryptedKey);
-    if (key) {
+    if (encryptedKey && key) {
       fs.writeFileSync(
         CREDENTIALS_PATH,
         JSON.stringify({
           identifier,
           key,
         })
-        );
-        return;
-      }
+      );
+      return;
+    }
     throw new CustomError("Couldn't get a key");
   } catch (e) {
     logger.error("Error while registering the service", e);
     // istanbul ignore else
-    if (process.env.NODE_ENV === 'test') {
-      throw new CustomError('Process would have exited', 'ProcessExitError', null, e);
+    if (process.env.NODE_ENV === "test") {
+      throw new CustomError(
+        "Process would have exited",
+        "ProcessExitError",
+        null,
+        e
+      );
     } else {
       process.exit(1);
     }
@@ -87,10 +97,22 @@ export const register = async () => {
  */
 export const login = async () => {
   try {
+    if (!fs.existsSync(CREDENTIALS_PATH)) {
+      throw new CustomError("Service has not registered", "NoCredentialsError");
+    }
+
     const publicEncrypter = makeRsaPublicEncrypter("auth");
     const { identifier: savedIdentifier, key } = JSON.parse(
       fs.readFileSync(CREDENTIALS_PATH, "utf8")
     );
+
+    if (!savedIdentifier || !key) {
+      throw new CustomError(
+        "Credentials are malformed",
+        "CredentialsMalformedError"
+      );
+    }
+
     const { data: freshTokens } = await axios
       .post(`http://${AUTH_SERVICE_NAME}:${AUTH_SERVICE_PORT}/services/login`, {
         identifier: savedIdentifier,
@@ -100,14 +122,21 @@ export const login = async () => {
 
     tokens.accessToken = freshTokens.accessToken;
     tokens.refreshToken = freshTokens.refreshToken;
+
+    return tokens;
   } catch (e) {
     /** @WARNING Change this to fatal when feature available in winston + sentry */
     logger.error("Error while loging the service", e);
     // istanbul ignore else
-    if (process.env.NODE_ENV === 'test') {
-      throw new CustomError('Process would have exited', 'ProcessExitError');
+    if (process.env.NODE_ENV === "test") {
+      throw new CustomError(
+        "Process would have exited",
+        "ProcessExitError",
+        null,
+        e
+      );
     } else {
-      process.exit(1);
+      return process.exit(1);
     }
   }
 };
@@ -175,7 +204,7 @@ export const socketJwtMiddleware = (socket, next) => {
     socket.handshake.decodedToken = jwt.decode(token);
     next();
   } catch (error) {
-    if (['JsonWebTokenError', 'TokenExpiredError'].includes(error.name)) {
+    if (["JsonWebTokenError", "TokenExpiredError"].includes(error.name)) {
       error.data = { name: error.name, message: error.message };
 
       next(error);
@@ -185,7 +214,7 @@ export const socketJwtMiddleware = (socket, next) => {
       }, 200);
 
       // Do not change it to CustomError as socket.io will throw an Error instance
-      next(new Error('An error has occured'));
+      next(new Error("An error has occured"));
     }
   }
 };
@@ -196,5 +225,5 @@ export default {
   login,
   auth,
   refresh,
-  socketJwtMiddleware
+  socketJwtMiddleware,
 };
