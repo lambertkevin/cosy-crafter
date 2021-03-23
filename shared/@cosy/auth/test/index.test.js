@@ -276,4 +276,54 @@ describe("@cosy/auth unit tests", () => {
       });
     });
   });
+
+  describe("auth", () => {
+    let authServiceChild;
+    beforeEach(async () => {
+      process.env.AUTH_SERVICE_NAME = "localhost";
+      process.env.AUTH_SERVICE_PORT = "3002";
+      process.env.RSA_KEYS_LOCATION = path.resolve("./test/config/keys/");
+      process.env.AUTH_RSA_KEYS_NAME = "test";
+
+      authServiceChild = await startAuthService();
+    });
+
+    afterEach(() => {
+      authServiceChild.kill("SIGINT");
+      if (fs.existsSync(credentialsPath)) {
+        fs.unlinkSync(credentialsPath);
+      }
+    });
+
+    it("should call register then login if service has no credentials", () => {
+      // noCallThru necessary since the file doesn't exist at all
+      const { auth } = proxyquire.noCallThru().load("../index", {
+        [path.resolve("./src/config")]: {
+          identifier: "test-identifier",
+        },
+      });
+
+      return auth().then((res) => {
+        expect(res).to.have.keys("accessToken", "refreshToken");
+      });
+    });
+
+    it("should call only register if service has credentials", async () => {
+      if (fs.existsSync(credentialsPath)) {
+        fs.unlinkSync(credentialsPath);
+      }
+      // noCallThru necessary since the file doesn't exist at all
+      const { register, auth } = proxyquire.noCallThru().load("../index", {
+        [path.resolve("./src/config")]: {
+          identifier: "test-identifier",
+        },
+      });
+
+      await register();
+
+      return auth().then((res) => {
+        expect(res).to.have.keys("accessToken", "refreshToken");
+      });
+    });
+  });
 });
