@@ -15,9 +15,9 @@ export const hiddenFields = [
 
 export const projection = arrayToProjection(hiddenFields);
 
-const schema = new mongoose.Schema(
-  joigoose(mongoose, { _id: true, timestamps: true }).convert(PodcastSchema)
-);
+const schema = new mongoose.Schema(joigoose(mongoose).convert(PodcastSchema), {
+  timestamps: true
+});
 
 // This allow for beautified E11000 errors for 'uniqueness' of fields
 schema.plugin(mongooseUniqueValidator);
