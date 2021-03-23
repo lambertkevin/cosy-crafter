@@ -1,7 +1,7 @@
 import _ from 'lodash';
 import Boom from '@hapi/boom';
 import { logger } from '@cosy/logger';
-import Token, { projection, hiddenFields } from '../models/TokenBlaclistModel';
+import Token, { projection, hiddenFields } from '../models/TokenBlacklistModel';
 
 /**
  * Return a list of all Token
