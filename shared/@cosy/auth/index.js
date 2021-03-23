@@ -151,10 +151,8 @@ export const login = async () => {
 export const auth = async () => {
   if (!fs.existsSync(CREDENTIALS_PATH)) {
     await register();
-    await login();
-  } else {
-    await login();
   }
+  return login();
 };
 
 /**
