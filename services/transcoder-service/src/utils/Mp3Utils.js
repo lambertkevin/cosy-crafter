@@ -12,12 +12,10 @@ import CustomError from '@cosy/custom-error';
  */
 export const getMp3Duration = (file) =>
   new Promise((resolve, reject) => {
-    if (typeof file === 'string') {
-      const fileExist = fs.existsSync(file);
-      if (!fileExist) {
-        const notFound = new CustomError("File doesn't exist", 'NotFound');
-        return reject(notFound);
-      }
+    const fileExist = typeof file === 'string' && fs.existsSync(file);
+    if (!fileExist) {
+      const notFound = new CustomError("File doesn't exist", 'NotFound');
+      return reject(notFound);
     }
 
     return ffmpeg(file).ffprobe((err, data) => {
