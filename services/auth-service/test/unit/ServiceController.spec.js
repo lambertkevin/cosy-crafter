@@ -511,7 +511,7 @@ describe('ServiceController unit test', () => {
         .noPreserveCache()
         .load('../../src/controllers/ServiceController.js', {
           bcryptjs: {
-            compareSync: () => {
+            compare: () => {
               throw new Error('test error');
             }
           }
