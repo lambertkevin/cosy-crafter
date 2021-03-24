@@ -190,7 +190,6 @@ export const login = async ({ identifier, key }, ip) => {
     const ipAuthorized = ipsMatch || serviceAndRequestAreLocalNetwork;
     const keysMatch = bcrypt.compareSync(key, service.key);
 
-    // If ip is matching or ip is from private network and service ip was private on creation
     if ((ipAuthorized && keysMatch) || process.env.NODE_ENV === 'mock') {
       const tokens = await tokensFactory(
         {
@@ -243,6 +242,7 @@ export const refresh = async ({ accessToken, refreshToken }) => {
 
         // Check if the service is still registered
         const service = await (() => {
+          // istanbul ignore if
           if (process.env.NODE_ENV === 'mock') {
             return {
               data: {

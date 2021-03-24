@@ -1,13 +1,17 @@
 /* eslint-disable no-unused-expressions */
+import resnap from 'resnap';
 import Boom from '@hapi/boom';
 import bcrypt from 'bcryptjs';
 import mongoose from 'mongoose';
+import proxyquire from 'proxyquire';
 import chai, { expect } from 'chai';
 import chaiSubset from 'chai-subset';
 import MongoMemoryServer from 'mongodb-memory-server';
 import * as ServiceController from '../../src/controllers/ServiceController';
 import ServiceModel, { hiddenFields } from '../../src/models/ServiceModel';
+import { accessTokenFactory, refreshTokenFactory } from '../../src/utils/TokensFactory';
 
+const resetModuleCache = resnap();
 chai.use(chaiSubset);
 const mongooseOpts = {
   useCreateIndex: true,
@@ -442,8 +446,157 @@ describe('ServiceController unit test', () => {
 
       expect(error).to.be.an('error').and.to.be.an.instanceOf(Boom.Boom);
       expect(error?.output?.statusCode).to.be.equal(500);
+    });
+  });
 
-      ServiceModel.deleteMany = ServiceModel._backup.deleteMany;
+  describe('login', () => {
+    let mongoServer;
+    before(async () => {
+      mongoServer = new MongoMemoryServer();
+      const uri = await mongoServer.getUri();
+      await mongoose.connect(uri, mongooseOpts);
+      await ServiceController.create({
+        identifier: 'service-local',
+        ip: 'private',
+        key: '1234'
+      });
+      await ServiceController.create({
+        identifier: 'service-remote',
+        ip: '8.8.8.8',
+        key: '1234'
+      });
+    });
+
+    after(async () => {
+      await mongoServer.stop();
+      await mongoose.disconnect();
+    });
+
+    it('should return 401 if service is remote and request ip are not matching', async () => {
+      const error = await ServiceController.login(
+        { identifier: 'service-remote', key: '1234' },
+        '8.8.4.4'
+      );
+
+      expect(error).to.be.an('error').and.to.be.an.instanceOf(Boom.Boom);
+      expect(error?.message).to.be.equal("Service isn't matching ip or key");
+      expect(error?.output?.statusCode).to.be.equal(401);
+    });
+
+    it('should return 401 if service is local and request ip is remote', async () => {
+      const error = await ServiceController.login(
+        { identifier: 'service-local', key: '1234' },
+        '8.8.4.4'
+      );
+
+      expect(error).to.be.an('error').and.to.be.an.instanceOf(Boom.Boom);
+      expect(error?.message).to.be.equal("Service isn't matching ip or key");
+      expect(error?.output?.statusCode).to.be.equal(401);
+    });
+
+    it('should return 401 if service ip and request ip matched but wrong key', async () => {
+      const error = await ServiceController.login(
+        { identifier: 'service-local', key: 'abcd' },
+        '192.168.1.1'
+      );
+
+      expect(error).to.be.an('error').and.to.be.an.instanceOf(Boom.Boom);
+      expect(error?.message).to.be.equal("Service isn't matching ip or key");
+      expect(error?.output?.statusCode).to.be.equal(401);
+    });
+
+    it('should return 500 if another error is thrown during login', async () => {
+      resetModuleCache();
+      const { login } = proxyquire
+        .noPreserveCache()
+        .load('../../src/controllers/ServiceController.js', {
+          bcryptjs: {
+            compareSync: () => {
+              throw new Error('test error');
+            }
+          }
+        });
+      const error = await login({ identifier: 'service-local', key: '1234' }, '192.168.1.1');
+
+      expect(error).to.be.an('error').and.to.be.an.instanceOf(Boom.Boom);
+      expect(error?.message).to.be.equal('test error');
+      expect(error?.output?.statusCode).to.be.equal(500);
+    });
+  });
+
+  describe('refresh', () => {
+    let mongoServer;
+    before(async () => {
+      mongoServer = new MongoMemoryServer();
+      const uri = await mongoServer.getUri();
+      await mongoose.connect(uri, mongooseOpts);
+      await ServiceController.create({
+        identifier: 'service-1',
+        ip: 'private',
+        key: '1234'
+      });
+    });
+
+    after(async () => {
+      await mongoServer.stop();
+      await mongoose.disconnect();
+    });
+
+    beforeEach(() => {
+      resetModuleCache();
+    });
+
+    it('should return 401 if token are not signed with the correct secret', async () => {
+      const realSecret = process.env.SERVICE_JWT_SECRET;
+      process.env.SERVICE_JWT_SECRET = 'abcd';
+      const [accessToken, refreshToken] = [
+        accessTokenFactory({ service: 'service-1' }, '123'),
+        refreshTokenFactory({ service: 'service-1' }, '456')
+      ];
+      process.env.SERVICE_JWT_SECRET = realSecret;
+
+      const error = await ServiceController.refresh({ accessToken, refreshToken });
+
+      expect(error).to.be.an('error').and.to.be.an.instanceOf(Boom.Boom);
+      expect(error?.message).to.be.equal('Tokens verification failed');
+      expect(error?.output?.statusCode).to.be.equal(401);
+    });
+
+    it('should return 401 if refreshToken is expired', async () => {
+      const [accessToken, refreshToken] = [
+        accessTokenFactory({ service: 'service-1' }, '123'),
+        refreshTokenFactory({ service: 'service-1' }, '456', '-1h')
+      ];
+
+      const error = await ServiceController.refresh({ accessToken, refreshToken });
+
+      expect(error).to.be.an('error').and.to.be.an.instanceOf(Boom.Boom);
+      expect(error?.message).to.be.equal('Tokens verification failed');
+      expect(error?.output?.statusCode).to.be.equal(401);
+    });
+
+    it('should return 401 if tokens are not for the same service', async () => {
+      const [accessToken, refreshToken] = [
+        accessTokenFactory({ service: 'service-1' }, '123'),
+        refreshTokenFactory({ service: 'service-2' }, '456')
+      ];
+
+      const error = await ServiceController.refresh({ accessToken, refreshToken });
+
+      expect(error).to.be.an('error').and.to.be.an.instanceOf(Boom.Boom);
+      expect(error?.message).to.be.equal('Tokens are not matching');
+      expect(error?.output?.statusCode).to.be.equal(401);
+    });
+
+    it('should refresh even with an expired accessToken', async () => {
+      const [accessToken, refreshToken] = [
+        accessTokenFactory({ service: 'service-1' }, '123', '-3d'),
+        refreshTokenFactory({ service: 'service-1' }, '456')
+      ];
+
+      const tokens = await ServiceController.refresh({ accessToken, refreshToken });
+
+      expect(tokens).to.have.keys('accessToken', 'refreshToken');
     });
   });
 });
