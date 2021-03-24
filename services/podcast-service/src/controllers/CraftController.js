@@ -56,7 +56,7 @@ export const create = (
   Craft.create({ name, jobId, user, storageType, storagePath, storageFilename })
     .then((craft) => (sanitized ? _.omit(craft.toObject(), hiddenFields) : craft))
     .catch((error) => {
-      if (error instanceof mongoose.Error.ValidationError) {
+      if (error instanceof mongoose.Error) {
         logger.error('Craft Create Validation Error', error);
         const response = Boom.boomify(error, { statusCode: 409 });
         response.output.payload.data = error.errors;
@@ -106,7 +106,7 @@ export const update = (
       return craft;
     })
     .catch((error) => {
-      if (error instanceof mongoose.Error.ValidationError) {
+      if (error instanceof mongoose.Error) {
         logger.error('Craft Update Validation Error', error);
         const response = Boom.boomify(error, { statusCode: 409 });
         response.output.payload.data = error.errors;
