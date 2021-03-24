@@ -1,5 +1,6 @@
 import _ from 'lodash';
 import Boom from '@hapi/boom';
+import mongoose from 'mongoose';
 import { logger } from '@cosy/logger';
 import Token, { projection, hiddenFields } from '../models/TokenBlacklistModel';
 
@@ -66,7 +67,7 @@ export const create = ({ jwtid, type }, sanitized = true) =>
       sanitized ? _.omit(token.toObject(), hiddenFields) : token
     )
     .catch((error) => {
-      if (error.name === 'ValidationError') {
+      if (error instanceof mongoose.Error.ValidationError) {
         logger.error('Token Create Validation Error', error);
         const response = Boom.boomify(error, { statusCode: 409 });
         response.output.payload.data = error.errors;
@@ -104,7 +105,7 @@ export const update = (id, { jwtid, type }, sanitized = true) =>
       return token;
     })
     .catch((error) => {
-      if (error.name === 'ValidationError') {
+      if (error instanceof mongoose.Error.ValidationError) {
         logger.error('Token Update Validation Error', error);
         const response = Boom.boomify(error, { statusCode: 409 });
         response.output.payload.data = error.errors;
