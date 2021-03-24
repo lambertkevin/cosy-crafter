@@ -2,6 +2,7 @@ import _ from 'lodash';
 import Boom from '@hapi/boom';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
+import mongoose from 'mongoose';
 import { v4 as uuid } from 'uuid';
 import privateIp from 'private-ip';
 import { logger } from '@cosy/logger';
@@ -79,7 +80,7 @@ export const create = async (
       sanitized ? _.omit(service.toObject(), hiddenFields) : service
     )
     .catch((error) => {
-      if (error.toString().includes('ValidationError')) {
+      if (error instanceof mongoose.Error.ValidationError) {
         logger.error('Service Create Validation Error', error);
         const response = Boom.boomify(error, { statusCode: 409 });
         response.output.payload.data = error.errors;
@@ -114,22 +115,20 @@ export const update = async (
 
   return Service.updateOne(
     { _id: id },
-    _.omitBy({ identifier, key: hashedKey, ip }, _.isUndefined)
+    _.omitBy({ identifier, key: hashedKey, ip }, _.isUndefined),
+    { runValidators: true, context: 'query' }
   )
     .exec()
     .then(async (res) => {
       if (!res.n) {
         return Boom.notFound();
       }
-      if (!res.nModified) {
-        return Boom.expectationFailed('No changes required');
-      }
 
-      const service = await findOne(identifier, sanitized);
+      const service = await findOne(id, sanitized);
       return service;
     })
     .catch((error) => {
-      if (error.identifier === 'ValidationError') {
+      if (error instanceof mongoose.Error.ValidationError) {
         logger.error('Service Update Validation Error', error);
         const response = Boom.boomify(error, { statusCode: 409 });
         response.output.payload.data = error.errors;
