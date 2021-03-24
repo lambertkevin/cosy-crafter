@@ -272,10 +272,9 @@ describe('TokenBlacklistController unit test', () => {
 
     it('should update a token and return it sanitized', async () => {
       const jwtid = uuid();
-      const token = await TokenBlacklistController.update(
-        { _id: tokenToUpdate._id },
-        { jwtid }
-      );
+      const token = await TokenBlacklistController.update(tokenToUpdate._id, {
+        jwtid
+      });
 
       expect(token)
         .to.deep.include({ jwtid })
@@ -285,7 +284,7 @@ describe('TokenBlacklistController unit test', () => {
     it('should update a token and return it not sanitized', async () => {
       const jwtid = uuid();
       const token = await TokenBlacklistController.update(
-        { _id: tokenToUpdate._id },
+        tokenToUpdate._id,
         {
           jwtid
         },
@@ -300,7 +299,7 @@ describe('TokenBlacklistController unit test', () => {
     it("should return a 404 if the token doesn't exist", async () => {
       const jwtid = uuid();
       const response = await TokenBlacklistController.update(
-        { _id: '605a58c0b6c966ab548da8b1' },
+        '605a58c0b6c966ab548da8b1',
         {
           jwtid
         }
@@ -312,12 +311,9 @@ describe('TokenBlacklistController unit test', () => {
 
     it('should return a verification error', async () => {
       const jwtid = '123';
-      const error = await TokenBlacklistController.update(
-        { _id: tokenToUpdate._id },
-        {
-          jwtid
-        }
-      );
+      const error = await TokenBlacklistController.update(tokenToUpdate._id, {
+        jwtid
+      });
 
       expect(error).to.be.an('error').and.to.be.an.instanceOf(Boom.Boom);
       expect(error?.output?.statusCode).to.be.equal(409);
@@ -329,10 +325,9 @@ describe('TokenBlacklistController unit test', () => {
         exec: () => Promise.reject(new Error())
       });
 
-      const error = await TokenBlacklistController.update(
-        { _id: tokenToUpdate._id },
-        { jwtid: '123' }
-      );
+      const error = await TokenBlacklistController.update(tokenToUpdate._id, {
+        jwtid: '123'
+      });
 
       expect(error).to.be.an('error').and.to.be.an.instanceOf(Boom.Boom);
       expect(error?.output?.statusCode).to.be.equal(500);
