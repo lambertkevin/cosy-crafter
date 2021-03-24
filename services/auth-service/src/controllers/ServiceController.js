@@ -175,7 +175,8 @@ export const login = async ({ identifier, key }, ip) => {
       /* istanbul ignore if */
       if (process.env.NODE_ENV === 'mock') {
         return {
-          identifier
+          identifier,
+          key
         };
       }
       return Service.findOne({ identifier }).exec();
@@ -188,7 +189,7 @@ export const login = async ({ identifier, key }, ip) => {
     const ipsMatch = service.ip === ip;
     const serviceAndRequestAreLocalNetwork = privateIp(ip) && service.ip === 'private';
     const ipAuthorized = ipsMatch || serviceAndRequestAreLocalNetwork;
-    const keysMatch = bcrypt.compareSync(key, service.key);
+    const keysMatch = await bcrypt.compare(key, service.key);
 
     if ((ipAuthorized && keysMatch) || process.env.NODE_ENV === 'mock') {
       const tokens = await tokensFactory(
