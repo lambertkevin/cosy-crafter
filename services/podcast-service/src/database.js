@@ -4,6 +4,7 @@ import { MongoMemoryServer } from 'mongodb-memory-server';
 import { databaseConfig } from './config';
 
 export default async () => {
+  // istanbul ignore next
   const mongoURL = await (async () => {
     if (process.env.NODE_ENV === 'test') {
       const testDB = new MongoMemoryServer();
@@ -24,6 +25,7 @@ export default async () => {
     .then(() => console.log('Database connected'))
     .catch((err) =>
       /** @WARNING Change this to fatal when feature available in winston + sentry */
+      // istanbul ignore next
       logger.error(`Database connection error: ${err.message}`, err)
     );
 };
