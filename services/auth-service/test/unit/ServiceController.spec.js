@@ -1,7 +1,8 @@
 /* eslint-disable no-unused-expressions */
 import Boom from '@hapi/boom';
-import chai, { expect } from 'chai';
+import bcrypt from 'bcryptjs';
 import mongoose from 'mongoose';
+import chai, { expect } from 'chai';
 import chaiSubset from 'chai-subset';
 import MongoMemoryServer from 'mongodb-memory-server';
 import * as ServiceController from '../../src/controllers/ServiceController';
@@ -41,9 +42,7 @@ describe('ServiceController unit test', () => {
         { identifier: 'service-2', ip: '192.168.1.1', key: '5678' },
         { identifier: 'service-3', ip: '192.168.1.2', key: '91011' }
       ];
-      await Promise.all(
-        fakeServicesData.map((x) => ServiceController.create(x))
-      );
+      await Promise.all(fakeServicesData.map((x) => ServiceController.create(x)));
 
       const services = await ServiceController.find();
 
@@ -61,9 +60,7 @@ describe('ServiceController unit test', () => {
         { identifier: 'service-2', ip: '192.168.1.1', key: '5678' },
         { identifier: 'service-3', ip: '192.168.1.2', key: '91011' }
       ];
-      await Promise.all(
-        fakeServicesData.map((x) => ServiceController.create(x))
-      );
+      await Promise.all(fakeServicesData.map((x) => ServiceController.create(x)));
 
       const services = await ServiceController.find(false);
 
@@ -200,10 +197,7 @@ describe('ServiceController unit test', () => {
       };
 
       const { identifier } = await ServiceController.create(serviceData);
-      const service = await ServiceController.findOneByIndentifier(
-        identifier,
-        false
-      );
+      const service = await ServiceController.findOneByIndentifier(identifier, false);
 
       delete serviceData.key;
 
@@ -332,6 +326,28 @@ describe('ServiceController unit test', () => {
         .and.to.not.have.any.keys(...hiddenFields);
     });
 
+    it('should update a service key', async () => {
+      const key = 'new-key';
+      const service = await ServiceController.update(serviceToUpdate._id, {
+        key
+      });
+
+      expect(service).to.not.have.any.keys(...hiddenFields);
+      expect(service.key).to.not.be.equal(serviceToUpdate.key);
+      expect(bcrypt.compareSync(key, service.key)).to.be.equal(true);
+    });
+
+    it('should update a service ip', async () => {
+      const ip = '192.168.1.1';
+      const service = await ServiceController.update(serviceToUpdate._id, {
+        ip
+      });
+
+      expect(service)
+        .to.include({ ip: 'private' })
+        .and.to.not.have.any.keys(...hiddenFields);
+    });
+
     it('should update a service and return it not sanitized', async () => {
       const identifier = 'service-2';
       const service = await ServiceController.update(
@@ -349,12 +365,9 @@ describe('ServiceController unit test', () => {
 
     it("should return a 404 if the service doesn't exist", async () => {
       const identifier = 'service-2';
-      const response = await ServiceController.update(
-        '605a58c0b6c966ab548da8b1',
-        {
-          identifier
-        }
-      );
+      const response = await ServiceController.update('605a58c0b6c966ab548da8b1', {
+        identifier
+      });
 
       expect(response).to.be.an('error').and.to.be.an.instanceOf(Boom.Boom);
       expect(response?.output?.statusCode).to.be.equal(404);
@@ -408,9 +421,7 @@ describe('ServiceController unit test', () => {
     });
 
     it("should return a 404 if service doesn't exist", async () => {
-      const error = await ServiceController.remove([
-        '605a56f67ab4c26d4da8ff6b'
-      ]);
+      const error = await ServiceController.remove(['605a56f67ab4c26d4da8ff6b']);
 
       expect(error).to.be.an('error').and.to.be.an.instanceOf(Boom.Boom);
       expect(error?.output?.statusCode).to.be.equal(404);
