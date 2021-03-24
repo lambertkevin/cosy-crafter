@@ -75,7 +75,7 @@ export const create = async ({ identifier, key, ip: _ip }, sanitized = true) => 
   return Service.create({ identifier, key: hashedKey, ip })
     .then((service) => (sanitized ? _.omit(service.toObject(), hiddenFields) : service))
     .catch((error) => {
-      if (error instanceof mongoose.Error.ValidationError) {
+      if (error instanceof mongoose.Error) {
         logger.error('Service Create Validation Error', error);
         const response = Boom.boomify(error, { statusCode: 409 });
         response.output.payload.data = error.errors;
@@ -122,7 +122,7 @@ export const update = async (id, { identifier, key, ip: _ip }, sanitized = true)
       return service;
     })
     .catch((error) => {
-      if (error instanceof mongoose.Error.ValidationError) {
+      if (error instanceof mongoose.Error) {
         logger.error('Service Update Validation Error', error);
         const response = Boom.boomify(error, { statusCode: 409 });
         response.output.payload.data = error.errors;

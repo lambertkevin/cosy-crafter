@@ -65,7 +65,7 @@ export const create = ({ jwtid, type }, sanitized = true) =>
   Token.create({ jwtid, type })
     .then((token) => (sanitized ? _.omit(token.toObject(), hiddenFields) : token))
     .catch((error) => {
-      if (error instanceof mongoose.Error.ValidationError) {
+      if (error instanceof mongoose.Error) {
         logger.error('Token Create Validation Error', error);
         const response = Boom.boomify(error, { statusCode: 409 });
         response.output.payload.data = error.errors;
@@ -103,7 +103,7 @@ export const update = (id, { jwtid, type }, sanitized = true) =>
       return token;
     })
     .catch((error) => {
-      if (error instanceof mongoose.Error.ValidationError) {
+      if (error instanceof mongoose.Error) {
         logger.error('Token Update Validation Error', error);
         const response = Boom.boomify(error, { statusCode: 409 });
         response.output.payload.data = error.errors;
