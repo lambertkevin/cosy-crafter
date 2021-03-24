@@ -28,10 +28,7 @@ export const checkSignature = (request, h) => {
 
 export const checkIpWhiteList = (request, h) => {
   const ip = request.info.remoteAddress;
-  const { whitelist = [] } = fs.readFileSync(
-    path.resolve('./', 'remoteAddresses.json'),
-    'utf8'
-  );
+  const { whitelist = [] } = fs.readFileSync(path.resolve('./', 'remoteAddresses.json'), 'utf8');
 
   if (!privateIp(ip) && !whitelist.includes(ip)) {
     /** @WARNING Make it critical when feature is available in winston + sentry */
