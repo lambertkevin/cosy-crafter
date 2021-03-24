@@ -4,12 +4,14 @@ export const hiddenProperties = [];
 
 export const creationSchema = joi
   .object({
+    // prettier-ignore
     type: joi
       .string()
       .valid('access', 'refresh')
       .required()
       .default('refresh')
       .example('refresh'),
+    // prettier-ignore
     jwtid: joi
       .string()
       .guid()
@@ -28,6 +30,7 @@ export const responseSchema = validationSchema
     _id: joi.string().length(24).required().example('5f3ec14cb2d104269d3c3282')
   })
   .fork(hiddenProperties, (x) =>
+    // prettier-ignore
     x.optional().description('Only if not sanitized')
   )
   .label('TokenResponse');

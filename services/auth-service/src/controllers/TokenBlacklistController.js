@@ -63,9 +63,7 @@ export const findOneByJwtId = (jwtid, sanitized = true) =>
  */
 export const create = ({ jwtid, type }, sanitized = true) =>
   Token.create({ jwtid, type })
-    .then((token) =>
-      sanitized ? _.omit(token.toObject(), hiddenFields) : token
-    )
+    .then((token) => (sanitized ? _.omit(token.toObject(), hiddenFields) : token))
     .catch((error) => {
       if (error instanceof mongoose.Error.ValidationError) {
         logger.error('Token Create Validation Error', error);
