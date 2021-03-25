@@ -9,7 +9,7 @@ import chaiSubset from 'chai-subset';
 import MongoMemoryServer from 'mongodb-memory-server';
 import * as ServiceController from '../../src/controllers/ServiceController';
 import ServiceModel, { hiddenFields } from '../../src/models/ServiceModel';
-import { accessTokenFactory, refreshTokenFactory } from '../../src/utils/TokensFactory';
+import { accessTokenFactory, refreshTokenFactory } from '../../src/lib/TokensFactory';
 
 const resetModuleCache = resnap();
 chai.use(chaiSubset);
