@@ -10,14 +10,13 @@ const REFRESH_TOKEN_LIFETIME = '1d';
  * @param {String} jwtid
  * @param {String} expire
  *
- * @return {Promise<String>}
+ * @return {String}
  */
 export const accessTokenFactory = (payload, jwtid, expire) =>
   jwt.sign(payload, process.env.SERVICE_JWT_SECRET, {
     expiresIn: expire || ACCESS_TOKEN_LIFETIME,
-    jwtid
+    ...(jwtid ? { jwtid } : null)
   });
-
 /**
  * Create an refresh token
  *
@@ -25,12 +24,12 @@ export const accessTokenFactory = (payload, jwtid, expire) =>
  * @param {String} jwtid
  * @param {String} expire
  *
- * @return {Promise<String>}
+ * @return {String}
  */
 export const refreshTokenFactory = (payload, jwtid, expire) =>
   jwt.sign(payload, process.env.SERVICE_JWT_REFRESH_SECRET, {
     expiresIn: expire || REFRESH_TOKEN_LIFETIME,
-    jwtid
+    ...(jwtid ? { jwtid } : null)
   });
 
 /**
@@ -40,9 +39,9 @@ export const refreshTokenFactory = (payload, jwtid, expire) =>
  * @param {String|Object|Buffer} payload
  * @param {Array<Strng>} jwtids
  *
- * @return {Promise<Object>}
+ * @return {Object}
  */
-export default async (payload, jwtids = []) => ({
-  accessToken: await accessTokenFactory(payload, jwtids[0] || undefined),
-  refreshToken: await refreshTokenFactory(payload, jwtids[1] || undefined)
+export default (payload, jwtids = []) => ({
+  accessToken: accessTokenFactory(payload, jwtids[0]),
+  refreshToken: refreshTokenFactory(payload, jwtids[1])
 });
