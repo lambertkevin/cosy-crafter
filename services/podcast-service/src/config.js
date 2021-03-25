@@ -1,3 +1,5 @@
+/* istanbul ignore file */
+
 import Package from '../package.json';
 
 export const identifier = `${process.env.PODCAST_SERVICE_NAME}-jessica`;

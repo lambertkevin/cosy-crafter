@@ -36,8 +36,7 @@ export default async () => {
     });
 
     return server;
-    // istanbul ignore next
-  } catch (err) {
+  } catch (err) /* istanbul ignore next */ {
     /** @WARNING Change this to fatal when feature available in winston + sentry */
     logger.error('Fatal Error while starting the service', err);
     return process.exit(1);
