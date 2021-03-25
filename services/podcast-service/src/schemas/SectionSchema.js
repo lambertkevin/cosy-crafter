@@ -20,8 +20,8 @@ export const responseSchema = validationSchema
   .append({
     _id: joi.string().length(24).required().example('5f3ffc559dd530f33cc39f8b')
   })
-  .fork(hiddenProperties, (x) =>
-    x.optional().description('Only if not sanitized')
+  .fork(
+    hiddenProperties,
+    /* istanbul ignore next */ (x) => x.optional().description('Only if not sanitized')
   );
-
 export default validationSchema;

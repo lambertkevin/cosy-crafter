@@ -1,19 +1,9 @@
 import joi from 'joi';
 
-export const hiddenProperties = [
-  'jobId',
-  'storageType',
-  'storagePath',
-  'storageFilename'
-];
+export const hiddenProperties = ['jobId', 'storageType', 'storagePath', 'storageFilename'];
 
 export const creationSchema = joi.object({
-  name: joi
-    .string()
-    .min(1)
-    .max(100)
-    .required()
-    .example('La partie qui est rigolote. LOL!'),
+  name: joi.string().min(1).max(100).required().example('La partie qui est rigolote. LOL!'),
   jobId: joi
     .string()
     .guid()
@@ -34,8 +24,7 @@ export const responseSchema = validationSchema
   .append({
     _id: joi.string().length(24).required().example('5f3ec14cb2d104269d3c3282')
   })
-  .fork(hiddenProperties, (x) =>
-    x.optional().description('Only if not sanitized')
-  );
+  // istanbul ignore next
+  .fork(hiddenProperties, (x) => x.optional().description('Only if not sanitized'));
 
 export default validationSchema;
