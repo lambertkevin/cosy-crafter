@@ -3,7 +3,7 @@ import { expect } from 'chai';
 import { makeRsaPublicEncrypter } from '@cosy/rsa-utils';
 import * as ServiceController from '../../src/controllers/ServiceController';
 import * as TokenBlacklistController from '../../src/controllers/TokenBlacklistController';
-import { accessTokenFactory, refreshTokenFactory } from '../../src/utils/TokensFactory';
+import { accessTokenFactory, refreshTokenFactory } from '../../src/lib/TokensFactory';
 import init from '../../src/server';
 
 describe('Services API tests', () => {

@@ -8,7 +8,7 @@ import privateIp from 'private-ip';
 import { logger } from '@cosy/logger';
 import Service, { projection, hiddenFields } from '../models/ServiceModel';
 import * as TokenBlacklistController from './TokenBlacklistController';
-import tokensFactory from '../utils/TokensFactory';
+import tokensFactory from '../lib/TokensFactory';
 
 /**
  * Return a list of all Services
