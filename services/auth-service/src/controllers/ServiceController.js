@@ -192,7 +192,7 @@ export const login = async ({ identifier, key }, ip) => {
     const keysMatch = await bcrypt.compare(key, service.key);
 
     if ((ipAuthorized && keysMatch) || process.env.NODE_ENV === 'mock') {
-      const tokens = await tokensFactory(
+      const tokens = tokensFactory(
         {
           service: service.identifier
         },
@@ -258,7 +258,7 @@ export const refresh = async ({ accessToken, refreshToken }) => {
           // Omit JWT payload properties from spec
           const jwtProperties = ['iat', 'exp', 'jti', 'nbf'];
           // Generate new tokens with new jwtids
-          const tokens = await tokensFactory(_.omit(decodedRefreshToken, jwtProperties), [
+          const tokens = tokensFactory(_.omit(decodedRefreshToken, jwtProperties), [
             uuid(),
             uuid()
           ]);
