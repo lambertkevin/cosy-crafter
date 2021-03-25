@@ -111,7 +111,7 @@ describe('Services API tests', () => {
             expect(response.result).to.deep.include({
               statusCode: 401,
               error: 'Unauthorized',
-              message: 'Unauthorized'
+              message: 'Signature Check Failed'
             });
           });
       });
@@ -142,7 +142,7 @@ describe('Services API tests', () => {
 
       it('should fail trying to create service if controller throws. HTTP 500', () => {
         const oldCreate = ServiceController.create;
-        ServiceController.create = () => Promise.reject();
+        ServiceController.create = () => Promise.reject(new Error());
         return server
           .inject({
             method: 'POST',
