@@ -22,7 +22,7 @@ export const checkSignature = (request, h) => {
   } catch (error) {
     /** @WARNING Make it critical when feature is available in winston + sentry */
     logger.error('Signature Check Middleware Failed', error);
-    throw Boom.unauthorized();
+    throw Boom.unauthorized('Signature Check Failed');
   }
 };
 
@@ -30,12 +30,12 @@ export const checkIpWhiteList = (request, h) => {
   const ip = request.info.remoteAddress;
   const { whitelist = [] } = fs.readFileSync(path.resolve('./', 'remoteAddresses.json'), 'utf8');
 
-  if (!privateIp(ip) && !whitelist.includes(ip)) {
-    /** @WARNING Make it critical when feature is available in winston + sentry */
-    logger.error('Ip WhiteList Check Failed', { ip });
-    throw Boom.unauthorized('Remote not authorized');
+  if (privateIp(ip) || whitelist.includes(ip)) {
+    return h.continue;
   }
-  return h.continue;
+  /** @WARNING Make it critical when feature is available in winston + sentry */
+  logger.error('Ip WhiteList Check Failed', { ip });
+  throw Boom.unauthorized('Remote not authorized');
 };
 
 export default {
