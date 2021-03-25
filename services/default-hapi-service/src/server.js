@@ -4,7 +4,7 @@ import Vision from '@hapi/vision';
 import HapiSwagger from 'hapi-swagger';
 import { nodeConfig, swaggerConfig } from './config';
 
-const init = async () => {
+export default async () => {
   try {
     const server = Hapi.server(nodeConfig);
     await server.register([
@@ -16,16 +16,21 @@ const init = async () => {
       }
     ]);
     await server.start();
-
     console.log('Server running on %s', server.info.uri);
-  } catch (e) {
-    console.log(e);
+
+    return server;
+  } catch (err) /* istanbul ignore next */ {
+    /** @WARNING Change this to fatal when feature available in winston + sentry */
+    logger.error('Fatal Error while starting the service', err);
+    return process.exit(1);
   }
 };
 
-process.on('unhandledRejection', (err) => {
-  console.log(err);
-  process.exit(1);
-});
-
-init();
+// istanbul ignore if
+if (process.env.NODE_ENV !== 'test') {
+  process.on('unhandledRejection', (err) => {
+    /** @WARNING Change this to fatal when feature available in winston + sentry */
+    logger.error('unhandledRejection', err);
+    process.exit(1);
+  });
+}

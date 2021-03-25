@@ -23,9 +23,10 @@ export default async () => {
       useUnifiedTopology: true
     })
     .then(() => console.log('Database connected'))
-    .catch((err) =>
-      /** @WARNING Change this to fatal when feature available in winston + sentry */
+    .catch(
       // istanbul ignore next
-      logger.error(`Database connection error: ${err.message}`, err)
+      (err) =>
+        /** @WARNING Change this to fatal when feature available in winston + sentry */
+        logger.error(`Database connection error: ${err.message}`, err)
     );
 };
