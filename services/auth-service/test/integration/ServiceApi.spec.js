@@ -66,7 +66,7 @@ describe('Services API tests', () => {
     });
 
     describe('Success', () => {
-      it('should succeed finding and returung a service', () => {
+      it('should succeed finding and return a service', () => {
         return server
           .inject({
             method: 'GET',
