@@ -6,9 +6,7 @@ import { v4 as uuid } from 'uuid';
 import chaiSubset from 'chai-subset';
 import MongoMemoryServer from 'mongodb-memory-server';
 import * as TokenBlacklistController from '../../src/controllers/TokenBlacklistController';
-import TokenBlacklistModel, {
-  hiddenFields
-} from '../../src/models/TokenBlacklistModel';
+import TokenBlacklistModel, { hiddenFields } from '../../src/models/TokenBlacklistModel';
 
 chai.use(chaiSubset);
 const mongooseOpts = {
@@ -44,9 +42,7 @@ describe('TokenBlacklistController unit test', () => {
         { jwtid: uuid(), type: 'refresh' },
         { jwtid: uuid(), type: 'access' }
       ];
-      await Promise.all(
-        fakeTokensData.map((x) => TokenBlacklistController.create(x))
-      );
+      await Promise.all(fakeTokensData.map((x) => TokenBlacklistController.create(x)));
 
       const tokens = await TokenBlacklistController.find();
 
@@ -64,9 +60,7 @@ describe('TokenBlacklistController unit test', () => {
         { jwtid: uuid(), type: 'refresh' },
         { jwtid: uuid(), type: 'access' }
       ];
-      await Promise.all(
-        fakeTokensData.map((x) => TokenBlacklistController.create(x))
-      );
+      await Promise.all(fakeTokensData.map((x) => TokenBlacklistController.create(x)));
 
       const tokens = await TokenBlacklistController.find(false);
 
@@ -298,12 +292,9 @@ describe('TokenBlacklistController unit test', () => {
 
     it("should return a 404 if the token doesn't exist", async () => {
       const jwtid = uuid();
-      const response = await TokenBlacklistController.update(
-        '605a58c0b6c966ab548da8b1',
-        {
-          jwtid
-        }
-      );
+      const response = await TokenBlacklistController.update('605a58c0b6c966ab548da8b1', {
+        jwtid
+      });
 
       expect(response).to.be.an('error').and.to.be.an.instanceOf(Boom.Boom);
       expect(response?.output?.statusCode).to.be.equal(404);
@@ -356,18 +347,14 @@ describe('TokenBlacklistController unit test', () => {
     });
 
     it("should return a 404 if token doesn't exist", async () => {
-      const error = await TokenBlacklistController.remove([
-        '605a56f67ab4c26d4da8ff6b'
-      ]);
+      const error = await TokenBlacklistController.remove(['605a56f67ab4c26d4da8ff6b']);
 
       expect(error).to.be.an('error').and.to.be.an.instanceOf(Boom.Boom);
       expect(error?.output?.statusCode).to.be.equal(404);
     });
 
     it('should update a token and return it not sanitized', async () => {
-      const response = await TokenBlacklistController.remove([
-        tokenToDelete._id
-      ]);
+      const response = await TokenBlacklistController.remove([tokenToDelete._id]);
 
       expect(response).to.deep.include({ deleted: [tokenToDelete._id] });
     });
