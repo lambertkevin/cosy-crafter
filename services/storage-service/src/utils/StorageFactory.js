@@ -62,11 +62,7 @@ export default () => {
      *
      * @return {String|void} storageType {aws|scaleway|local|null}
      */
-    const setFileFromReadable = async (
-      storagesPriorities,
-      stream,
-      filepath
-    ) => {
+    const setFileFromReadable = async (storagesPriorities, stream, filepath) => {
       let storageName;
       let publicLink;
 
@@ -116,9 +112,15 @@ export default () => {
      */
     const getFileAsReadable = (storageType, filepath, filename) => {
       const storage = storages[storageType];
+
       if (!storage) {
         throw Boom.badData('Storage type not existing');
       }
+
+      if (!filepath || !filename) {
+        throw Boom.notFound();
+      }
+
       return storage.getFileAsReadable(`${filepath}/${filename}`);
     };
 
