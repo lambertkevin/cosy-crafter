@@ -7,7 +7,7 @@ import { Stream } from 'stream';
 import proxyquire from 'proxyquire';
 import mockS3 from '../utils/mockS3';
 import createAxiosError from 'axios/lib/core/createError';
-import StorageController, { getCraftFile } from '../../src/controllers/StorageController';
+import StorageController from '../../src/controllers/StorageController';
 
 const h = {
   continue: Symbol('h.continue'),
@@ -26,7 +26,7 @@ const h = {
   }
 };
 
-describe.only('StorageController unit tests', () => {
+describe('StorageController unit tests', () => {
   let s3FakeServers;
 
   before(async () => {
@@ -87,6 +87,22 @@ describe.only('StorageController unit tests', () => {
           location: 'podcasts/podcast-test',
           storageType: 'scaleway',
           publicLink: `https://cosy-crafter.s3.fr-par.scw.cloud/${result.location}/${result.filename}`
+        });
+        expect(result).to.have.property('filename');
+      });
+
+      it("should upload a default storage if storageStrategy isn't set", async () => {
+        const payload = {
+          podcastName: 'podcast-test',
+          filename: 'filename-test.mp3',
+          file: fs.createReadStream(path.resolve('./test/files/blank.mp3'))
+        };
+        const result = await StorageController.addPodcastPartFile(payload);
+
+        expect(result).to.deep.include({
+          location: 'podcasts/podcast-test',
+          storageType: 'local',
+          publicLink: undefined
         });
         expect(result).to.have.property('filename');
       });
@@ -554,6 +570,21 @@ describe.only('StorageController unit tests', () => {
           location: `crafts`,
           storageType: 'scaleway',
           publicLink: `https://cosy-crafter.s3.fr-par.scw.cloud/crafts/${result.filename}`
+        });
+        expect(result).to.have.property('filename');
+      });
+
+      it("should upload a default storage if storageStrategy isn't set", async () => {
+        const payload = {
+          filename: 'filename-test.mp3',
+          file: fs.createReadStream(path.resolve('./test/files/blank.mp3'))
+        };
+        const result = await StorageController.addCraftFile(payload);
+
+        expect(result).to.deep.include({
+          location: `crafts`,
+          storageType: 'local',
+          publicLink: undefined
         });
         expect(result).to.have.property('filename');
       });

@@ -41,6 +41,35 @@ describe('Podcast Part Storage API V1 tests', () => {
     });
   });
 
+  describe('Podcast Part Get', () => {
+    it('should get a buffer as string', async () => {
+      const filepath = path.resolve('./', 'test', 'files', 'blank.mp3');
+      const partPayload = {
+        podcastName: 'podcast-test',
+        filename: 'integration-filename.mp3',
+        file: fs.createReadStream(filepath)
+      };
+      const bufferedFile = fs.readFileSync(filepath);
+      const part = await StorageController.addPodcastPartFile(partPayload);
+      return server
+        .inject({
+          method: 'GET',
+          url: `/v1/podcast-parts/605e3daaf96692bb3780009e`,
+          headers: {
+            'X-Mock': JSON.stringify({
+              storageType: part.storageType,
+              storagePath: part.location,
+              storageFilename: part.filename
+            })
+          }
+        })
+        .then((response) => {
+          expect(response).to.include({ statusCode: 200 });
+          expect(response?.result).to.be.equal(bufferedFile.toString());
+        });
+    });
+  });
+
   describe('Podcast Part Upload', () => {
     const podcastPartPayload = {
       podcastName: 'integration-podcast',
@@ -91,9 +120,7 @@ describe('Podcast Part Storage API V1 tests', () => {
         const payloadFormData = objectToFormData({
           ...podcastPartPayload,
           // Returns string and not ReadableStream
-          file: fs.readFileSync(
-            path.resolve('./', 'test', 'files', 'blank.mp3')
-          )
+          file: fs.readFileSync(path.resolve('./', 'test', 'files', 'blank.mp3'))
         });
         const payloadStream = await getStream(payloadFormData);
 
@@ -237,9 +264,7 @@ describe('Podcast Part Storage API V1 tests', () => {
       it('should succeed uploading podcast part on local', async () => {
         const payloadFormData = objectToFormData({
           ...podcastPartPayload,
-          file: fs.createReadStream(
-            path.resolve('./', 'test', 'files', 'blank.mp3')
-          )
+          file: fs.createReadStream(path.resolve('./', 'test', 'files', 'blank.mp3'))
         });
         const payloadStream = await getStream(payloadFormData);
 
@@ -271,9 +296,7 @@ describe('Podcast Part Storage API V1 tests', () => {
       it('should succeed uploading podcast part on aws', async () => {
         const payloadFormData = objectToFormData({
           ...podcastPartPayload,
-          file: fs.createReadStream(
-            path.resolve('./', 'test', 'files', 'blank.mp3')
-          ),
+          file: fs.createReadStream(path.resolve('./', 'test', 'files', 'blank.mp3')),
           storageStrategy: 'aws'
         });
         const payloadStream = await getStream(payloadFormData);
@@ -306,9 +329,7 @@ describe('Podcast Part Storage API V1 tests', () => {
       it('should succeed uploading podcast part on scaleway', async () => {
         const payloadFormData = objectToFormData({
           ...podcastPartPayload,
-          file: fs.createReadStream(
-            path.resolve('./', 'test', 'files', 'blank.mp3')
-          ),
+          file: fs.createReadStream(path.resolve('./', 'test', 'files', 'blank.mp3')),
           storageStrategy: 'scaleway'
         });
         const payloadStream = await getStream(payloadFormData);
