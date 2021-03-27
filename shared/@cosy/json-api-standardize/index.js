@@ -62,6 +62,10 @@ export default {
   name: "json-api-standardize",
   register(server, { ignorePlugins = [] } = {}) {
     const preResponse = (request, h) => {
+      if (request?.response instanceof Error) {
+        return standardizeError(request.response);
+      }
+
       if (
         // variety can be plain, stream or buffer
         // @see https://hapi.dev/api/?v=20.1.0#-responsevariety
@@ -71,9 +75,6 @@ export default {
         return h.continue;
       }
 
-      if (request?.response instanceof Error) {
-        return standardizeError(request.response);
-      }
       return standardizeResponse(request.response);
     };
 
