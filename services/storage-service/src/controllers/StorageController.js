@@ -87,11 +87,20 @@ export const addPodcastPartFile = async ({
  *
  * @param {String} id
  * @param {Object} h
+ * @param {String} headers [Used only to mock data for test purposes]
  *
- * @return {Response}
+ * @return {Promise<Buffer|Boom.Boom>}
  */
-export const getPodcastPartFile = async (id, h) => {
+export const getPodcastPartFile = async (id, h, headers) => {
   const axiosAsService = makeAxiosInstance(refresh);
+
+  if (process.env.NODE_ENV === 'test' && headers?.['x-mock']) {
+    axiosAsService.get = () =>
+      Promise.resolve({
+        data: { data: JSON.parse(headers['x-mock']) }
+      });
+  }
+
   return axiosAsService
     .get(`http://${PODCAST_SERVICE_NAME}:${PODCAST_SERVICE_PORT}/v1/parts/${id}`, {
       headers: {
@@ -127,7 +136,7 @@ export const getPodcastPartFile = async (id, h) => {
  * @param {String} data.storagePath
  * @param {String} data.storageFilename
  *
- * @return {Object}
+ * @return {Promise<Object|Boom.Boom>}
  */
 export const removePodcastPartFile = async ({ storageType, storagePath, storageFilename } = {}) => {
   try {
@@ -213,11 +222,20 @@ export const addCraftFile = async ({ file, filename, storageStrategy: _storageSt
  *
  * @param {String} id
  * @param {Object} h
+ * @param {String} headers [Used only to mock data for test purposes]
  *
- * @return {Response}
+ * @return {Promise<Buffer|Boom.Boom>}
  */
-export const getCraftFile = async (id, h) => {
+export const getCraftFile = async (id, h, headers) => {
   const axiosAsService = makeAxiosInstance(refresh);
+
+  if (process.env.NODE_ENV === 'test' && headers?.['x-mock']) {
+    axiosAsService.get = () =>
+      Promise.resolve({
+        data: { data: JSON.parse(headers['x-mock']) }
+      });
+  }
+
   return axiosAsService
     .get(`http://${PODCAST_SERVICE_NAME}:${PODCAST_SERVICE_PORT}/v1/crafts/${id}`, {
       headers: {
@@ -256,7 +274,7 @@ export const getCraftFile = async (id, h) => {
  * @param {String} data.storagePath
  * @param {String} data.storageFilename
  *
- * @return {Object}
+ * @return {Promise<Object>}
  */
 export const removeCraftFile = async ({ storageType, storagePath, storageFilename } = {}) => {
   try {
