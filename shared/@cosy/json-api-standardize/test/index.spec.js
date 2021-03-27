@@ -183,6 +183,15 @@ describe("@cosy/json-api-standardize", () => {
       expect(onPreResponseHookFunc(fakeRequest, h)).to.be.equal(h.continue);
     });
 
+    it("should ignore request if variety is not 'plain'", () => {
+      jsonApiStandardize.register(mockServer);
+      const fakeRequest = { response: { variety: "stream" } };
+      const fakeRequest2 = { response: { variety: "buffer" } };
+
+      expect(onPreResponseHookFunc(fakeRequest, h)).to.be.equal(h.continue);
+      expect(onPreResponseHookFunc(fakeRequest2, h)).to.be.equal(h.continue);
+    });
+
     it("should return a bad implmentation Boom error", () => {
       jsonApiStandardize.register(mockServer, {
         ignorePlugins: ["test-plugin"],
@@ -225,7 +234,9 @@ describe("@cosy/json-api-standardize", () => {
 
     it("should return standardized payload without status code", () => {
       jsonApiStandardize.register(mockServer);
-      const fakeRequest = { response: { source: { foo: "bar" } } };
+      const fakeRequest = {
+        response: { variety: "plain", source: { foo: "bar" } },
+      };
       const returnedResponse = onPreResponseHookFunc(fakeRequest, h);
 
       expect(returnedResponse)
