@@ -32,7 +32,7 @@ export default async () => {
 
     server.auth.strategy('service-jwt', 'jwt', {
       key: process.env.SERVICE_JWT_SECRET,
-      validate: async (decoded) => (decoded.service ? { isValid: true } : { isValid: false }),
+      validate: async (decoded) => ({ isValid: Boolean(decoded.service) }),
       errorFunc: (error, request) => {
         logger.error('Storage Service Request JWT Error', _.pick(request, ['info', 'auth']));
 
