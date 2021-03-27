@@ -6,15 +6,8 @@ import { EventEmitter } from 'events';
 import stringify from 'fast-safe-stringify';
 import CustomError from '@cosy/custom-error';
 import { makeJob } from './JobFactory';
-import {
-  WORKER_STATUS_AVAILABLE,
-  WORKER_STATUS_BUSY
-} from './types/WorkerTypes';
-import {
-  JOB_STATUS_WAITING,
-  JOB_STATUS_FAILED,
-  JOB_STATUS_ONGOING
-} from './types/JobTypes';
+import { WORKER_STATUS_AVAILABLE, WORKER_STATUS_BUSY } from './types/WorkerTypes';
+import { JOB_STATUS_WAITING, JOB_STATUS_FAILED, JOB_STATUS_ONGOING } from './types/JobTypes';
 
 const JOB_LIST_SAVE_FILE = path.resolve('./', '.job-save.json');
 
@@ -31,10 +24,7 @@ export const makeQueue = (registerEvents = true) => {
   const workers = [];
   let jobs = (() => {
     try {
-      if (
-        !fs.existsSync(JOB_LIST_SAVE_FILE) ||
-        process.env.NODE_ENV === 'test'
-      ) {
+      if (!fs.existsSync(JOB_LIST_SAVE_FILE) || process.env.NODE_ENV === 'test') {
         return [];
       }
 
@@ -94,15 +84,11 @@ export const makeQueue = (registerEvents = true) => {
         },
 
         get available() {
-          return workers.filter(
-            (worker) => worker.status === WORKER_STATUS_AVAILABLE
-          );
+          return workers.filter((worker) => worker.status === WORKER_STATUS_AVAILABLE);
         },
 
         get busy() {
-          return workers.filter(
-            (worker) => worker.status === WORKER_STATUS_BUSY
-          );
+          return workers.filter((worker) => worker.status === WORKER_STATUS_BUSY);
         },
 
         get length() {
@@ -196,16 +182,18 @@ export const makeQueue = (registerEvents = true) => {
         // Let's imagine you feed this queue with jobs not made by the provided factory
         if (!job.events || !(job.events instanceof EventEmitter)) {
           this.removeJob(job);
-          const jobHasNoEvents = new CustomError(
-            'Job has no event emitter',
-            'JobHasNoEvents'
-          );
+          const jobHasNoEvents = new CustomError('Job has no event emitter', 'JobHasNoEvents');
           throw jobHasNoEvents;
         }
 
-        // Let's imagine you feed this queue with workers not made by the provided factory
-        if (!worker.execute || typeof worker.execute !== 'function') {
+        // Let's imagine you fed this queue with workers not made by the provided factory
+        if (typeof worker?.execute !== 'function') {
           this.removeWorker(worker);
+          // Execute next after resolving this Promise
+          setTimeout(() => {
+            this.next();
+          });
+          return new CustomError('Worker.execute was not a function', 'WorkerExecuteInvalidError');
         }
 
         const onJobStatusChanged = () => {
@@ -234,11 +222,8 @@ export const makeQueue = (registerEvents = true) => {
               return error;
             }
             case 'JobRetryError': {
-              // Get the job with the maximum value
-              const { priority: jobsMaxPriority } = _.maxBy(
-                jobs,
-                ({ priority }) => priority
-              );
+              // Get the job with the maximum priority
+              const { priority: jobsMaxPriority } = _.maxBy(jobs, ({ priority }) => priority);
               // Make the retrying job the highest priority of the queue
               // for it to be the next job to be handled
               job.priority = jobsMaxPriority + 1;
@@ -247,6 +232,8 @@ export const makeQueue = (registerEvents = true) => {
               break;
             }
             default:
+              this.removeJob(job);
+              return new CustomError('An error has occured', 'UnknownError', null, error);
           }
         } finally {
           job.events.off('job-status-changed', onJobStatusChanged);
@@ -264,14 +251,16 @@ export const makeQueue = (registerEvents = true) => {
      */
     registerEvents() {
       this.events.on('jobs-updated', () => {
+        // istanbul ignore if
         if (process.env.NODE_ENV === 'development') {
           console.log('Job List Updated', this.jobs.length);
         }
 
+        // istanbul ignore if
         if (process.env.NODE_ENV !== 'test') {
           fs.writeFileSync(
             JOB_LIST_SAVE_FILE,
-            stringify({ jobs }, (key, val) => {
+            stringify({ jobs: jobs.map((x) => x.safe) }, (key, val) => {
               return typeof val === 'function' ? val.toString() : val;
             })
           );
@@ -281,6 +270,7 @@ export const makeQueue = (registerEvents = true) => {
       });
 
       this.events.on('workers-updated', () => {
+        // istanbul ignore if
         if (process.env.NODE_ENV === 'development') {
           console.log('workers: ', this.workers.length);
         }
@@ -298,6 +288,7 @@ export const makeQueue = (registerEvents = true) => {
     'removeWorker',
     // For test purposes with chai spies,
     // we need to be able to set next again as a different function
+    /* istanbul ignore next */
     process.env.NODE_ENV === 'test' ? undefined : 'next',
     'registerEvents'
   ];

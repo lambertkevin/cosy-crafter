@@ -1,10 +1,7 @@
 import CustomError from '@cosy/custom-error';
 import { AssertionError, expect } from 'chai';
 import { makeSocketWorker } from '../../src/lib/SocketWorkerFactory';
-import {
-  WORKER_STATUS_AVAILABLE,
-  WORKER_STATUS_BUSY
-} from '../../src/lib/types/WorkerTypes';
+import { WORKER_STATUS_AVAILABLE, WORKER_STATUS_BUSY } from '../../src/lib/types/WorkerTypes';
 
 const fakeSocket = {
   id: '123',
@@ -22,10 +19,37 @@ describe('Socket Worker Unit Test', () => {
         } catch (e) {
           expect(e).to.be.an('error').and.to.be.an.instanceOf(CustomError);
           expect(e?.name).to.be.equal('StatusUnknownError');
-          expect(e.message).to.be.equal(
-            'Unknown status: "value" must be one of [available, busy]'
-          );
+          expect(e.message).to.be.equal('Unknown status: "value" must be one of [available, busy]');
         }
+      });
+
+      it('should do nothing if updating to the same status', (done) => {
+        const worker = makeSocketWorker(fakeSocket);
+
+        worker.events.on('worker-status-changed', () => {
+          expect.fail();
+        });
+
+        worker.status = WORKER_STATUS_AVAILABLE;
+
+        setTimeout(() => {
+          done();
+        }, 50);
+      });
+
+      it('should not send a kill event if it has no currentJob', () => {
+        const fakeSockerWithKill = {
+          ...fakeSocket,
+          emittedEvent: undefined,
+          emit(eventName) {
+            this.emittedEvent = eventName;
+          }
+        };
+        const worker = makeSocketWorker(fakeSockerWithKill);
+
+        worker.sendKillEvent();
+
+        expect(fakeSockerWithKill.emittedEvent).to.be.equal(undefined);
       });
     });
 
@@ -35,6 +59,22 @@ describe('Socket Worker Unit Test', () => {
         worker.status = WORKER_STATUS_BUSY;
 
         expect(worker.status).to.be.equal(WORKER_STATUS_BUSY);
+      });
+
+      it('should send a kill event to socket', () => {
+        const fakeSockerWithKill = {
+          ...fakeSocket,
+          emittedEvent: undefined,
+          emit(eventName) {
+            this.emittedEvent = eventName;
+          }
+        };
+        const worker = makeSocketWorker(fakeSockerWithKill);
+        worker.currentJob = { id: 'id-of-the-current-job' };
+
+        worker.sendKillEvent();
+
+        expect(fakeSockerWithKill.emittedEvent).to.be.equal('kill-job-id-of-the-current-job');
       });
     });
   });
