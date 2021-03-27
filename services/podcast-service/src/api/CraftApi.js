@@ -7,11 +7,6 @@ import * as craftController from '../controllers/CraftController';
 export default {
   name: 'craftApi',
   async register(server) {
-    server.route({
-      method: 'get',
-      path: '/ping',
-      handler: () => 'pong'
-    });
     /**
      * Get all crafts
      *
@@ -32,8 +27,7 @@ export default {
             })
             .unknown()
         },
-        handler: (request) =>
-          craftController.find(!request.auth.isAuthenticated),
+        handler: (request) => craftController.find(!request.auth.isAuthenticated),
         tags: ['api', 'crafts', 'v1'],
         description: 'Get all Crafts',
         notes: 'Returns all the crafts',
@@ -75,10 +69,7 @@ export default {
             .unknown()
         },
         handler: (request) =>
-          craftController.findOne(
-            request.params.id,
-            !request.auth.isAuthenticated
-          ),
+          craftController.findOne(request.params.id, !request.auth.isAuthenticated),
         tags: ['api', 'crafts', 'v1'],
         description: 'Get a Craft',
         notes: 'Returns a specific craft',
@@ -118,10 +109,7 @@ export default {
             .unknown()
         },
         handler: (request) =>
-          craftController.create(
-            request.payload,
-            !request.auth.isAuthenticated
-          ),
+          craftController.create(request.payload, !request.auth.isAuthenticated),
         tags: ['api', 'crafts', 'v1'],
         description: 'Create a Craft',
         notes: 'Creates a craft and returns it',
@@ -157,9 +145,7 @@ export default {
           params: joi.object({
             id: joi.string().length(24).required()
           }),
-          payload: creationSchema.fork(schemaKeys(creationSchema), (x) =>
-            x.optional()
-          ),
+          payload: creationSchema.fork(schemaKeys(creationSchema), (x) => x.optional()),
           headers: joi
             .object({
               authorization: joi.string().required()
@@ -167,11 +153,7 @@ export default {
             .unknown()
         },
         handler: (request) =>
-          craftController.update(
-            request.params.id,
-            request.payload,
-            !request.auth.isAuthenticated
-          ),
+          craftController.update(request.params.id, request.payload, !request.auth.isAuthenticated),
         tags: ['api', 'crafts', 'v1'],
         description: 'Update a Craft',
         notes: 'Updates a craft and returns it',
@@ -206,13 +188,7 @@ export default {
           payload: joi.object({
             ids: joi
               .array()
-              .items(
-                joi
-                  .string()
-                  .length(24)
-                  .required()
-                  .example('5f3ffc6b726fccbdeac6a320')
-              )
+              .items(joi.string().length(24).required().example('5f3ffc6b726fccbdeac6a320'))
           }),
           headers: joi
             .object({
@@ -232,13 +208,7 @@ export default {
                   joi.object({
                     deleted: joi
                       .array()
-                      .items(
-                        joi
-                          .string()
-                          .length(24)
-                          .required()
-                          .example('5f3ffc6b726fccbdeac6a320')
-                      )
+                      .items(joi.string().length(24).required().example('5f3ffc6b726fccbdeac6a320'))
                   }),
                   false
                 )
@@ -287,13 +257,7 @@ export default {
                   joi.object({
                     deleted: joi
                       .array()
-                      .items(
-                        joi
-                          .string()
-                          .length(24)
-                          .required()
-                          .example('5f3ffc717161d3708f251bc0')
-                      )
+                      .items(joi.string().length(24).required().example('5f3ffc717161d3708f251bc0'))
                   }),
                   false
                 )

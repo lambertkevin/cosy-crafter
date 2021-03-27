@@ -26,21 +26,6 @@ describe('Podcast Part Storage API V1 tests', () => {
     s3FakeServers.forEach((s3) => s3.close());
   });
 
-  describe('Server Testing', () => {
-    it('should validate if podcast parts v1 API is reachable', () => {
-      return server
-        .inject({
-          method: 'GET',
-          url: '/v1/podcast-parts/ping'
-        })
-        .then((response) => {
-          expect(response).to.be.a('object');
-          expect(response).to.include({ statusCode: 200 });
-          expect(response?.result?.data).to.be.equal('pong');
-        });
-    });
-  });
-
   describe('Podcast Part Get', () => {
     it('should get a buffer as string', async () => {
       const filepath = path.resolve('./', 'test', 'files', 'blank.mp3');
