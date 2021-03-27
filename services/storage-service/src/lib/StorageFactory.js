@@ -6,6 +6,7 @@ import { storagesConfig } from '../config';
 
 export default () => {
   try {
+    // istanbul ignore next
     const storages =
       process.env.NODE_ENV === 'test'
         ? {
