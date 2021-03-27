@@ -2,8 +2,8 @@ import fs from 'fs';
 import path from 'path';
 import { expect } from 'chai';
 import getStream from 'get-stream';
-import * as StorageController from '../../src/controllers/StorageController';
 import { startAuthService, accessToken } from '../utils/authUtils';
+import * as StorageController from '../../src/controllers/StorageController';
 import { objectToFormData } from '../utils/formUtils';
 import mockS3 from '../utils/mockS3';
 import init from '../../src/server';
@@ -37,6 +37,34 @@ describe('Craft Storage API V1 tests', () => {
           expect(response).to.be.a('object');
           expect(response).to.include({ statusCode: 200 });
           expect(response?.result?.data).to.be.equal('pong');
+        });
+    });
+  });
+
+  describe('Craft Get', () => {
+    it('should get a buffer as string', async () => {
+      const filepath = path.resolve('./', 'test', 'files', 'blank.mp3');
+      const craftPayload = {
+        filename: 'integration-craft-filename.mp3',
+        file: fs.createReadStream(filepath)
+      };
+      const bufferedFile = fs.readFileSync(filepath);
+      const craft = await StorageController.addCraftFile(craftPayload);
+      return server
+        .inject({
+          method: 'GET',
+          url: `/v1/crafts/605e3daaf96692bb3780009e`,
+          headers: {
+            'X-Mock': JSON.stringify({
+              storageType: craft.storageType,
+              storagePath: craft.location,
+              storageFilename: craft.filename
+            })
+          }
+        })
+        .then((response) => {
+          expect(response).to.include({ statusCode: 200 });
+          expect(response?.result).to.be.equal(bufferedFile.toString());
         });
     });
   });
@@ -90,9 +118,7 @@ describe('Craft Storage API V1 tests', () => {
         const payloadFormData = objectToFormData({
           ...craftPayload,
           // Returns string and not ReadableStream
-          file: fs.readFileSync(
-            path.resolve('./', 'test', 'files', 'blank.mp3')
-          )
+          file: fs.readFileSync(path.resolve('./', 'test', 'files', 'blank.mp3'))
         });
         const payloadStream = await getStream(payloadFormData);
 
@@ -208,9 +234,7 @@ describe('Craft Storage API V1 tests', () => {
       it('should succeed uploading craft on local', async () => {
         const payloadFormData = objectToFormData({
           ...craftPayload,
-          file: fs.createReadStream(
-            path.resolve('./', 'test', 'files', 'blank.mp3')
-          )
+          file: fs.createReadStream(path.resolve('./', 'test', 'files', 'blank.mp3'))
         });
         const payloadStream = await getStream(payloadFormData);
 
@@ -230,9 +254,9 @@ describe('Craft Storage API V1 tests', () => {
             expect(response?.result).to.include({
               statusCode: 200
             });
-            expect(response?.result?.data).to.have.property('filename');
             expect(response?.result?.data).to.include({
-              location: 'crafts/integration-craft-filename.mp3',
+              filename: 'integration-craft-filename.mp3',
+              location: 'crafts',
               storageType: 'local',
               publicLink: undefined
             });
@@ -242,9 +266,7 @@ describe('Craft Storage API V1 tests', () => {
       it('should succeed uploading craft on aws', async () => {
         const payloadFormData = objectToFormData({
           ...craftPayload,
-          file: fs.createReadStream(
-            path.resolve('./', 'test', 'files', 'blank.mp3')
-          ),
+          file: fs.createReadStream(path.resolve('./', 'test', 'files', 'blank.mp3')),
           storageStrategy: 'aws'
         });
         const payloadStream = await getStream(payloadFormData);
@@ -265,9 +287,9 @@ describe('Craft Storage API V1 tests', () => {
             expect(response?.result).to.include({
               statusCode: 200
             });
-            expect(response?.result?.data).to.have.property('filename');
             expect(response?.result?.data).to.include({
-              location: 'crafts/integration-craft-filename.mp3',
+              filename: 'integration-craft-filename.mp3',
+              location: 'crafts',
               storageType: 'aws',
               publicLink: `https://cosy-crafter-backup.s3.eu-west-3.amazonaws.com/crafts/${response?.result?.data?.filename}`
             });
@@ -277,9 +299,7 @@ describe('Craft Storage API V1 tests', () => {
       it('should succeed uploading craft on scaleway', async () => {
         const payloadFormData = objectToFormData({
           ...craftPayload,
-          file: fs.createReadStream(
-            path.resolve('./', 'test', 'files', 'blank.mp3')
-          ),
+          file: fs.createReadStream(path.resolve('./', 'test', 'files', 'blank.mp3')),
           storageStrategy: 'scaleway'
         });
         const payloadStream = await getStream(payloadFormData);
@@ -300,9 +320,9 @@ describe('Craft Storage API V1 tests', () => {
             expect(response?.result).to.include({
               statusCode: 200
             });
-            expect(response?.result?.data).to.have.property('filename');
             expect(response?.result?.data).to.include({
-              location: 'crafts/integration-craft-filename.mp3',
+              filename: 'integration-craft-filename.mp3',
+              location: 'crafts',
               storageType: 'scaleway',
               publicLink: `https://cosy-crafter.s3.fr-par.scw.cloud/crafts/${response?.result?.data?.filename}`
             });
