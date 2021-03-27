@@ -10,7 +10,7 @@ import mockS3 from '../utils/mockS3';
 
 const storages = storageFactory();
 
-describe.only('StorageFactory unit tests', () => {
+describe('StorageFactory unit tests', () => {
   let s3FakeServers;
 
   before(async () => {
