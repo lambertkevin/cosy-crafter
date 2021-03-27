@@ -1,6 +1,8 @@
 import path from 'path';
 import Boom from '@hapi/boom';
 import { Readable } from 'stream';
+import { logger } from '@cosy/logger';
+import CustomError from '@cosy/custom-error';
 import { Storage, StorageType } from '@tweedegolf/storage-abstraction';
 import { storagesConfig } from '../config';
 
@@ -57,38 +59,43 @@ export default () => {
      * Will upload a stream to one of the storage available
      * depending on a priority list given as argument
      *
-     * @param {Array} storagesPriorities
+     * @param {Array} storagePriorities
      * @param {ReadableStream} stream
      * @param {String} filepath
      *
      * @return {String|void} storageType {aws|scaleway|local|null}
      */
-    const setFileFromReadable = async (storagesPriorities, stream, filepath) => {
-      let storageName;
-      let publicLink;
-
+    const setFileFromReadable = async (storagePriorities, stream, filepath) => {
       if (!(stream instanceof Readable)) {
         throw Boom.badData('File is not a stream');
       }
 
-      for (let i = 0; i < storagesPriorities.length; i += 1) {
-        storageName = storagesPriorities[i];
+      let storageName;
+      let publicLink;
+      for (let i = 0; i < storagePriorities.length; i += 1) {
+        storageName = storagePriorities[i];
         const storage = storages[storageName];
-        const storageConfig = storagesConfig[storageName];
 
-        if (storage) {
-          try {
-            // eslint-disable-next-line no-await-in-loop
+        try {
+          if (storage) {
             await storage.addFileFromReadable(stream, filepath);
-            if (storageConfig) {
-              publicLink = storageConfig.publicLinkGenerator(filepath);
-            }
+            publicLink = storagesConfig?.[storageName]?.publicLinkGenerator(filepath);
 
+            // If addFileFromReadable didn't fail, we just exit the loop
             break;
-          } catch (e) {
-            /** @WARNING Log dat */
-            storageName = null;
+          } else {
+            throw new CustomError("Storage doesn't exist", 'StorageNotExisting');
           }
+        } catch (error) {
+          logger.warn('StorageFactory Error: Storage option has failed', {
+            error,
+            args: {
+              storagePriorities,
+              storage,
+              filepath
+            }
+          });
+          storageName = null;
         }
       }
 
@@ -136,9 +143,15 @@ export default () => {
      */
     const removeFile = (storageType, filepath, filename) => {
       const storage = storages[storageType];
+
       if (!storage) {
         throw Boom.badData('Storage type not existing');
       }
+
+      if (!filepath || !filename) {
+        throw Boom.notFound();
+      }
+
       return storage.removeFile(`${filepath}/${filename}`);
     };
 
