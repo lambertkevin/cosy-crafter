@@ -41,10 +41,7 @@ export default {
               storageStrategy: joi
                 .string()
                 .allow('')
-                .regex(
-                  /^[a-zA-Z0-9, -]*$/,
-                  'Alphanumerics, space, dash and comma characters'
-                )
+                .regex(/^[a-zA-Z0-9, -]*$/, 'Alphanumerics, space, dash and comma characters')
             })
             .label('CraftCreationSchema'),
           headers: joi
@@ -64,10 +61,7 @@ export default {
                 schema: standardizeSchema(
                   joi.object({
                     storagePath: joi.string().example('path/to/the').required(),
-                    storageFilename: joi
-                      .string()
-                      .example('file.mp3')
-                      .required(),
+                    storageFilename: joi.string().example('file.mp3').required(),
                     storageType: joi
                       .string()
                       .valid('local', 'aws', 'scaleway')
@@ -98,8 +92,8 @@ export default {
       method: 'GET',
       path: '/{id}',
       options: {
-        handler: async ({ params }, h) =>
-          StorageController.getCraftFile(params.id, h),
+        handler: async ({ params, headers }, h) =>
+          StorageController.getCraftFile(params.id, h, headers),
         tags: ['api', 'crafts', 'v1'],
         description: 'Get a Craft file',
         notes: 'Returns a craft file',
@@ -135,8 +129,7 @@ export default {
           strategy: 'service-jwt',
           mode: 'required'
         },
-        handler: async ({ payload }) =>
-          StorageController.removeCraftFile(payload),
+        handler: async ({ payload }) => StorageController.removeCraftFile(payload),
         tags: ['api', 'crafts', 'v1'],
         description: 'Delete a craft file',
         notes: 'Deletes a specific a craft file',
@@ -144,11 +137,7 @@ export default {
           failAction: failValidationHandler,
           payload: joi
             .object({
-              storageType: joi
-                .string()
-                .required()
-                .valid('aws', 'scaleway', 'local')
-                .example('aws'),
+              storageType: joi.string().required().valid('aws', 'scaleway', 'local').example('aws'),
               storagePath: joi.string().required().example('path/to/folder'),
               storageFilename: joi
                 .string()
@@ -170,13 +159,7 @@ export default {
                   joi.object({
                     deleted: joi
                       .array()
-                      .items(
-                        joi
-                          .string()
-                          .length(24)
-                          .required()
-                          .example('5f3ed184201d35c0c309aaaa')
-                      )
+                      .items(joi.string().length(24).required().example('5f3ed184201d35c0c309aaaa'))
                   }),
                   false
                 )
