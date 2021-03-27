@@ -1,4 +1,5 @@
 import joi from 'joi';
+import _ from 'lodash';
 import { v4 as uuid } from 'uuid';
 import { logger } from '@cosy/logger';
 import { EventEmitter } from 'events';
@@ -28,12 +29,14 @@ const argsSchema = joi.object({
       startedAt: joi.date().timestamp().optional(),
       finishedAt: joi.date().timestamp().optional(),
       retries: joi.number().strict().positive().allow(0).optional(),
+      fails: joi.number().strict().positive().allow(0).optional(),
       asyncAction: joi.string().optional()
     })
     .optional()
     .when('asyncAction', {
       is: null,
       then: joi
+        //
         .object({ asyncAction: joi.disallow(null).required() })
         .required()
     })
@@ -59,20 +62,13 @@ export const makeJob = (asyncAction, opts) => {
   const { error } = argsSchema.validate({ asyncAction, opts });
 
   if (error) {
-    throw new CustomError(
-      `Arguments are invalid: ${error?.message}`,
-      error?.name,
-      406,
-      error
-    );
+    throw new CustomError(`Arguments are invalid: ${error?.message}`, error?.name, 406, error);
   }
 
   let priority = opts?.priority ?? JOB_PRIORITY_MEDIUM;
   let progress = opts?.progress || 0;
   let status =
-    opts && opts.status && opts.status !== JOB_STATUS_ONGOING
-      ? opts.status
-      : JOB_STATUS_WAITING;
+    opts && opts.status && opts.status !== JOB_STATUS_ONGOING ? opts.status : JOB_STATUS_WAITING;
 
   const job = {
     id: opts?.id || uuid(),
@@ -113,10 +109,7 @@ export const makeJob = (asyncAction, opts) => {
           .validate(_status);
 
         if (statusError) {
-          throw new CustomError(
-            `Unknown status: ${statusError.message}`,
-            'StatusUnknownError'
-          );
+          throw new CustomError(`Unknown status: ${statusError.message}`, 'StatusUnknownError');
         }
 
         status = _status;
@@ -140,10 +133,7 @@ export const makeJob = (asyncAction, opts) => {
      */
     set priority(_priority) {
       if (priority !== _priority) {
-        const { error: priorityError } = joi
-          .number()
-          .strict()
-          .validate(_priority);
+        const { error: priorityError } = joi.number().strict().validate(_priority);
 
         if (priorityError) {
           throw new CustomError(
@@ -202,9 +192,9 @@ export const makeJob = (asyncAction, opts) => {
     get duration() {
       if (this.startedAt) {
         return this.finishedAt
-          ? `${
-              this.status === JOB_STATUS_FAILED ? 'Failed after ' : ''
-            }${humanizeDuration(this.finishedAt - this.startedAt)}`
+          ? `${this.status === JOB_STATUS_FAILED ? 'Failed after ' : ''}${humanizeDuration(
+              this.finishedAt - this.startedAt
+            )}`
           : humanizeDuration(Date.now() - this.startedAt);
       }
       return undefined;
@@ -269,33 +259,40 @@ export const makeJob = (asyncAction, opts) => {
           error: rejection
         });
 
-        const jobRetryError = new CustomError(
-          'Job failed but will retry',
-          'JobRetryError'
-        );
+        const jobRetryError = new CustomError('Job failed but will retry', 'JobRetryError');
         return jobRetryError;
       }
 
       this.status = JOB_STATUS_FAILED;
       logger.error('Job finally failed', { jobId: job.id, error: rejection });
 
-      const jobFailedError = new CustomError(
-        'Job finally failed',
-        'JobFailedError'
-      );
+      const jobFailedError = new CustomError('Job finally failed', 'JobFailedError');
       return jobFailedError;
+    },
+
+    /**
+     * Get a safe for stringification
+     * version of the job
+     *
+     * @return {Object}
+     */
+    get safe() {
+      return _.pick(this, [
+        'id',
+        'priority',
+        'progress',
+        'status',
+        'addedAt',
+        'startedAt',
+        'finishedAt',
+        'retries',
+        'fails',
+        'asyncAction'
+      ]);
     }
   };
 
-  const freezeProps = [
-    'id',
-    'addedAt',
-    'asyncAction',
-    'process',
-    'retry',
-    'finish',
-    'kill'
-  ];
+  const freezeProps = ['id', 'addedAt', 'asyncAction', 'process', 'retry', 'finish', 'kill'];
   freezeProps.forEach((freezeProp) => {
     Object.defineProperty(job, freezeProp, {
       writable: false,

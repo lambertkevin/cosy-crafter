@@ -1,18 +1,26 @@
+import fs from 'fs';
 import _ from 'lodash';
+import path from 'path';
 import spies from 'chai-spies';
+import subset from 'chai-subset';
+import proxyquire from 'proxyquire';
 import { EventEmitter } from 'events';
+import stringify from 'fast-safe-stringify';
 import CustomError from '@cosy/custom-error';
 import chai, { AssertionError, expect } from 'chai';
 import { makeJob } from '../../src/lib/JobFactory';
 import { makeQueue } from '../../src/lib/QueueFactory';
 import { makeSocketWorker } from '../../src/lib/SocketWorkerFactory';
+import { WORKER_STATUS_AVAILABLE, WORKER_STATUS_BUSY } from '../../src/lib/types/WorkerTypes';
 import {
+  JOB_STATUS_DONE,
   JOB_STATUS_FAILED,
   JOB_STATUS_ONGOING,
   JOB_STATUS_WAITING
 } from '../../src/lib/types/JobTypes';
 
 chai.use(spies);
+chai.use(subset);
 
 const successAsyncAction = () =>
   new Promise((resolve) => {
@@ -35,9 +43,7 @@ describe('Queue Unit Test', () => {
         const removal = queue.removeJob({});
         expect(removal).to.be.an('error').and.to.be.an.instanceOf(CustomError);
         expect(removal.name).to.be.equal('JobNotFound');
-        expect(removal.message).to.be.equal(
-          'This job is not existing in this queue'
-        );
+        expect(removal.message).to.be.equal('This job is not existing in this queue');
       });
 
       it('should fail adding a duplicated job', () => {
@@ -92,6 +98,43 @@ describe('Queue Unit Test', () => {
         });
       });
 
+      it('should fail executing a job that has no start function', async () => {
+        const fakeWorker = { execute: 123, status: WORKER_STATUS_AVAILABLE };
+        const fakeJob = {
+          events: new EventEmitter(),
+          status: JOB_STATUS_WAITING
+        };
+        const queue = makeQueue(false);
+
+        queue.addWorker(fakeWorker);
+        queue.addJob(fakeJob);
+
+        return queue.next().then((res) => {
+          expect(res).to.be.an('error').and.to.be.an.instanceOf(CustomError);
+          expect(res.name).to.be.equal('WorkerExecuteInvalidError');
+        });
+      });
+
+      it('should fail executing if worker execute is not a function', async () => {
+        const fakeWorker = {
+          execute: () => Promise.reject(new Error()),
+          status: WORKER_STATUS_AVAILABLE
+        };
+        const fakeJob = {
+          events: new EventEmitter(),
+          status: JOB_STATUS_WAITING
+        };
+        const queue = makeQueue(false);
+
+        queue.addWorker(fakeWorker);
+        queue.addJob(fakeJob);
+
+        return queue.next().then((res) => {
+          expect(res).to.be.an('error').and.to.be.an.instanceOf(CustomError);
+          expect(res.name).to.be.equal('UnknownError');
+        });
+      });
+
       it('should fail executing a job that start function is not a promise', async () => {
         const fakeWorker = makeSocketWorker({ id: null, handshake: null });
         const fakeJob = {
@@ -137,6 +180,29 @@ describe('Queue Unit Test', () => {
         expect(queue.jobs.all).to.include(job);
       });
 
+      it('should succeed getting jobs in different states', () => {
+        const job1 = makeJob(successAsyncAction);
+        const job2 = makeJob(successAsyncAction, { status: JOB_STATUS_FAILED });
+        const job3 = makeJob(successAsyncAction, { status: JOB_STATUS_WAITING });
+        const job4 = makeJob(successAsyncAction, { status: JOB_STATUS_DONE });
+        // job cannot be created with ongoing status
+        job1.status = JOB_STATUS_ONGOING;
+
+        const queue = makeQueue();
+        queue.next = () => {};
+
+        queue.addJob(job1);
+        queue.addJob(job2);
+        queue.addJob(job3);
+        queue.addJob(job4);
+
+        expect(queue.jobs.all).to.containSubset([job1, job1, job3, job4]);
+        expect(queue.jobs.length).to.be.equal(4);
+        expect(queue.jobs.waiting).to.include(job3);
+        expect(queue.jobs.failed).to.include(job2);
+        expect(queue.jobs.ongoing).to.include(job1);
+      });
+
       it('should succeed adding a job to queue and emit an event', (done) => {
         const job = makeJob(successAsyncAction, {
           priority: 1
@@ -166,9 +232,7 @@ describe('Queue Unit Test', () => {
       it('should succeed sorting jobs by priority at push', () => {
         const jobs = new Array(100)
           .fill(0)
-          .map(() =>
-            makeJob(successAsyncAction, { priority: _.random(0, 1000) })
-          );
+          .map(() => makeJob(successAsyncAction, { priority: _.random(0, 1000) }));
 
         const queue = makeQueue();
 
@@ -234,6 +298,32 @@ describe('Queue Unit Test', () => {
         expect(queue.workers.all).to.include(worker);
       });
 
+      it('should succeed adding a worker to queue', () => {
+        const worker1 = makeSocketWorker({
+          id: '123',
+          handshake: null,
+          status: WORKER_STATUS_AVAILABLE
+        });
+        const worker2 = makeSocketWorker({
+          id: '123',
+          handshake: null
+        });
+
+        // worker cannot be create with status busy
+        worker2.status = WORKER_STATUS_BUSY;
+
+        const queue = makeQueue();
+        queue.next = () => {};
+
+        queue.addWorker(worker1);
+        queue.addWorker(worker2);
+
+        expect(queue.workers.all).to.containSubset([worker1, worker2]);
+        expect(queue.workers.length).to.be.equal(2);
+        expect(queue.workers.available).to.include(worker1);
+        expect(queue.workers.busy).to.include(worker2);
+      });
+
       it('should succeed removing a worker to queue', () => {
         const worker = makeSocketWorker({ id: '123', handshake: null });
         const queue = makeQueue();
@@ -282,6 +372,76 @@ describe('Queue Unit Test', () => {
 
           done();
         });
+      });
+
+      it('should have a list of job at start from a JSON save file', () => {
+        const jobs = [
+          makeJob(successAsyncAction),
+          makeJob(successAsyncAction),
+          makeJob(successAsyncAction),
+          makeJob(successAsyncAction),
+          makeJob(successAsyncAction)
+        ];
+
+        const { default: makeMockedQueue } = proxyquire('../../src/lib/QueueFactory.js', {
+          fs: {
+            existSync: () => true,
+            readFileSync: () =>
+              stringify({ jobs: jobs.map((x) => x.safe) }, (key, val) => {
+                return typeof val === 'function' ? val.toString() : val;
+              })
+          }
+        });
+
+        const oldEnv = process.env.NODE_ENV;
+        process.env.NODE_ENV = 'development';
+
+        const queue = makeMockedQueue();
+        const idsInQueue = queue.jobs.all.map(({ id }) => id);
+        expect(idsInQueue).to.have.members(jobs.map(({ id }) => id));
+
+        process.env.NODE_ENV = oldEnv;
+      });
+
+      it('should default to empty job list if jobs is not an Array', () => {
+        const jobs = [makeJob(successAsyncAction), makeJob(successAsyncAction)];
+
+        const { default: makeMockedQueue } = proxyquire('../../src/lib/QueueFactory.js', {
+          fs: {
+            existSync: () => true,
+            readFileSync: () =>
+              stringify({ jobsWithOtherName: jobs.map((x) => x.safe) }, (key, val) => {
+                return typeof val === 'function' ? val.toString() : val;
+              })
+          }
+        });
+
+        const oldEnv = process.env.NODE_ENV;
+        process.env.NODE_ENV = 'development';
+
+        const queue = makeMockedQueue();
+        expect(queue.jobs.length).to.be.equal(0);
+
+        process.env.NODE_ENV = oldEnv;
+      });
+
+      it('should default to empty job list if any error', () => {
+        const { default: makeMockedQueue } = proxyquire('../../src/lib/QueueFactory.js', {
+          fs: {
+            existSync: () => true,
+            readFileSync: () => {
+              throw new Error();
+            }
+          }
+        });
+
+        const oldEnv = process.env.NODE_ENV;
+        process.env.NODE_ENV = 'development';
+
+        const queue = makeMockedQueue();
+        expect(queue.jobs.length).to.be.equal(0);
+
+        process.env.NODE_ENV = oldEnv;
       });
     });
   });

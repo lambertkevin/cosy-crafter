@@ -4,7 +4,8 @@ import {
   JOB_STATUS_WAITING,
   JOB_STATUS_DONE,
   JOB_STATUS_FAILED,
-  JOB_STATUS_ONGOING
+  JOB_STATUS_ONGOING,
+  JOB_PRIORITY_MEDIUM
 } from '../../src/lib/types/JobTypes';
 import { makeJob } from '../../src/lib/JobFactory';
 
@@ -59,9 +60,7 @@ describe('Job Unit Test', () => {
           } catch (e) {
             expect(e).to.be.an('error').and.to.be.an.instanceOf(CustomError);
             expect(e?.name).to.be.equal('ValidationError');
-            expect(e?.message).to.be.equal(
-              'Arguments are invalid: "asyncAction" is required'
-            );
+            expect(e?.message).to.be.equal('Arguments are invalid: "asyncAction" is required');
           }
         });
 
@@ -72,9 +71,7 @@ describe('Job Unit Test', () => {
           } catch (e) {
             expect(e).to.be.an('error').and.to.be.an.instanceOf(CustomError);
             expect(e?.name).to.be.equal('ValidationError');
-            expect(e?.message).to.be.equal(
-              'Arguments are invalid: "asyncAction" is required'
-            );
+            expect(e?.message).to.be.equal('Arguments are invalid: "asyncAction" is required');
           }
         });
 
@@ -85,9 +82,7 @@ describe('Job Unit Test', () => {
           } catch (e) {
             expect(e).to.be.an('error').and.to.be.an.instanceOf(CustomError);
             expect(e?.name).to.be.equal('ValidationError');
-            expect(e?.message).to.be.equal(
-              'Arguments are invalid: "opts" is required'
-            );
+            expect(e?.message).to.be.equal('Arguments are invalid: "opts" is required');
           }
         });
 
@@ -98,9 +93,7 @@ describe('Job Unit Test', () => {
           } catch (e) {
             expect(e).to.be.an('error').and.to.be.an.instanceOf(CustomError);
             expect(e?.name).to.be.equal('ValidationError');
-            expect(e?.message).to.be.equal(
-              'Arguments are invalid: "opts.asyncAction" is required'
-            );
+            expect(e?.message).to.be.equal('Arguments are invalid: "opts.asyncAction" is required');
           }
         });
 
@@ -466,10 +459,20 @@ describe('Job Unit Test', () => {
         } catch (e) {
           expect(e).to.be.an('error').and.to.be.an.instanceOf(CustomError);
           expect(e?.name).to.be.equal('PriorityInvalidError');
-          expect(e.message).to.be.equal(
-            'Invalid priority: "value" must be a number'
-          );
+          expect(e.message).to.be.equal('Invalid priority: "value" must be a number');
         }
+      });
+
+      it('should fire priority event change if new status === old status', (done) => {
+        const job = makeJob(successAsyncAction);
+        job.events.on('job-priority-changed', () => {
+          expect.fail();
+        });
+        job.priority = JOB_PRIORITY_MEDIUM;
+
+        setTimeout(() => {
+          done();
+        });
       });
 
       it('should fail changing progress with something not a number', () => {
@@ -480,10 +483,20 @@ describe('Job Unit Test', () => {
         } catch (e) {
           expect(e).to.be.an('error').and.to.be.an.instanceOf(CustomError);
           expect(e?.name).to.be.equal('ProgressInvalidError');
-          expect(e.message).to.be.equal(
-            'Invalid progress: "value" must be a number'
-          );
+          expect(e.message).to.be.equal('Invalid progress: "value" must be a number');
         }
+      });
+
+      it('should fire priority event change if new status === old status', (done) => {
+        const job = makeJob(successAsyncAction);
+        job.events.on('job-progress-changed', () => {
+          expect.fail();
+        });
+        job.progress = 0;
+
+        setTimeout(() => {
+          done();
+        });
       });
 
       it('should fail changing progress with a number bigger than 100', () => {
@@ -553,6 +566,25 @@ describe('Job Unit Test', () => {
         });
 
         expect(job.duration).to.be.equal('5 minutes');
+      });
+
+      it('should return humanized duration of duration between now and start when job is ongoing', () => {
+        const job1 = makeJob(failAsyncAction, {
+          status: JOB_STATUS_DONE,
+          startedAt: Date.now() - 60000
+        });
+        const job2 = makeJob(failAsyncAction, {
+          status: JOB_STATUS_DONE,
+          startedAt: Date.now() - 120000
+        });
+        const job3 = makeJob(failAsyncAction, {
+          status: JOB_STATUS_DONE,
+          startedAt: Date.now() - 60000 * 60
+        });
+
+        expect(job1.duration.startsWith('1 minute')).to.be.equal(true);
+        expect(job2.duration.startsWith('2 minutes')).to.be.equal(true);
+        expect(job3.duration.startsWith('1 hour')).to.be.equal(true);
       });
     });
   });
