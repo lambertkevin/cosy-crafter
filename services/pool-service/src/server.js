@@ -17,7 +17,7 @@ export default async () => {
     });
     const io = socket(server, {
       cors: {
-        origin: process.env.NODE_ENV === 'development' ? '*' : undefined
+        origin /* istanbul ignore next */: process.env.NODE_ENV === 'development' ? '*' : undefined
       }
     });
 

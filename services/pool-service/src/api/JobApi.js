@@ -7,6 +7,13 @@ import { transcodingQueue } from '../queue';
 
 const routes = [
   {
+    // Healthcheck route for testing purposes
+    path: '/ping',
+    handler: (data, ack) => {
+      return ack('pong');
+    }
+  },
+  {
     path: '/add',
     handler: (data, ack) => {
       const job = JobController.createTranscodingJob(data, ack);
