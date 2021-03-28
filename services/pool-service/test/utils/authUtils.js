@@ -51,6 +51,8 @@ export const accessToken = accessTokenFactory(
   '10m'
 );
 
+export const accessTokenMalformed = accessTokenFactory({}, '10m');
+
 export const accessTokenExpired = accessTokenFactory(
   {
     service: 'integration-service'

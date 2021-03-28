@@ -1,9 +1,7 @@
 import { expect } from 'chai';
+import proxyquire from 'proxyquire';
 import * as JobController from '../../src/controllers/JobController';
-import {
-  JOB_STATUS_DONE,
-  JOB_STATUS_WAITING
-} from '../../src/lib/types/JobTypes';
+import { JOB_STATUS_DONE, JOB_STATUS_WAITING } from '../../src/lib/types/JobTypes';
 import { makeWorkerMock } from '../utils/workerUtils';
 
 describe('Job Controller Unit Tests', () => {
@@ -76,6 +74,25 @@ describe('Job Controller Unit Tests', () => {
           // Job should have failed and been put back in queue
           expect(transcodingJob.fails).to.be.equal(1);
           expect(transcodingJob.status).to.be.equal(JOB_STATUS_WAITING);
+        });
+      });
+
+      it('should ack a 500 error if anything fail while creating the job', async () => {
+        let response;
+        const { createTranscodingJob } = proxyquire('../../src/controllers/JobController.js', {
+          '../lib/JobFactory': {
+            makeJob: () => {
+              throw new Error();
+            }
+          }
+        });
+        createTranscodingJob({}, (res) => {
+          response = res;
+        });
+
+        expect(response).to.deep.include({
+          statusCode: 500,
+          message: "Couldn't create the transcoding job"
         });
       });
     });
