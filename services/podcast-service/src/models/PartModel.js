@@ -1,4 +1,3 @@
-import _ from 'lodash';
 import axios from 'axios';
 import Boom from '@hapi/boom';
 import mongoose from 'mongoose';
@@ -10,6 +9,7 @@ import mongooseUniqueValidator from 'mongoose-unique-validator';
 import PartSchema, { hiddenProperties } from '../schemas/PartSchema';
 import Podcast from './PodcastModel';
 
+// prettier-ignore
 export const hiddenFields = [
   ...hiddenProperties,
   'createdAt',
@@ -23,7 +23,7 @@ const schema = new mongoose.Schema(joigoose(mongoose).convert(PartSchema), {
   timestamps: true
 });
 
-// This allow for beautified E11000 errors for 'uniqueness' of fields
+// Beautify E11000 errors for 'uniqueness' of fields
 schema.plugin(mongooseUniqueValidator);
 
 // Cascade update to add part to podcast parts array
@@ -42,9 +42,7 @@ schema.post('validate', async (part, next) => {
 
     next();
   } catch (e) {
-    logger.error(
-      'Part Cascade Update Error: Error while adding part to podcast'
-    );
+    logger.error('Part Cascade Update Error: Error while adding part to podcast');
     next(Boom.resourceGone('Error while updating the podcast'));
   }
 });
@@ -52,39 +50,32 @@ schema.post('validate', async (part, next) => {
 // Remove all files related to parts
 schema.pre('deleteMany', async function preDeleteManyMiddelware(next) {
   try {
-    const ids = _.get(this, ['_conditions', '_id', '$in'], []);
-    const parts = await Promise.all(
-      ids.map((id) => this.model.findById(id))
-    ).then((_parts) => _parts.filter((x) => x));
+    // Parts ids (should always be defined since SectionController is always fed with array)
+    const ids = this._conditions._id.$in;
+    const partsPromises = ids.map((id) => this.model.findById(id));
+    const parts = await Promise.all(partsPromises).then((partsData) => partsData.filter((x) => x));
 
-    const deletions = parts.map(
-      ({ storageType, storagePath, storageFilename }) => {
-        return storageType && storagePath && storageFilename
-          ? axios.delete(
-              `http://${process.env.STORAGE_SERVICE_NAME}:${process.env.STORAGE_SERVICE_PORT}/v1/podcast-parts`,
-              {
-                data: {
-                  storageType,
-                  storagePath,
-                  storageFilename
-                }
-              },
-              {
-                headers: {
-                  authorization: tokens.accessToken
-                }
-              }
-            )
-          : Promise.resolve();
-      }
+    const deletions = parts.map(({ storageType, storagePath, storageFilename }) =>
+      axios.delete(
+        `http://${process.env.STORAGE_SERVICE_NAME}:${process.env.STORAGE_SERVICE_PORT}/v1/podcast-parts`,
+        {
+          data: {
+            storageType,
+            storagePath,
+            storageFilename
+          }
+        },
+        {
+          headers: {
+            authorization: tokens.accessToken
+          }
+        }
+      )
     );
 
     await Promise.allSettled(deletions);
-  } catch (error) {
-    logger.warn(
-      "Part Cascade Delete Error: Error while deleting parts' files from storage",
-      error
-    );
+  } catch (error) /* istanbul ignore next */ {
+    logger.warn("Part Cascade Delete Error: Error while deleting parts' files from storage", error);
   } finally {
     next();
   }

@@ -4,7 +4,13 @@ import arrayToProjection from '@cosy/array-to-projection';
 import mongooseUniqueValidator from 'mongoose-unique-validator';
 import SectionSchema, { hiddenProperties } from '../schemas/SectionSchema';
 
-export const hiddenFields = [...hiddenProperties, 'createdAt', 'updatedAt', '__v'];
+// prettier-ignore
+export const hiddenFields = [
+  ...hiddenProperties,
+  'createdAt',
+  'updatedAt',
+  '__v'
+];
 
 export const projection = arrayToProjection(hiddenFields);
 
