@@ -36,14 +36,14 @@ export default async () => {
     });
 
     return server;
-  } catch (err) {
-    console.error(err);
+  } catch (err) /* istanbul ignore next */ {
     /** @WARNING Change this to fatal when feature available in winston + sentry */
     logger.error('Fatal Error while starting the service', err);
     return process.exit(1);
   }
 };
 
+// istanbul ignore if
 if (process.env.NODE_ENV !== 'test') {
   process.on('unhandledRejection', (err) => {
     /** @WARNING Change this to fatal when feature available in winston + sentry */

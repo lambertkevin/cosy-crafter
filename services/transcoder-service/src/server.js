@@ -29,22 +29,23 @@ export default async () => {
             await refresh();
             pool.connect();
           } catch (err) {
-            logger.error(
-              'Fatal Error while refreshing the service tokens',
-              err
-            );
+            logger.error('Fatal Error while refreshing the service tokens', err);
             process.exit(0);
           }
         }
       });
-  } catch (err) {
+  } catch (err) /* istanbul ignore next */ {
     /** @WARNING Change this to fatal when feature available in winston + sentry */
     logger.error('Fatal Error while starting the service', err);
     process.exit(0);
   }
 };
 
-process.on('unhandledRejection', (err) => {
-  logger.error('unhandledRejection', err);
-  process.exit(1);
-});
+// istanbul ignore if
+if (process.env.NODE_ENV !== 'test') {
+  process.on('unhandledRejection', (err) => {
+    /** @WARNING Change this to fatal when feature available in winston + sentry */
+    logger.error('unhandledRejection', err);
+    process.exit(1);
+  });
+}

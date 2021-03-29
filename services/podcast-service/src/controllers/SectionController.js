@@ -1,5 +1,6 @@
 import _ from 'lodash';
 import Boom from '@hapi/boom';
+import mongoose from 'mongoose';
 import { logger } from '@cosy/logger';
 import Section, { projection, hiddenFields } from '../models/SectionModel';
 
@@ -45,11 +46,9 @@ export const findOne = (id, sanitized = true) =>
  */
 export const create = ({ name }, sanitized = true) =>
   Section.create({ name })
-    .then((section) =>
-      sanitized ? _.omit(section.toObject(), hiddenFields) : section
-    )
+    .then((section) => (sanitized ? _.omit(section.toObject(), hiddenFields) : section))
     .catch((error) => {
-      if (error.name === 'ValidationError') {
+      if (error instanceof mongoose.Error) {
         logger.error('Section Create Validation Error', error);
         const response = Boom.boomify(error, { statusCode: 409 });
         response.output.payload.data = error.errors;
@@ -72,21 +71,21 @@ export const create = ({ name }, sanitized = true) =>
  * @return {Promise<Object>} {Section}
  */
 export const update = (id, { name }, sanitized = true) =>
-  Section.updateOne({ _id: id }, _.omitBy({ name }, _.isUndefined))
+  Section.updateOne({ _id: id }, _.omitBy({ name }, _.isUndefined), {
+    runValidators: true,
+    context: 'query'
+  })
     .exec()
     .then(async (res) => {
       if (!res.n) {
         return Boom.notFound();
-      }
-      if (!res.nModified) {
-        return Boom.expectationFailed('No changes required');
       }
 
       const section = await findOne(id, sanitized);
       return section;
     })
     .catch((error) => {
-      if (error.name === 'ValidationError') {
+      if (error instanceof mongoose.Error) {
         logger.error('Section Update Validation Error', error);
         const response = Boom.boomify(error, { statusCode: 409 });
         response.output.payload.data = error.errors;

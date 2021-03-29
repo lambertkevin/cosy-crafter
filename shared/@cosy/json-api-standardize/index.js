@@ -62,13 +62,19 @@ export default {
   name: "json-api-standardize",
   register(server, { ignorePlugins = [] } = {}) {
     const preResponse = (request, h) => {
-      if (ignorePlugins?.includes(request?.route?.realm?.plugin)) {
-        return h.continue;
-      }
-
       if (request?.response instanceof Error) {
         return standardizeError(request.response);
       }
+
+      if (
+        // variety can be plain, stream or buffer
+        // @see https://hapi.dev/api/?v=20.1.0#-responsevariety
+        request?.response?.variety !== "plain" ||
+        ignorePlugins?.includes(request?.route?.realm?.plugin)
+      ) {
+        return h.continue;
+      }
+
       return standardizeResponse(request.response);
     };
 

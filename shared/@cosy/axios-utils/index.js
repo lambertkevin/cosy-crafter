@@ -18,6 +18,11 @@ export const axiosErrorBoomifier = (error) => {
     }
     return Boom.badRequest(error.message);
   }
+
+  if (error?.isBoom) {
+    return error;
+  }
+
   return Boom.boomify(error, error);
 };
 

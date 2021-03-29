@@ -28,6 +28,55 @@ describe('Tokens Blacklist API tests', () => {
     });
   });
 
+  describe('Blacklisted Token Find', () => {
+    let token;
+    before(async () => {
+      token = await TokenBlacklistController.create({
+        jwtid: uuid(),
+        type: 'refresh'
+      });
+    });
+
+    after(async () => {
+      await TokenBlacklistController.remove([token._id]);
+    });
+
+    describe('Fails', () => {
+      it('should fail returning a non existing service', () => {
+        return server
+          .inject({
+            method: 'GET',
+            url: `/tokens/605c806536ff1ff7465c32ca`
+          })
+          .then((response) => {
+            expect(response).to.be.an('object');
+            expect(response).to.include({ statusCode: 404 });
+            expect(response.result).to.deep.include({
+              statusCode: 404,
+              error: 'Not Found',
+              message: 'The resource with that ID does not exist or has already been deleted.'
+            });
+          });
+      });
+    });
+
+    describe('Success', () => {
+      it('should succeed finding and return a service', () => {
+        return server
+          .inject({
+            method: 'GET',
+            url: `/tokens/${token._id}`
+          })
+          .then((response) => {
+            expect(response).to.be.an('object');
+            expect(response).to.include({ statusCode: 200 });
+            expect(response.result).to.deep.include({ statusCode: 200 });
+            expect(response.result?.data).to.deep.include(token);
+          });
+      });
+    });
+  });
+
   describe('Blacklisted Token Creation', () => {
     describe('Fails', () => {
       it.skip('should fail trying to create blacklisted token if user is not allowed. HTTP 401', () => {
@@ -132,8 +181,7 @@ describe('Tokens Blacklist API tests', () => {
 
   describe('Blacklisted Token Deletion', () => {
     let token;
-
-    before(async () => {
+    beforeEach(async () => {
       token = await TokenBlacklistController.create({
         type: 'refresh',
         jwtid: uuid()
@@ -180,9 +228,30 @@ describe('Tokens Blacklist API tests', () => {
             expect(response.result).to.include({
               statusCode: 200
             });
-            expect(response.result?.data?.deleted[0]).to.be.equal(
-              token?._id.toString()
-            );
+            expect(response.result?.data?.deleted[0]).to.be.equal(token?._id.toString());
+          });
+      });
+
+      it('should succeed deleting a blacklisted token', () => {
+        return server
+          .inject({
+            method: 'DELETE',
+            url: `/tokens`,
+            payload: {
+              ids: [token?._id.toString()]
+            },
+            headers: {
+              // @TODO Add user login when feature available
+              // authorization: ???
+            }
+          })
+          .then((response) => {
+            expect(response).to.be.a('object');
+            expect(response).to.include({ statusCode: 200 });
+            expect(response.result).to.include({
+              statusCode: 200
+            });
+            expect(response.result?.data?.deleted[0]).to.be.equal(token?._id.toString());
           });
       });
     });

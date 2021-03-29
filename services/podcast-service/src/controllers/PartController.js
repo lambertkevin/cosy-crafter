@@ -1,9 +1,9 @@
 import fs from 'fs';
 import _ from 'lodash';
 import Boom from '@hapi/boom';
+import mongoose from 'mongoose';
 import FormData from 'form-data';
 import { logger } from '@cosy/logger';
-import CustomError from '@cosy/custom-error';
 import { tokens, refresh } from '@cosy/auth';
 import { makeAxiosInstance, axiosErrorBoomifier } from '@cosy/axios-utils';
 import { projection as podcastProjection } from '../models/PodcastModel';
@@ -75,13 +75,13 @@ export const create = async (
     ]);
     // eslint-disable-next-line prefer-destructuring
     podcast = dependencies[1];
-    const dependenciesErrors = dependencies.filter((x) => x instanceof Error);
+    const dependenciesErrors = dependencies.filter((x) => x instanceof Error || !x);
     if (dependenciesErrors.length) {
       return Boom.notAcceptable("At least one dependency doesn't exist");
     }
   } catch (error) {
     logger.error('Part Create Dependencies Error', error);
-    return error;
+    return Boom.serverUnavailable();
   }
 
   const tags =
@@ -114,26 +114,22 @@ export const create = async (
         publicLink: 'integration-test'
       };
     } else {
-      const savingFile = await axiosAsService.post(
-        `http://${STORAGE_SERVICE_NAME}:${STORAGE_SERVICE_PORT}/v1/podcast-parts`,
-        formData,
-        {
+      const savingFile = await axiosAsService
+        .post(`http://${STORAGE_SERVICE_NAME}:${STORAGE_SERVICE_PORT}/v1/podcast-parts`, formData, {
           headers: {
             ...formData.getHeaders(),
             authorization: tokens.accessToken
           },
           maxBodyLength: 200 * 1024 * 1024, // 200MB max part size
           maxContentLength: 200 * 1024 * 1024 // 200MB max part size
-        }
-      );
-      savedFile = _.get(savingFile, ['data', 'data'], {});
+        })
+        .then(({ data }) => data);
+      savedFile = savingFile?.data;
     }
 
     if (_.isEmpty(savedFile)) {
-      throw new CustomError(
-        'An error occured while saving the file',
-        'FileSavingError'
-      );
+      logger.error('Part Create Upload Storage Failed And Return Empty Response', { formData });
+      throw Boom.serverUnavailable('An error occured while saving the file');
     }
 
     return Part.create({
@@ -148,36 +144,29 @@ export const create = async (
       publicLink: savedFile.publicLink,
       contentType: headers['content-type']
     })
-      .then((part) =>
-        sanitized ? _.omit(part.toObject(), hiddenFields) : part
-      )
+      .then((part) => (sanitized ? _.omit(part.toObject(), hiddenFields) : part))
       .catch((error) => {
-        if (error.name === 'ValidationError') {
+        if (error instanceof mongoose.Error) {
           logger.error('Part Create Validation Error', error);
+          // Boom.conflict() -> 409
           const response = Boom.boomify(error, { statusCode: 409 });
           response.output.payload.data = error.errors;
-          const {
-            storageType,
-            location: storagePath,
-            filename: storageFilename
-          } = savedFile;
+          const { storageType, location: storagePath, filename: storageFilename } = savedFile;
 
+          // istanbul ignore else
           if (storageType && storagePath && storageFilename) {
             // Delete the saved file since the Part isn't validated
             axiosAsService
-              .delete(
-                `http://${STORAGE_SERVICE_NAME}:${STORAGE_SERVICE_PORT}/v1/podcast-parts`,
-                {
-                  data: {
-                    storageType,
-                    storagePath,
-                    storageFilename
-                  },
-                  headers: {
-                    authorization: tokens.accessToken
-                  }
+              .delete(`http://${STORAGE_SERVICE_NAME}:${STORAGE_SERVICE_PORT}/v1/podcast-parts`, {
+                data: {
+                  storageType,
+                  storagePath,
+                  storageFilename
+                },
+                headers: {
+                  authorization: tokens.accessToken
                 }
-              )
+              })
               .catch((err) => {
                 logger.error("Couln't delete podcast parts in storage", err);
               });
@@ -191,11 +180,7 @@ export const create = async (
       });
   } catch (error) {
     logger.error('Part Create Upload In Storage Error', error);
-    if (error.isAxiosError) {
-      return axiosErrorBoomifier(error);
-    }
-
-    return Boom.boomify(error);
+    return axiosErrorBoomifier(error);
   }
 };
 
@@ -213,13 +198,7 @@ export const update = async (id, payload, sanitized = true) => {
     return Boom.expectationFailed('No changes required');
   }
 
-  const {
-    name,
-    section: sectionId,
-    podcast: podcastId,
-    tags: _tags,
-    file
-  } = payload;
+  const { name, section: sectionId, podcast: podcastId, tags: _tags, file } = payload;
   // Test part existence
   let part;
   try {
@@ -297,12 +276,7 @@ export const update = async (id, payload, sanitized = true) => {
     const { storageType, storagePath, storageFilename } = part;
     const axiosAsService = makeAxiosInstance(refresh);
 
-    if (
-      storageType &&
-      storagePath &&
-      storageFilename &&
-      process.env.NODE_ENV !== 'test'
-    ) {
+    if (process.env.NODE_ENV !== 'test') {
       axiosAsService
         .delete(
           `http://${STORAGE_SERVICE_NAME}:${STORAGE_SERVICE_PORT}/v1/podcast-parts`,
@@ -320,10 +294,10 @@ export const update = async (id, payload, sanitized = true) => {
           }
         )
         .catch((error) => {
-          logger.error(
-            "Part Update Error: Couldn't delete old files from storage",
-            { payload, error }
-          );
+          logger.error("Part Update Error: Couldn't delete old files from storage", {
+            payload,
+            error
+          });
         });
     }
 
@@ -344,19 +318,21 @@ export const update = async (id, payload, sanitized = true) => {
           publicLink: 'integration-test'
         };
       } else {
-        const storageRequest = await axiosAsService.post(
-          `http://${STORAGE_SERVICE_NAME}:${STORAGE_SERVICE_PORT}/v1/podcast-parts`,
-          formData,
-          {
-            headers: {
-              ...formData.getHeaders(),
-              authorization: tokens.accessToken
-            },
-            maxBodyLength: 200 * 1024 * 1024, // 200MB max part size
-            maxContentLength: 200 * 1024 * 1024 // 200MB max part size
-          }
-        );
-        savedFile = storageRequest.data;
+        const storageRequest = await axiosAsService
+          .post(
+            `http://${STORAGE_SERVICE_NAME}:${STORAGE_SERVICE_PORT}/v1/podcast-parts`,
+            formData,
+            {
+              headers: {
+                ...formData.getHeaders(),
+                authorization: tokens.accessToken
+              },
+              maxBodyLength: 200 * 1024 * 1024, // 200MB max part size
+              maxContentLength: 200 * 1024 * 1024 // 200MB max part size
+            }
+          )
+          .then(({ data }) => data);
+        savedFile = storageRequest?.data;
       }
 
       fileInfos = {
@@ -369,7 +345,7 @@ export const update = async (id, payload, sanitized = true) => {
       };
     } catch (error) {
       logger.error('Part Upload In Storage Error', error);
-      return Boom.boomify(error);
+      return axiosErrorBoomifier(error);
     }
   }
 
@@ -384,22 +360,19 @@ export const update = async (id, payload, sanitized = true) => {
         ...fileInfos
       },
       _.isUndefined
-    )
+    ),
+    {
+      runValidators: true,
+      context: 'query'
+    }
   )
     .exec()
-    .then(async (res) => {
-      if (!res.n) {
-        return Boom.notFound();
-      }
-      if (!res.nModified) {
-        return Boom.expectationFailed('No changes required');
-      }
-
+    .then(async () => {
       const updatedPart = await findOne(id, sanitized);
       return updatedPart;
     })
     .catch((error) => {
-      if (error.name === 'ValidationError') {
+      if (error instanceof mongoose.Error) {
         logger.error('Part Update Validation Error', error);
         const response = Boom.boomify(error, { statusCode: 409 });
         response.output.payload.data = error.errors;
@@ -407,7 +380,7 @@ export const update = async (id, payload, sanitized = true) => {
         return response;
       }
       logger.error('Part Update Error', error);
-      return Boom.boomify(error);
+      return axiosErrorBoomifier(error);
     });
 };
 

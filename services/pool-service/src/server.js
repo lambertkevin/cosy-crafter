@@ -13,13 +13,11 @@ export default async () => {
     await auth();
     const app = express();
     const server = app.listen(nodeConfig.apiPort, () => {
-      console.log(
-        `Server running on http://${os.hostname()}:${nodeConfig.apiPort}`
-      );
+      console.log(`Server running on http://${os.hostname()}:${nodeConfig.apiPort}`);
     });
     const io = socket(server, {
       cors: {
-        origin: process.env.NODE_ENV === 'development' ? '*' : undefined
+        origin /* istanbul ignore next */: process.env.NODE_ENV === 'development' ? '*' : undefined
       }
     });
 
@@ -44,13 +42,14 @@ export default async () => {
     });
 
     return server;
-  } catch (err) {
+  } catch (err) /* istanbul ignore next */ {
     /** @WARNING Change this to fatal when feature available in winston + sentry */
     logger.error('Fatal Error while starting the service', err);
     return process.exit(0);
   }
 };
 
+// istanbul ignore if
 if (process.env.NODE_ENV !== 'test') {
   process.on('unhandledRejection', (err) => {
     logger.error('unhandledRejection', err);

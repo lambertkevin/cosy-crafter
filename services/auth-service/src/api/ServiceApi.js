@@ -3,17 +3,11 @@ import Boom from '@hapi/boom';
 import { logger } from '@cosy/logger';
 import generatePassword from 'generate-password';
 import { standardizeSchema } from '@cosy/schema-utils';
-import {
-  makeRsaPrivateDecrypter,
-  makeRsaPrivateEncrypter
-} from '@cosy/rsa-utils';
+import { makeRsaPrivateDecrypter, makeRsaPrivateEncrypter } from '@cosy/rsa-utils';
 import failValidationHandler from '@cosy/hapi-fail-validation-handler';
 import { responseSchema, creationSchema } from '../schemas/ServiceSchema';
 import * as ServiceController from '../controllers/ServiceController';
-import {
-  checkSignature,
-  checkIpWhiteList
-} from '../middlewares/ServiceMiddleware';
+import { checkSignature, checkIpWhiteList } from '../middlewares/ServiceMiddleware';
 
 export default {
   name: 'serviceApi',
@@ -106,10 +100,7 @@ export default {
             });
 
             if (service.isBoom) {
-              logger.error(
-                'Service Creation Handler Error: Service creation failed',
-                service
-              );
+              logger.error('Service Creation Handler Error: Service creation failed', service);
               return Boom.boomify(service);
             }
 
@@ -179,6 +170,7 @@ export default {
               202: {
                 schema: standardizeSchema(
                   joi.object({
+                    // prettier-ignore
                     deleted: joi
                       .array()
                       .items(
@@ -227,16 +219,17 @@ export default {
         validate: {
           failAction: failValidationHandler,
           payload: joi.object({
+            // prettier-ignore
             identifier: joi
               .string()
               .required()
               .example('podcast-service-john')
               .required(),
+            // prettier-ignore
             key: joi
-              .string()
-              .required()
-              .example('wxWxBcq9hd9WEXh1Al5pa0Kh0')
-              .required()
+            .string()
+            .required()
+            .example('wxWxBcq9hd9WEXh1Al5pa0Kh0').required()
           })
         },
         tags: ['api', 'services'],

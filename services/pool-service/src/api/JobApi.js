@@ -7,6 +7,13 @@ import { transcodingQueue } from '../queue';
 
 const routes = [
   {
+    // Healthcheck route for testing purposes
+    path: '/ping',
+    handler: (data, ack) => {
+      return ack('pong');
+    }
+  },
+  {
     path: '/add',
     handler: (data, ack) => {
       const job = JobController.createTranscodingJob(data, ack);
@@ -35,27 +42,27 @@ const routes = [
 
 export default (prefix, socket) => {
   _.forEach(routes, (route) => {
-    const path = `${prefix}${route.path}`;
+    const path = `${_.trimEnd(prefix, '/')}/${_.trim(route.path, '/')}`;
     const handler = async (data, ack) => {
       try {
         if (route.validation) {
           await route.validation.validateAsync(data);
         }
         if (typeof ack !== 'function') {
-          const error = new CustomError('ack is not a function', 'AckError');
+          const error = new CustomError('ack is not a function', 'AckError', 500);
           throw error;
         }
         return route.handler.apply(null, [data, ack, socket]);
       } catch (e) {
         logger.error('Socket payload validation error', e);
-        if (e.name !== 'AckError') {
+        if (e.name !== 'AckError' && typeof ack === 'function') {
           return ack({
             statusCode: 400,
             error: 'Bad Request',
             message: e.message
           });
         }
-        return null;
+        return e;
       }
     };
 

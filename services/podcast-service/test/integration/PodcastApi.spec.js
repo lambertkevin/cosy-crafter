@@ -1,6 +1,7 @@
 import { expect } from 'chai';
 import { startAuthService, accessToken } from '../utils/authUtils';
 import * as PodcastController from '../../src/controllers/PodcastController';
+import { hiddenFields } from '../../src/models/PodcastModel';
 import init from '../../src/server';
 
 describe('Podcasts API V1 tests', () => {
@@ -27,6 +28,55 @@ describe('Podcasts API V1 tests', () => {
         .then((response) => {
           expect(response).to.be.a('object');
           expect(response).to.include({ statusCode: 200 });
+        });
+    });
+  });
+
+  describe('Podcasts Get', () => {
+    let podcast;
+
+    before(async () => {
+      const podcastPayload = {
+        name: 'integration-podcast-to-get',
+        edition: 12983
+      };
+      podcast = await PodcastController.create(podcastPayload);
+    });
+
+    it('should return a sanitized podcast', () => {
+      return server
+        .inject({
+          method: 'GET',
+          url: `/v1/podcasts/${podcast._id.toString()}`
+        })
+        .then((response) => {
+          expect(response).to.be.a('object');
+          expect(response).to.include({ statusCode: 200 });
+          expect(response?.result).to.include({
+            statusCode: 200
+          });
+          expect(response?.result?.data?._id?.toString()).to.be.equal(podcast._id?.toString());
+          expect(response?.result?.data).to.not.have.keys(...hiddenFields);
+        });
+    });
+
+    it('should return a non sanitized podcast', () => {
+      return server
+        .inject({
+          method: 'GET',
+          url: `/v1/podcasts/${podcast._id.toString()}`,
+          headers: {
+            authorization: accessToken
+          }
+        })
+        .then((response) => {
+          expect(response).to.be.a('object');
+          expect(response).to.include({ statusCode: 200 });
+          expect(response?.result).to.include({
+            statusCode: 200
+          });
+          expect(response?.result?.data?._id?.toString()).to.be.equal(podcast._id?.toString());
+          expect(response?.result?.data?.toJSON()).to.include.keys(...hiddenFields);
         });
     });
   });
@@ -142,8 +192,7 @@ describe('Podcasts API V1 tests', () => {
               expect(response?.result).to.include({
                 statusCode: 400,
                 error: 'Bad Request',
-                message:
-                  '"name" length must be less than or equal to 100 characters long'
+                message: '"name" length must be less than or equal to 100 characters long'
               });
             });
         });
@@ -273,9 +322,34 @@ describe('Podcasts API V1 tests', () => {
             expect(response?.result).to.include({
               statusCode: 200
             });
-            expect(response?.result?.data?.deleted[0]).to.equal(
-              podcastToDelete?._id.toString()
-            );
+            expect(response?.result?.data?.deleted[0]).to.equal(podcastToDelete?._id.toString());
+          });
+      });
+
+      it('should also succeed deleting a podcast', async () => {
+        const podcastToDelete = await PodcastController.create({
+          name: 'integration-podcast-to-delete',
+          edition: 200
+        });
+
+        return server
+          .inject({
+            method: 'DELETE',
+            url: `/v1/podcasts`,
+            payload: {
+              ids: [podcastToDelete?._id?.toString()]
+            },
+            headers: {
+              authorization: accessToken
+            }
+          })
+          .then((response) => {
+            expect(response).to.be.a('object');
+            expect(response).to.include({ statusCode: 200 });
+            expect(response?.result).to.include({
+              statusCode: 200
+            });
+            expect(response?.result?.data?.deleted[0]).to.equal(podcastToDelete?._id.toString());
           });
       });
     });

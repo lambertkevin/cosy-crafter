@@ -44,10 +44,7 @@ export const creationSchema = joi.object({
   tags: joi
     .string()
     .allow('')
-    .regex(
-      /^[a-zA-Z0-9, -]*$/,
-      'Alphanumerics, space, dash and comma characters'
-    )
+    .regex(/^[a-zA-Z0-9, -]*$/, 'Alphanumerics, space, dash and comma characters')
     .min(0)
     .max(200),
   file: joi.any().required().meta({ swaggerType: 'file' })
@@ -57,23 +54,14 @@ export const validationSchema = creationSchema
   .append({
     tags: joi.array().items(joi.string().min(3).max(100).example('LOL')),
     originalFilename: joi.string().required().example('MonFichier.mp3'),
-    storageType: joi
-      .string()
-      .required()
-      .valid('local', 'aws', 'scaleway')
-      .example('scaleway'),
+    storageType: joi.string().required().valid('local', 'aws', 'scaleway').example('scaleway'),
     storagePath: joi.string().required().example('mon_dossier/mon_podcast/'),
-    storageFilename: joi
-      .string()
-      .required()
-      .example('ecd3506c-e26e-4799-8562-85f658c82056.mp3'),
+    storageFilename: joi.string().required().example('ecd3506c-e26e-4799-8562-85f658c82056.mp3'),
     publicLink: joi
       .string()
       .allow(null)
       .default(null)
-      .example(
-        'https://cosy-crafter.s3.fr-par.scw.cloud/ecd3506c-e26e-4799-8562-85f658c82056.mp3'
-      ),
+      .example('https://cosy-crafter.s3.fr-par.scw.cloud/ecd3506c-e26e-4799-8562-85f658c82056.mp3'),
     contentType: joi.string().required().example('audio/mpeg'),
     file: joi.any().forbidden()
   })
@@ -83,8 +71,8 @@ export const responseSchema = validationSchema
   .append({
     _id: joi.string().length(24).required().example('5f3ec14cb2d104269d3c3282')
   })
-  .fork(hiddenProperties, (x) =>
-    x.optional().description('Only if not sanitized')
+  .fork(
+    hiddenProperties,
+    /* istanbul ignore next */ (x) => x.optional().description('Only if not sanitized')
   );
-
 export default validationSchema;
