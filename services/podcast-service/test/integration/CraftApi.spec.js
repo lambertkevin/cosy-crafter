@@ -2,6 +2,7 @@ import { expect } from 'chai';
 import { v4 as uuid } from 'uuid';
 import { startAuthService, accessToken } from '../utils/authUtils';
 import * as CraftController from '../../src/controllers/CraftController';
+import { hiddenFields } from '../../src/models/CraftModel';
 import init from '../../src/server';
 
 describe('Crafts API V1 tests', () => {
@@ -28,6 +29,59 @@ describe('Crafts API V1 tests', () => {
         .then((response) => {
           expect(response).to.be.a('object');
           expect(response).to.include({ statusCode: 200 });
+        });
+    });
+  });
+
+  describe('Craft Get', () => {
+    let craft;
+
+    before(async () => {
+      const craftPayload = {
+        name: 'integration-craft-to-update',
+        jobId: uuid(),
+        user: '603181b5136eaf770f0949e8',
+        storageType: 'aws',
+        storagePath: 'crafts/',
+        storageFilename: 'craft.mp3'
+      };
+      craft = await CraftController.create(craftPayload);
+    });
+
+    it('should return a sanitized craft', () => {
+      return server
+        .inject({
+          method: 'GET',
+          url: `/v1/crafts/${craft._id.toString()}`
+        })
+        .then((response) => {
+          expect(response).to.be.a('object');
+          expect(response).to.include({ statusCode: 200 });
+          expect(response?.result).to.include({
+            statusCode: 200
+          });
+          expect(response?.result?.data?._id?.toString()).to.be.equal(craft._id?.toString());
+          expect(response?.result?.data).to.not.have.keys(...hiddenFields);
+        });
+    });
+
+    it('should return a non sanitized craft', () => {
+      return server
+        .inject({
+          method: 'GET',
+          url: `/v1/crafts/${craft._id.toString()}`,
+          headers: {
+            authorization: accessToken
+          }
+        })
+        .then((response) => {
+          expect(response).to.be.a('object');
+          expect(response).to.include({ statusCode: 200 });
+          expect(response?.result).to.include({
+            statusCode: 200
+          });
+          expect(response?.result?.data?._id?.toString()).to.be.equal(craft._id?.toString());
+          expect(response?.result?.data?.toJSON()).to.include.keys(...hiddenFields);
         });
     });
   });
@@ -110,10 +164,7 @@ describe('Crafts API V1 tests', () => {
         it('user is not required yet');
 
         it('should fail if missing storageType', async () => {
-          const {
-            storageType,
-            ...craftPayloadWithoutStorageType
-          } = craftPayload;
+          const { storageType, ...craftPayloadWithoutStorageType } = craftPayload;
 
           return server
             .inject({
@@ -136,10 +187,7 @@ describe('Crafts API V1 tests', () => {
         });
 
         it('should fail if missing storagePath', async () => {
-          const {
-            storagePath,
-            ...craftPayloadWithoutStoragePath
-          } = craftPayload;
+          const { storagePath, ...craftPayloadWithoutStoragePath } = craftPayload;
 
           return server
             .inject({
@@ -162,10 +210,7 @@ describe('Crafts API V1 tests', () => {
         });
 
         it('should fail if missing storageFilename', async () => {
-          const {
-            storageFilename,
-            ...craftPayloadWithoutStorageFilename
-          } = craftPayload;
+          const { storageFilename, ...craftPayloadWithoutStorageFilename } = craftPayload;
 
           return server
             .inject({
@@ -232,8 +277,7 @@ describe('Crafts API V1 tests', () => {
               expect(response.result).to.include({
                 statusCode: 400,
                 error: 'Bad Request',
-                message:
-                  '"name" length must be less than or equal to 100 characters long'
+                message: '"name" length must be less than or equal to 100 characters long'
               });
             });
         });
@@ -342,8 +386,7 @@ describe('Crafts API V1 tests', () => {
               expect(response.result).to.include({
                 statusCode: 400,
                 error: 'Bad Request',
-                message:
-                  '"name" length must be less than or equal to 100 characters long'
+                message: '"name" length must be less than or equal to 100 characters long'
               });
             });
         });
@@ -385,17 +428,17 @@ describe('Crafts API V1 tests', () => {
   });
 
   describe('Craft Deletion', () => {
-    const craftPayload = {
-      name: 'integration-craft-to-delete',
-      jobId: uuid(),
-      user: '603181b5136eaf770f0949e8',
-      storageType: 'aws',
-      storagePath: 'crafts/',
-      storageFilename: 'craft.mp3'
-    };
     let craft;
+    beforeEach(async () => {
+      const craftPayload = {
+        name: 'integration-craft-to-delete',
+        jobId: uuid(),
+        user: '603181b5136eaf770f0949e8',
+        storageType: 'aws',
+        storagePath: 'crafts/',
+        storageFilename: 'craft.mp3'
+      };
 
-    before(async () => {
       craft = await CraftController.create(craftPayload);
     });
 
@@ -434,9 +477,29 @@ describe('Crafts API V1 tests', () => {
             expect(response?.result).to.include({
               statusCode: 200
             });
-            expect(response?.result?.data?.deleted[0]).to.equal(
-              craft?._id.toString()
-            );
+            expect(response?.result?.data?.deleted[0]).to.equal(craft?._id.toString());
+          });
+      });
+
+      it('should also succeed deleting a craft', async () => {
+        return server
+          .inject({
+            method: 'DELETE',
+            url: `/v1/crafts`,
+            payload: {
+              ids: [craft?._id?.toString()]
+            },
+            headers: {
+              authorization: accessToken
+            }
+          })
+          .then((response) => {
+            expect(response).to.be.a('object');
+            expect(response).to.include({ statusCode: 200 });
+            expect(response?.result).to.include({
+              statusCode: 200
+            });
+            expect(response?.result?.data?.deleted[0]).to.equal(craft?._id.toString());
           });
       });
     });

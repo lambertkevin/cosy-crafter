@@ -27,8 +27,7 @@ export default {
             })
             .unknown()
         },
-        handler: (request) =>
-          sectionController.find(!request.auth.isAuthenticated),
+        handler: (request) => sectionController.find(!request.auth.isAuthenticated),
         tags: ['api', 'sections', 'v1'],
         description: 'Get all Sections',
         notes: 'Returns all the sections',
@@ -70,10 +69,7 @@ export default {
             .unknown()
         },
         handler: (request) =>
-          sectionController.findOne(
-            request.params.id,
-            !request.auth.isAuthenticated
-          ),
+          sectionController.findOne(request.params.id, !request.auth.isAuthenticated),
         tags: ['api', 'sections', 'v1'],
         description: 'Get a Section',
         notes: 'Returns a specific section',
@@ -113,10 +109,7 @@ export default {
             .unknown()
         },
         handler: (request) =>
-          sectionController.create(
-            request.payload,
-            !request.auth.isAuthenticated
-          ),
+          sectionController.create(request.payload, !request.auth.isAuthenticated),
         tags: ['api', 'sections', 'v1'],
         description: 'Create a Section',
         notes: 'Creates a section and returns it',
@@ -152,9 +145,7 @@ export default {
           params: joi.object({
             id: joi.string().length(24).required()
           }),
-          payload: creationSchema.fork(schemaKeys(creationSchema), (x) =>
-            x.optional()
-          ),
+          payload: creationSchema.fork(schemaKeys(creationSchema), (x) => x.optional()),
           headers: joi
             .object({
               authorization: joi.string().required()
@@ -201,13 +192,7 @@ export default {
           payload: joi.object({
             ids: joi
               .array()
-              .items(
-                joi
-                  .string()
-                  .length(24)
-                  .required()
-                  .example('5f3ffc6b726fccbdeac6a320')
-              )
+              .items(joi.string().length(24).required().example('5f3ffc6b726fccbdeac6a320'))
           }),
           headers: joi
             .object({
@@ -227,13 +212,7 @@ export default {
                   joi.object({
                     deleted: joi
                       .array()
-                      .items(
-                        joi
-                          .string()
-                          .length(24)
-                          .required()
-                          .example('5f3ffc6b726fccbdeac6a320')
-                      )
+                      .items(joi.string().length(24).required().example('5f3ffc6b726fccbdeac6a320'))
                   }),
                   false
                 )
@@ -282,13 +261,7 @@ export default {
                   joi.object({
                     deleted: joi
                       .array()
-                      .items(
-                        joi
-                          .string()
-                          .length(24)
-                          .required()
-                          .example('5f3ffc717161d3708f251bc0')
-                      )
+                      .items(joi.string().length(24).required().example('5f3ffc717161d3708f251bc0'))
                   }),
                   false
                 )

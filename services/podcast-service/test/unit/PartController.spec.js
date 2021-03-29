@@ -13,6 +13,7 @@ import * as PartController from '../../src/controllers/PartController';
 import { create as createSection } from '../../src/controllers/SectionController';
 import { create as createPodcast } from '../../src/controllers/PodcastController';
 import PartModel, { hiddenFields } from '../../src/models/PartModel';
+import PodcastModel from '../../src/models/PodcastModel';
 
 const resetModuleCache = resnap();
 chai.use(chaiSubset);
@@ -340,6 +341,25 @@ describe('PartController unit test', () => {
       expect(error?.output?.statusCode).to.be.equal(500);
 
       PartModel.create = PartModel._backup.create;
+    });
+
+    it('should return a 410 error if podcast cannot be updated with the id of the part as post validate hook', async () => {
+      const oldFindOneAndUpdate = PodcastModel.findOneAndUpdate;
+      PodcastModel.findOneAndUpdate = () => {
+        throw new Error();
+      };
+      const partData = {
+        name: 'part-1',
+        section: section._id,
+        podcast: podcast._id,
+        tags: ['tag1'],
+        file
+      };
+      const error = await PartController.create(partData);
+
+      expect(error).to.be.an('error').and.to.be.an.instanceOf(Boom.Boom);
+      expect(error?.output?.statusCode).to.be.equal(410);
+      PodcastModel.findOneAndUpdate = oldFindOneAndUpdate;
     });
 
     it('should return a 503 error due to dependencies failing', async () => {
