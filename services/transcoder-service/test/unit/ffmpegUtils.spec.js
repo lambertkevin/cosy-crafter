@@ -1,12 +1,28 @@
+/* eslint-disable no-unused-expressions */
 import path from 'path';
 import { expect } from 'chai';
-import {
-  getCrossFadeFilters,
-  percentageFromTimemark
-} from '../../src/utils/FfmpegUtils';
+import { getCrossFadeFilters, percentageFromTimemark } from '../../src/utils/FfmpegUtils';
 
 describe('FFmpeg Utils Unit Tests', () => {
   describe('getCrossFadeFilters', () => {
+    describe('Fails', () => {
+      it('should fail or throw if array of files is empty', () => {
+        const files = [];
+        const filters = getCrossFadeFilters(files);
+        expect(filters).to.be.an('array').that.is.empty;
+      });
+
+      it('should fail or throw if array of files is null', () => {
+        const filters = getCrossFadeFilters(null);
+        expect(filters).to.be.an('array').that.is.empty;
+      });
+
+      it('should fail or throw if array of files is undefined', () => {
+        const filters = getCrossFadeFilters(undefined);
+        expect(filters).to.be.an('array').that.is.empty;
+      });
+    });
+
     describe('Success', () => {
       it('should create an array crossfade complex filters for each input', () => {
         const files = Array(8).fill({
@@ -56,23 +72,6 @@ describe('FFmpeg Utils Unit Tests', () => {
             inputs: ['0+1+2+3+4+5+6', '7']
           }
         ]);
-      });
-
-      it('should fail or throw if array of files is empty', () => {
-        const files = [];
-        const filters = getCrossFadeFilters(files);
-        // eslint-disable-next-line no-unused-expressions
-        expect(filters).to.be.an('array').that.is.empty;
-      });
-
-      it('should fail or throw if array of files is null', () => {
-        const filters = getCrossFadeFilters(null);
-        expect(filters).to.be.equal(null);
-      });
-
-      it('should fail or throw if array of files is undefined', () => {
-        const filters = getCrossFadeFilters(undefined);
-        expect(filters).to.be.equal(null);
       });
     });
   });
