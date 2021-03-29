@@ -446,6 +446,7 @@ describe('ServiceController unit test', () => {
 
       expect(error).to.be.an('error').and.to.be.an.instanceOf(Boom.Boom);
       expect(error?.output?.statusCode).to.be.equal(500);
+      ServiceModel.deleteMany = ServiceModel._backup.deleteMany;
     });
   });
 
