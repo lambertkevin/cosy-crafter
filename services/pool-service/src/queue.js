@@ -7,6 +7,7 @@ export const workerHandler = (socket) => {
   const worker = makeSocketWorker(socket);
   transcodingQueue.addWorker(worker);
 
+  // istanbul ignore if
   if (process.env.NODE_ENV === 'development') {
     console.log('worker added!');
   }
@@ -14,6 +15,7 @@ export const workerHandler = (socket) => {
   socket.on('disconnect', () => {
     transcodingQueue.removeWorker(worker);
 
+    // istanbul ignore if
     if (process.env.NODE_ENV === 'development') {
       console.log('worker removed!');
     }

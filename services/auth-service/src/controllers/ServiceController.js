@@ -2,12 +2,13 @@ import _ from 'lodash';
 import Boom from '@hapi/boom';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
+import mongoose from 'mongoose';
 import { v4 as uuid } from 'uuid';
 import privateIp from 'private-ip';
 import { logger } from '@cosy/logger';
 import Service, { projection, hiddenFields } from '../models/ServiceModel';
 import * as TokenBlacklistController from './TokenBlacklistController';
-import tokensFactory from '../utils/TokensFactory';
+import tokensFactory from '../lib/TokensFactory';
 
 /**
  * Return a list of all Services
@@ -67,19 +68,14 @@ export const findOneByIndentifier = (identifier, sanitized = true) =>
  *
  * @return {Promise<Object>} {Service}
  */
-export const create = async (
-  { identifier, key, ip: _ip },
-  sanitized = true
-) => {
+export const create = async ({ identifier, key, ip: _ip }, sanitized = true) => {
   const hashedKey = await bcrypt.hash(key, 10);
   const ip = privateIp(_ip) ? 'private' : _ip;
 
   return Service.create({ identifier, key: hashedKey, ip })
-    .then((service) =>
-      sanitized ? _.omit(service.toObject(), hiddenFields) : service
-    )
+    .then((service) => (sanitized ? _.omit(service.toObject(), hiddenFields) : service))
     .catch((error) => {
-      if (error.toString().includes('ValidationError')) {
+      if (error instanceof mongoose.Error) {
         logger.error('Service Create Validation Error', error);
         const response = Boom.boomify(error, { statusCode: 409 });
         response.output.payload.data = error.errors;
@@ -103,33 +99,30 @@ export const create = async (
  *
  * @return {Promise<Object[]>} {Service}
  */
-export const update = async (
-  id,
-  { identifier, key, ip: _ip },
-  sanitized = true
-) => {
+export const update = async (id, { identifier, key, ip: _ip }, sanitized = true) => {
   const hashedKey = key ? await bcrypt.hash(key, 10) : undefined;
   const ipPrivatizer = (ip) => (privateIp(ip) ? 'private' : ip);
   const ip = _ip ? ipPrivatizer(_ip) : undefined;
 
   return Service.updateOne(
     { _id: id },
-    _.omitBy({ identifier, key: hashedKey, ip }, _.isUndefined)
+    _.omitBy({ identifier, key: hashedKey, ip }, _.isUndefined),
+    {
+      runValidators: true,
+      context: 'query'
+    }
   )
     .exec()
     .then(async (res) => {
       if (!res.n) {
         return Boom.notFound();
       }
-      if (!res.nModified) {
-        return Boom.expectationFailed('No changes required');
-      }
 
-      const service = await findOne(identifier, sanitized);
+      const service = await findOne(id, sanitized);
       return service;
     })
     .catch((error) => {
-      if (error.identifier === 'ValidationError') {
+      if (error instanceof mongoose.Error) {
         logger.error('Service Update Validation Error', error);
         const response = Boom.boomify(error, { statusCode: 409 });
         response.output.payload.data = error.errors;
@@ -145,11 +138,11 @@ export const update = async (
 /**
  * Remove Services
  *
- * @param {Arrays} ids
+ * @param {Array} ids
  *
  * @return {Promise<void>}
  */
-export const remove = (ids = []) =>
+export const remove = (ids) =>
   Service.deleteMany({ _id: { $in: ids.filter((x) => x) } })
     .exec()
     .then((res) => {
@@ -179,9 +172,11 @@ export const remove = (ids = []) =>
 export const login = async ({ identifier, key }, ip) => {
   try {
     const service = await (() => {
+      /* istanbul ignore if */
       if (process.env.NODE_ENV === 'mock') {
         return {
-          identifier
+          identifier,
+          key
         };
       }
       return Service.findOne({ identifier }).exec();
@@ -191,13 +186,13 @@ export const login = async ({ identifier, key }, ip) => {
       throw Boom.notFound();
     }
 
-    if (
-      // If ip is matching or ip is from private network and service ip was private on creation
-      ((service.ip === ip || (privateIp(ip) && service.ip === 'private')) &&
-        bcrypt.compareSync(key, service.key)) ||
-      process.env.NODE_ENV === 'mock'
-    ) {
-      const tokens = await tokensFactory(
+    const ipsMatch = service.ip === ip;
+    const serviceAndRequestAreLocalNetwork = privateIp(ip) && service.ip === 'private';
+    const ipAuthorized = ipsMatch || serviceAndRequestAreLocalNetwork;
+    const keysMatch = await bcrypt.compare(key, service.key);
+
+    if ((ipAuthorized && keysMatch) || process.env.NODE_ENV === 'mock') {
+      const tokens = tokensFactory(
         {
           service: service.identifier
         },
@@ -228,13 +223,9 @@ export const login = async ({ identifier, key }, ip) => {
 export const refresh = async ({ accessToken, refreshToken }) => {
   try {
     // Check accessToken signature but not expiraton
-    const decodedAccessToken = await jwt.verify(
-      accessToken,
-      process.env.SERVICE_JWT_SECRET,
-      {
-        ignoreExpiration: true
-      }
-    );
+    const decodedAccessToken = await jwt.verify(accessToken, process.env.SERVICE_JWT_SECRET, {
+      ignoreExpiration: true
+    });
 
     // Check refreshToken signature and verify its expiration
     const decodedRefreshToken = await jwt.verify(
@@ -252,6 +243,7 @@ export const refresh = async ({ accessToken, refreshToken }) => {
 
         // Check if the service is still registered
         const service = await (() => {
+          // istanbul ignore if
           if (process.env.NODE_ENV === 'mock') {
             return {
               data: {
@@ -266,19 +258,17 @@ export const refresh = async ({ accessToken, refreshToken }) => {
           // Omit JWT payload properties from spec
           const jwtProperties = ['iat', 'exp', 'jti', 'nbf'];
           // Generate new tokens with new jwtids
-          const tokens = await tokensFactory(
-            _.omit(decodedRefreshToken, jwtProperties),
-            [uuid(), uuid()]
-          );
+          const tokens = tokensFactory(_.omit(decodedRefreshToken, jwtProperties), [
+            uuid(),
+            uuid()
+          ]);
           return tokens;
         }
         // if blacklisting or not found, go to catch
         throw new Error();
       } catch (error) {
         logger.error('Service Token Refresh Error', error);
-        return Boom.unauthorized(
-          'Token is blacklisted or service is not existing'
-        );
+        return Boom.unauthorized('Token is blacklisted or service is not existing');
       }
     }
     logger.error('Service Token Refresh Error: Using wrong tokens', {
@@ -287,10 +277,7 @@ export const refresh = async ({ accessToken, refreshToken }) => {
     });
     return Boom.unauthorized('Tokens are not matching');
   } catch (error) {
-    logger.error(
-      'Service Token Refresh Error: Tokens verification failed',
-      error
-    );
+    logger.error('Service Token Refresh Error: Tokens verification failed', error);
     return Boom.unauthorized('Tokens verification failed');
   }
 };

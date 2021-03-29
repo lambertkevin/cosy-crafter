@@ -1,5 +1,6 @@
 import _ from 'lodash';
 import Boom from '@hapi/boom';
+import mongoose from 'mongoose';
 import { logger } from '@cosy/logger';
 import Podcast, { projection, hiddenFields } from '../models/PodcastModel';
 import { projection as partProjection } from '../models/PartModel';
@@ -13,10 +14,7 @@ import { projection as partProjection } from '../models/PartModel';
  */
 export const find = (sanitized = true) =>
   Podcast.find({}, sanitized ? projection : null)
-    .populate(
-      'parts',
-      sanitized ? { ...partProjection, podcast: false } : { podcast: false }
-    )
+    .populate('parts', sanitized ? { ...partProjection, podcast: false } : { podcast: false })
     .exec()
     .catch((error) => {
       logger.error('Podcast Find Error', error);
@@ -32,10 +30,7 @@ export const find = (sanitized = true) =>
  */
 export const findOne = (id, sanitized = true) =>
   Podcast.findOne({ _id: id }, sanitized ? projection : null)
-    .populate(
-      'parts',
-      sanitized ? { ...partProjection, podcast: false } : { podcast: false }
-    )
+    .populate('parts', sanitized ? { ...partProjection, podcast: false } : { podcast: false })
     .exec()
     .catch((error) => {
       logger.error('Podcast FindOne', error);
@@ -54,21 +49,16 @@ export const findOne = (id, sanitized = true) =>
  *
  * @return {Promise<Object>} {Podcast}
  */
-export const create = (
-  { name, edition, parts = [], tags = [] },
-  sanitized = true
-) =>
+export const create = ({ name, edition, parts = [], tags = [] }, sanitized = true) =>
   Podcast.create({
     name,
     edition,
     parts,
     tags
   })
-    .then((podcast) =>
-      sanitized ? _.omit(podcast.toObject(), hiddenFields) : podcast
-    )
+    .then((podcast) => (sanitized ? _.omit(podcast.toObject(), hiddenFields) : podcast))
     .catch((error) => {
-      if (error.name === 'ValidationError') {
+      if (error instanceof mongoose.Error) {
         logger.error('Podcast Create Validation Error', error);
         const response = Boom.boomify(error, { statusCode: 409 });
         response.output.payload.data = error.errors;
@@ -104,22 +94,23 @@ export const update = (id, { name, edition, parts, tags }, sanitized = true) =>
         tags
       },
       _.isUndefined
-    )
+    ),
+    {
+      runValidators: true,
+      context: 'query'
+    }
   )
     .exec()
     .then(async (res) => {
       if (!res.n) {
         return Boom.notFound();
       }
-      if (!res.nModified) {
-        return Boom.expectationFailed('No changes required');
-      }
 
       const podcast = await findOne(id, sanitized);
       return podcast;
     })
     .catch((error) => {
-      if (error.name === 'ValidationError') {
+      if (error instanceof mongoose.Error) {
         logger.error('Podcast Update Validation Error', error);
         const response = Boom.boomify(error, { statusCode: 409 });
         response.output.payload.data = error.errors;

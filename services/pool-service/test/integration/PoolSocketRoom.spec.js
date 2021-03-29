@@ -3,7 +3,8 @@ import io from 'socket.io-client';
 import {
   startAuthService,
   accessToken,
-  accessTokenExpired
+  accessTokenExpired,
+  accessTokenMalformed
 } from '../utils/authUtils';
 import { transcodingQueue } from '../../src/queue';
 import init from '../../src/server';
@@ -25,27 +26,25 @@ describe('Socket Clients Api tests', () => {
   describe('Server Testing', () => {
     describe('Fails', () => {
       it('should fail to connect to pool without JWT', (done) => {
-        io(
-          `http://${process.env.POOL_SERVICE_NAME}:${process.env.POOL_SERVICE_PORT}/clients`
-        ).on('connect_error', function cb(error) {
-          expect(error?.data).to.deep.include({
-            name: 'JsonWebTokenError',
-            message: 'jwt must be provided'
-          });
-          this.close();
-          done();
-        });
+        io(`http://${process.env.POOL_SERVICE_NAME}:${process.env.POOL_SERVICE_PORT}/clients`).on(
+          'connect_error',
+          function cb(error) {
+            expect(error?.data).to.deep.include({
+              name: 'JsonWebTokenError',
+              message: 'jwt must be provided'
+            });
+            this.close();
+            done();
+          }
+        );
       });
 
       it('should fail to connect to pool with invalid JWT', (done) => {
-        io(
-          `http://${process.env.POOL_SERVICE_NAME}:${process.env.POOL_SERVICE_PORT}/clients`,
-          {
-            auth: {
-              token: 'wrong-token'
-            }
+        io(`http://${process.env.POOL_SERVICE_NAME}:${process.env.POOL_SERVICE_PORT}/clients`, {
+          auth: {
+            token: 'wrong-token'
           }
-        ).on('connect_error', function cb(error) {
+        }).on('connect_error', function cb(error) {
           expect(error?.data).to.deep.include({
             name: 'JsonWebTokenError',
             message: 'jwt malformed'
@@ -56,14 +55,11 @@ describe('Socket Clients Api tests', () => {
       });
 
       it('should fail to connect to pool with expired JWT', (done) => {
-        io(
-          `http://${process.env.POOL_SERVICE_NAME}:${process.env.POOL_SERVICE_PORT}/clients`,
-          {
-            auth: {
-              token: accessTokenExpired
-            }
+        io(`http://${process.env.POOL_SERVICE_NAME}:${process.env.POOL_SERVICE_PORT}/clients`, {
+          auth: {
+            token: accessTokenExpired
           }
-        ).on('connect_error', function cb(error) {
+        }).on('connect_error', function cb(error) {
           expect(error?.data).to.deep.include({
             name: 'TokenExpiredError',
             message: 'jwt expired'
@@ -72,18 +68,34 @@ describe('Socket Clients Api tests', () => {
           done();
         });
       });
+
+      it("should not be able to use the api if token doesn't have a service property", (done) => {
+        const pool = io(
+          `http://${process.env.POOL_SERVICE_NAME}:${process.env.POOL_SERVICE_PORT}/clients`,
+          {
+            auth: {
+              token: accessTokenMalformed
+            }
+          }
+        );
+
+        pool.emit('/v1/jobs/ping', null, () => {
+          expect.fail();
+        });
+
+        setTimeout(() => {
+          done();
+        }, 50);
+      });
     });
 
     describe('Success', () => {
       it('should successfully connect to pool WS', (done) => {
-        io(
-          `http://${process.env.POOL_SERVICE_NAME}:${process.env.POOL_SERVICE_PORT}/clients`,
-          {
-            auth: {
-              token: accessToken
-            }
+        io(`http://${process.env.POOL_SERVICE_NAME}:${process.env.POOL_SERVICE_PORT}/clients`, {
+          auth: {
+            token: accessToken
           }
-        ).on('connect', function cb() {
+        }).on('connect', function cb() {
           expect(this.connected).to.be.equal(true);
           this.close();
           done();
@@ -92,15 +104,12 @@ describe('Socket Clients Api tests', () => {
 
       it('should successfully refresh token if accessToken is expired and retry', (done) => {
         let token = accessTokenExpired;
-        io(
-          `http://${process.env.POOL_SERVICE_NAME}:${process.env.POOL_SERVICE_PORT}/clients`,
-          {
-            auth: (cb) =>
-              cb({
-                token
-              })
-          }
-        )
+        io(`http://${process.env.POOL_SERVICE_NAME}:${process.env.POOL_SERVICE_PORT}/clients`, {
+          auth: (cb) =>
+            cb({
+              token
+            })
+        })
           .on('connect', function cb() {
             expect(this.connected).to.be.equal(true);
             done();
@@ -161,33 +170,25 @@ describe('Socket Clients Api tests', () => {
     describe('Fails', () => {
       describe('Requirements', () => {
         it('should fail without name. ERROR CODE 400', (done) => {
-          pool.emit(
-            '/v1/jobs/add',
-            { ...jobPayload, name: null },
-            (response) => {
-              expect(response).to.deep.include({
-                statusCode: 400,
-                error: 'Bad Request',
-                message: '"name" must be a string'
-              });
-              done();
-            }
-          );
+          pool.emit('/v1/jobs/add', { ...jobPayload, name: null }, (response) => {
+            expect(response).to.deep.include({
+              statusCode: 400,
+              error: 'Bad Request',
+              message: '"name" must be a string'
+            });
+            done();
+          });
         });
 
         it('should fail without files. ERROR CODE 400', (done) => {
-          pool.emit(
-            '/v1/jobs/add',
-            { ...jobPayload, files: null },
-            (response) => {
-              expect(response).to.deep.include({
-                statusCode: 400,
-                error: 'Bad Request',
-                message: '"files" must be an array'
-              });
-              done();
-            }
-          );
+          pool.emit('/v1/jobs/add', { ...jobPayload, files: null }, (response) => {
+            expect(response).to.deep.include({
+              statusCode: 400,
+              error: 'Bad Request',
+              message: '"files" must be an array'
+            });
+            done();
+          });
         });
 
         it("should fail if file don't have id. ERROR CODE 400", (done) => {
@@ -232,8 +233,7 @@ describe('Socket Clients Api tests', () => {
             expect(response).to.deep.include({
               statusCode: 400,
               error: 'Bad Request',
-              message:
-                '"files[0].type" must be one of [podcast-part, user-input]'
+              message: '"files[0].type" must be one of [podcast-part, user-input]'
             });
             done();
           });

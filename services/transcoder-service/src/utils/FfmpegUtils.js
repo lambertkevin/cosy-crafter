@@ -8,7 +8,7 @@
  */
 export const getCrossFadeFilters = (files) => {
   if (!files || !Array.isArray(files)) {
-    return null;
+    return [];
   }
 
   // Making an array of what chaining inputs will look like
@@ -77,13 +77,12 @@ export const percentageFromTimemark = (timemark, duration) => {
   }
 
   const timemarkAsSec =
-    (Date.parse(`04/21/2014 ${timemark}`) -
-      Date.parse('04/21/2014 00:00:00.00')) /
-    1000;
+    (Date.parse(`04/21/2014 ${timemark}`) - Date.parse('04/21/2014 00:00:00.00')) / 1000;
 
   return (timemarkAsSec / duration) * 100;
 };
 
 export default {
-  getCrossFadeFilters
+  getCrossFadeFilters,
+  percentageFromTimemark
 };

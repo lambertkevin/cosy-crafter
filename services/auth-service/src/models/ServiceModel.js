@@ -4,6 +4,7 @@ import arrayToProjection from '@cosy/array-to-projection';
 import mongooseUniqueValidator from 'mongoose-unique-validator';
 import ServiceSchema, { hiddenProperties } from '../schemas/ServiceSchema';
 
+// prettier-ignore
 export const hiddenFields = [
   ...hiddenProperties,
   'createdAt',

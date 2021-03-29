@@ -1,11 +1,12 @@
 import fs from 'fs';
 import path from 'path';
+import ffmpeg from 'fluent-ffmpeg';
 import proxyquire from 'proxyquire';
 import objectID from 'bson-objectid';
 import CustomError from '@cosy/custom-error';
 import { AssertionError, expect } from 'chai';
 import * as TranscodeController from '../../src/controllers/TranscodeController';
-import { getMp3Duration } from '../../src/utils/Mp3Utils';
+import { getMp3Duration, getMp3ListDuration } from '../../src/utils/Mp3Utils';
 import { mockAxiosGet, mockAxiosCreate } from '../utils/AxiosUtils';
 
 const makeFakeSocket = (killJob = false) => ({
@@ -117,13 +118,38 @@ describe('Transcode Controller Unit tests', () => {
           expect(e).to.be.an('error').and.to.be.an.instanceOf(CustomError);
           expect(e.name).to.be.equal('StorageServiceError');
           expect(e.details).to.include({ code: 404 });
-          expect(e.details.message).to.be.equal(
-            'Error: Request failed with status code 404'
-          );
+          expect(e.details.message).to.be.equal('Error: Request failed with status code 404');
         } finally {
           if (fs.existsSync(path.resolve('./', 'cache', `${file.id}`))) {
             fs.unlinkSync(path.resolve('./', 'cache', `${file.id}`));
           }
+        }
+      });
+
+      it('should fail if axios throws', async () => {
+        const mockedTranscodeController = proxyquire(
+          '../../src/controllers/TranscodeController.js',
+          {
+            axios: {
+              get: () => {
+                throw new Error('test error');
+              }
+            }
+          }
+        );
+
+        try {
+          await await mockedTranscodeController.getFile({
+            type: 'podcast-part',
+            id: 'test'
+          });
+          expect.fail('Promise should have been rejected');
+        } catch (e) {
+          if (e instanceof AssertionError) {
+            throw e;
+          }
+          expect(e).to.be.an('error');
+          expect(e?.message).to.be.equal('test error');
         }
       });
     });
@@ -147,15 +173,13 @@ describe('Transcode Controller Unit tests', () => {
         }
       });
 
-      it('should succeed getting a cached file and saving it', async () => {
+      it('should succeed getting a file and saving it', async () => {
         const mockedTranscodeController = proxyquire(
           '../../src/controllers/TranscodeController.js',
           {
             axios: {
               get: () =>
-                fs.promises.readFile(
-                  path.resolve('./test/files/10-seconds-of-silence.mp3')
-                )
+                fs.promises.readFile(path.resolve('./test/files/10-seconds-of-silence.mp3'))
             }
           }
         );
@@ -164,6 +188,24 @@ describe('Transcode Controller Unit tests', () => {
         const fileExists = fs.existsSync(filepath);
 
         expect(fileExists).to.be.equal(true);
+      });
+
+      it('should succeed getting a cached file', async () => {
+        const mockedTranscodeController = proxyquire(
+          '../../src/controllers/TranscodeController.js',
+          {
+            fs: {
+              existsSync: () => true
+            }
+          }
+        );
+
+        const response = await mockedTranscodeController.getFile({
+          type: 'podcast-part',
+          id: 'test'
+        });
+
+        expect(response).to.be.equal(path.resolve('./', 'cache', 'test'));
       });
     });
   });
@@ -292,10 +334,7 @@ describe('Transcode Controller Unit tests', () => {
 
       it('should fail if socket is not defined and throw', async () => {
         try {
-          await TranscodeController.joinFiles(
-            [],
-            'C56A4180-65AA-42EC-A945-5FD21DEC0538'
-          );
+          await TranscodeController.joinFiles([], 'C56A4180-65AA-42EC-A945-5FD21DEC0538');
           expect.fail('Promise should have been rejected');
         } catch (e) {
           if (e instanceof AssertionError) {
@@ -304,6 +343,81 @@ describe('Transcode Controller Unit tests', () => {
           expect(e).to.be.an('error').and.to.be.an.instanceOf(CustomError);
           expect(e.name).to.be.equal('ValidationError');
           expect(e.message).to.be.equal('"socket" is required');
+        }
+      });
+
+      it('should fail if worker send a kill event', async () => {
+        const files = [
+          {
+            id: '604fd42cbe839f3738dd7831',
+            path: path.resolve('./test/files/This_is_a_test_-_voice_1.mp3'),
+            type: 'podcast-part'
+          },
+          {
+            id: '604fd42cbe839f3738dd7832',
+            path: path.resolve('./test/files/Beat_Thee_-_128Kbps.mp3'),
+            type: 'user-input'
+          }
+        ];
+        const fakeSocket = makeFakeSocket(true);
+
+        try {
+          await TranscodeController.joinFiles(
+            files,
+            'C56A4180-65AA-42EC-A945-5FD21DEC0538',
+            fakeSocket
+          );
+          expect.fail('Promise should have been rejected');
+        } catch (e) {
+          if (e instanceof AssertionError) {
+            throw e;
+          }
+          expect(e).to.be.an('error').and.to.be.an.instanceOf(CustomError);
+          expect(e?.name).to.be.equal('TranscodingKilledError');
+          expect(e?.code).to.be.equal(499);
+        }
+      });
+
+      it('should fail on ffmpeg error', async () => {
+        const files = [
+          {
+            id: '604fd42cbe839f3738dd7831',
+            path: path.resolve('./test/files/This_is_a_test_-_voice_1.mp3'),
+            type: 'podcast-part'
+          },
+          {
+            id: '604fd42cbe839f3738dd7832',
+            path: path.resolve('./test/files/Beat_Thee_-_128Kbps.mp3'),
+            type: 'user-input'
+          }
+        ];
+        const fakeSocket = makeFakeSocket();
+        const mockedTranscodeController = proxyquire(
+          '../../src/controllers/TranscodeController.js',
+          {
+            'fluent-ffmpeg': () => {
+              const instance = ffmpeg();
+              setTimeout(() => {
+                instance.emit('error', new Error('Error thrown by ffmpeg'));
+              }, 50);
+              return instance;
+            }
+          }
+        );
+
+        try {
+          await mockedTranscodeController.joinFiles(
+            files,
+            'C56A4180-65AA-42EC-A945-5FD21DEC0538',
+            fakeSocket
+          );
+          expect.fail('Promise should have been rejected');
+        } catch (e) {
+          if (e instanceof AssertionError) {
+            throw e;
+          }
+          expect(e).to.be.an('error');
+          expect(e?.details?.message).to.be.equal('Error thrown by ffmpeg');
         }
       });
     });
@@ -329,8 +443,7 @@ describe('Transcode Controller Unit tests', () => {
           'C56A4180-65AA-42EC-A945-5FD21DEC0538',
           fakeSocket
         ).then(() => {
-          const lastEmit =
-            fakeSocket.responses[fakeSocket.responses.length - 1];
+          const lastEmit = fakeSocket.responses[fakeSocket.responses.length - 1];
           expect(lastEmit?.payload).to.deep.include({ percent: 100 });
         });
       });
@@ -374,12 +487,47 @@ describe('Transcode Controller Unit tests', () => {
         )
           .then((res) => getMp3Duration(res))
           .then((duration) => {
-            const lastEmit =
-              fakeSocket.responses[fakeSocket.responses.length - 1];
+            const lastEmit = fakeSocket.responses[fakeSocket.responses.length - 1];
             expect(lastEmit?.payload).to.deep.include({ percent: 100 });
-            // Duration should be 16 (10 sec + 10 sec + 10 sec - 2*4 sec of overlapping crossfade)
+            // Duration should be 22 (10 sec + 10 sec + 10 sec - 2*4 sec of overlapping crossfade)
             expect(Math.round(duration)).to.be.equal(22);
           });
+      });
+
+      it('should succeed creating a merge of 2 mp3s with crossfade without specifying seek end', async () => {
+        const files = [
+          {
+            id: '604fd42cbe839f3738dd7831',
+            path: path.resolve('./test/files/This_is_a_test_-_voice_1.mp3'),
+            type: 'podcast-part',
+            seek: {
+              start: 0
+            }
+          },
+          {
+            id: '604fd42cbe839f3738dd7832',
+            path: path.resolve('./test/files/Beat_Thee_-_128Kbps.mp3'),
+            type: 'user-input',
+            seek: {
+              start: 0
+            }
+          }
+        ];
+        const fakeSocket = makeFakeSocket();
+
+        return TranscodeController.joinFiles(
+          files,
+          'C56A4180-65AA-42EC-A945-5FD21DEC0538',
+          fakeSocket
+        ).then(async (mergedFilePath) => {
+          const { duration: supposedDuration } = await getMp3ListDuration([
+            path.resolve('./test/files/This_is_a_test_-_voice_1.mp3'),
+            path.resolve('./test/files/Beat_Thee_-_128Kbps.mp3')
+          ]);
+          const mergedDuration = await getMp3Duration(mergedFilePath);
+          // supposed duration - 4 seconds of crossfade between the 2 files
+          expect(Math.ceil(supposedDuration - 4)).to.be.equal(Math.ceil(mergedDuration));
+        });
       });
     });
   });
@@ -430,9 +578,7 @@ describe('Transcode Controller Unit tests', () => {
 
       it('should fail if jobId is undefined', async () => {
         try {
-          await TranscodeController.upload(
-            path.resolve('./test/files/10-seconds-of-silence.mp3')
-          );
+          await TranscodeController.upload(path.resolve('./test/files/10-seconds-of-silence.mp3'));
           expect.fail('Promise should have been rejected');
         } catch (e) {
           if (e instanceof AssertionError) {
@@ -471,10 +617,7 @@ describe('Transcode Controller Unit tests', () => {
         );
 
         try {
-          await mockedTranscodeController.upload(
-            path.resolve('./test/files/'),
-            'test-id'
-          );
+          await mockedTranscodeController.upload(path.resolve('./test/files/'), 'test-id');
           expect.fail('Promise should have been rejected');
         } catch (e) {
           if (e instanceof AssertionError) {
@@ -501,10 +644,7 @@ describe('Transcode Controller Unit tests', () => {
         );
 
         try {
-          await mockedTranscodeController.upload(
-            path.resolve('./test/files/'),
-            'test-id'
-          );
+          await mockedTranscodeController.upload(path.resolve('./test/files/'), 'test-id');
           expect.fail('Promise should have been rejected');
         } catch (e) {
           if (e instanceof AssertionError) {
@@ -563,11 +703,7 @@ describe('Transcode Controller Unit tests', () => {
         const fakeSocket = makeFakeSocket();
         const [response, fakeAck] = makeFakeAck();
 
-        return TranscodeController.createTranscodeJob(
-          undefined,
-          fakeAck,
-          fakeSocket
-        ).then(() => {
+        return TranscodeController.createTranscodeJob(undefined, fakeAck, fakeSocket).then(() => {
           expect(response.value).to.deep.include({
             statusCode: 400,
             errorName: 'PayloadError',
@@ -676,6 +812,90 @@ describe('Transcode Controller Unit tests', () => {
             if (fs.existsSync(path.resolve(`./cache/${files[1].id}`))) {
               fs.unlinkSync(path.resolve(`./cache/${files[1].id}`));
             }
+          });
+      });
+
+      it('should ack a 500 error if a non CustomError is thrown', async () => {
+        const fakeSocket = makeFakeSocket();
+        const [response, fakeAck] = makeFakeAck();
+        const files = [
+          {
+            id: objectID().toHexString(),
+            seek: {
+              start: 0,
+              end: 10
+            },
+            type: 'podcast-part'
+          },
+          {
+            id: objectID().toHexString(),
+            seek: {
+              start: 0,
+              end: 10
+            },
+            type: 'podcast-part'
+          }
+        ];
+
+        const mockedTranscodeController = proxyquire(
+          '../../src/controllers/TranscodeController.js',
+          {
+            joi: {
+              object: () => {
+                throw new Error('Unknown error');
+              }
+            }
+          }
+        );
+
+        return mockedTranscodeController
+          .createTranscodeJob(
+            {
+              files,
+              name: 'test-name',
+              jobId: 'C56a418065aa426ca9455fd21deC0538'
+            },
+            fakeAck,
+            fakeSocket
+          )
+          .then(() => {
+            expect(response.value).to.deep.include({
+              statusCode: 500,
+              errorName: 'Error',
+              message: 'An error has occured'
+            });
+          });
+      });
+
+      it('should ack error if worker is busy', async () => {
+        TranscodeController.setBusyFlag(true);
+        const fakeSocket = makeFakeSocket();
+        const [response, fakeAck] = makeFakeAck();
+        const files = [
+          {
+            id: '604fd42cbe839f3738dd7831',
+            type: 'podcast-part'
+          }
+        ];
+
+        return TranscodeController.createTranscodeJob(
+          {
+            files,
+            name: 'test-name',
+            jobId: 'C56a418065aa426ca9455fd21deC0538'
+          },
+          fakeAck,
+          fakeSocket
+        )
+          .then(() => {
+            expect(response.value).to.deep.include({
+              statusCode: 419,
+              errorName: 'WorkerBusyError',
+              message: 'Resource is busy'
+            });
+          })
+          .finally(() => {
+            TranscodeController.setBusyFlag(false);
           });
       });
     });

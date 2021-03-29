@@ -5,9 +5,9 @@ import { logger } from '@cosy/logger';
 import CustomError from '@cosy/custom-error';
 import { tokens, refresh } from '@cosy/auth';
 import { axiosErrorBoomifier, makeAxiosInstance } from '@cosy/axios-utils';
-import StorageFactory from '../utils/StorageFactory';
+import StorageFactory from '../lib/StorageFactory';
 
-const { PODCAST_SERVICE_NAME, PODCAST_SERVICE_PORT } = process.env;
+const { PODCAST_SERVICE_NAME, PODCAST_SERVICE_PORT, NODE_ENV } = process.env;
 const storages = StorageFactory();
 
 /**
@@ -17,7 +17,7 @@ const storages = StorageFactory();
  * @param {ReadableStream} payload.file
  * @param {String} payload.podcastName
  * @param {String} payload.filename
- * @param {Array} payload.storageType
+ * @param {String} payload.storageType
  *
  * @return {Object}
  */
@@ -30,8 +30,8 @@ export const addPodcastPartFile = async ({
   const extension = originalFilename.split('.').pop();
   const filename = `${uuid()}.${extension}`;
   const location = `podcasts/${_.kebabCase(podcastName)}`;
-  const defaultStorageStrategy =
-    process.env.NODE_ENV === 'production' ? ['scaleway', 'local'] : ['local'];
+  // istanbul ignore next
+  const defaultStorageStrategy = NODE_ENV === 'production' ? ['scaleway', 'local'] : ['local'];
   let storageStrategy;
 
   // Check if storageStrat is set and storages exist, else go default
@@ -46,12 +46,12 @@ export const addPodcastPartFile = async ({
         return Boom.badData("At least one storage type doesn't exist");
       }
     } else {
-      throw new CustomError(
-        'Storage strategy not specified',
-        'StorageStrategyUndefined'
-      );
+      throw new CustomError('Storage strategy not specified', 'StorageStrategyUndefined');
     }
   } catch (e) {
+    if (!(e instanceof CustomError)) {
+      return Boom.serverUnavailable();
+    }
     storageStrategy = defaultStorageStrategy;
   }
 
@@ -87,20 +87,26 @@ export const addPodcastPartFile = async ({
  *
  * @param {String} id
  * @param {Object} h
+ * @param {String} headers [Used only to mock data for test purposes]
  *
- * @return {Response}
+ * @return {Promise<Buffer|Boom.Boom>}
  */
-export const getPodcastPartFile = async (id, h) => {
+export const getPodcastPartFile = async (id, h, headers) => {
   const axiosAsService = makeAxiosInstance(refresh);
+
+  if (process.env.NODE_ENV === 'test' && headers?.['x-mock']) {
+    axiosAsService.get = () =>
+      Promise.resolve({
+        data: { data: JSON.parse(headers['x-mock']) }
+      });
+  }
+
   return axiosAsService
-    .get(
-      `http://${PODCAST_SERVICE_NAME}:${PODCAST_SERVICE_PORT}/v1/parts/${id}`,
-      {
-        headers: {
-          authorization: tokens.accessToken
-        }
+    .get(`http://${PODCAST_SERVICE_NAME}:${PODCAST_SERVICE_PORT}/v1/parts/${id}`, {
+      headers: {
+        authorization: tokens.accessToken
       }
-    )
+    })
     .then(({ data }) => data)
     .then(async ({ data }) => {
       const stream = await storages.getFileAsReadable(
@@ -112,26 +118,13 @@ export const getPodcastPartFile = async (id, h) => {
       return h.response(stream).type(data.contentType);
     })
     .catch((error) => {
-      if (error.isAxiosError) {
-        logger.error(
-          "Get Podcast Part File Error: Couldn't get part from podcast service",
-          error
-        );
-        return axiosErrorBoomifier(error);
-      }
       if (error.code === 'ENOENT' || error.statusCode === 404) {
         logger.error("Get Podcast Part File Error: Part doesn't exist", error);
-        return Boom.resourceGone('File has been deleted in storage');
+        return Boom.resourceGone("File doesn't exist or has been deleted in storage");
       }
-      // Any other error
+
       logger.error('Get Podcast Part File Error', error);
-      if (error.isBoom) {
-        return error;
-      }
-      if (error.statusCode) {
-        return new Boom.Boom(error.message, { statusCode: error.statusCode });
-      }
-      return Boom.boomify(error);
+      return axiosErrorBoomifier(error);
     });
 };
 
@@ -143,14 +136,14 @@ export const getPodcastPartFile = async (id, h) => {
  * @param {String} data.storagePath
  * @param {String} data.storageFilename
  *
- * @return {Object}
+ * @return {Promise<Object|Boom.Boom>}
  */
-export const removePodcastPartFile = async ({
-  storageType,
-  storagePath,
-  storageFilename
-}) => {
+export const removePodcastPartFile = async ({ storageType, storagePath, storageFilename } = {}) => {
   try {
+    if (!storageType || !storagePath || !storageFilename) {
+      throw Boom.badRequest();
+    }
+
     await storages.removeFile(storageType, storagePath, storageFilename);
     return { deleted: storageFilename };
   } catch (error) {
@@ -172,13 +165,8 @@ export const removePodcastPartFile = async ({
  *
  * @return {Promise<Object>}
  */
-export const addCraftFile = async ({
-  file,
-  filename,
-  storageStrategy: _storageStrategy
-}) => {
-  const storagePath = `crafts`;
-  const location = `${storagePath}/${filename}`;
+export const addCraftFile = async ({ file, filename, storageStrategy: _storageStrategy }) => {
+  const location = 'crafts';
   const defaultStorageStrategy = ['local'];
   let storageStrategy;
 
@@ -194,12 +182,12 @@ export const addCraftFile = async ({
         return Boom.badData("At least one storage type doesn't exist");
       }
     } else {
-      throw new CustomError(
-        'Storage strategy not specified',
-        'StorageStrategyUndefined'
-      );
+      throw new CustomError('Storage strategy not specified', 'StorageStrategyUndefined');
     }
   } catch (e) {
+    if (!(e instanceof CustomError)) {
+      return Boom.serverUnavailable();
+    }
     storageStrategy = defaultStorageStrategy;
   }
 
@@ -207,7 +195,7 @@ export const addCraftFile = async ({
     const storedFile = await storages.setFileFromReadable(
       storageStrategy,
       file,
-      location
+      `${location}/${filename}`
     );
 
     return {
@@ -234,20 +222,26 @@ export const addCraftFile = async ({
  *
  * @param {String} id
  * @param {Object} h
+ * @param {String} headers [Used only to mock data for test purposes]
  *
- * @return {Response}
+ * @return {Promise<Buffer|Boom.Boom>}
  */
-export const getCraftFile = async (id, h) => {
+export const getCraftFile = async (id, h, headers) => {
   const axiosAsService = makeAxiosInstance(refresh);
+
+  if (process.env.NODE_ENV === 'test' && headers?.['x-mock']) {
+    axiosAsService.get = () =>
+      Promise.resolve({
+        data: { data: JSON.parse(headers['x-mock']) }
+      });
+  }
+
   return axiosAsService
-    .get(
-      `http://${PODCAST_SERVICE_NAME}:${PODCAST_SERVICE_PORT}/v1/crafts/${id}`,
-      {
-        headers: {
-          authorization: tokens.accessToken
-        }
+    .get(`http://${PODCAST_SERVICE_NAME}:${PODCAST_SERVICE_PORT}/v1/crafts/${id}`, {
+      headers: {
+        authorization: tokens.accessToken
       }
-    )
+    })
     .then(({ data }) => data)
     .then(async ({ data }) => {
       const stream = await storages.getFileAsReadable(
@@ -259,33 +253,16 @@ export const getCraftFile = async (id, h) => {
       return h
         .response(stream)
         .type('audio/mpeg')
-        .header(
-          'content-disposition',
-          `attachment; filename=${_.snakeCase(data.name)}.mp3;`
-        );
+        .header('content-disposition', `attachment; filename=${_.snakeCase(data.name)}.mp3;`);
     })
     .catch((error) => {
-      if (error.isAxiosError) {
-        logger.error(
-          "Get Craft File Error: Couldn't get craft from podcast service",
-          error
-        );
-        return axiosErrorBoomifier(error);
-      }
       if (error.code === 'ENOENT' || error.statusCode === 404) {
         logger.error("Get Craft File Error: Craft doesn't exist", error);
+        return Boom.resourceGone("File doesn't exist or has been deleted in storage");
+      }
 
-        return Boom.resourceGone('File has been deleted in storage');
-      }
-      // Any other error
       logger.error('Get Craft File Error', error);
-      if (error.isBoom) {
-        return error;
-      }
-      if (error.statusCode) {
-        return new Boom.Boom(error.message, { statusCode: error.statusCode });
-      }
-      return Boom.boomify(error);
+      return axiosErrorBoomifier(error);
     });
 };
 
@@ -297,14 +274,14 @@ export const getCraftFile = async (id, h) => {
  * @param {String} data.storagePath
  * @param {String} data.storageFilename
  *
- * @return {Object}
+ * @return {Promise<Object>}
  */
-export const removeCraftFile = async ({
-  storageType,
-  storagePath,
-  storageFilename
-}) => {
+export const removeCraftFile = async ({ storageType, storagePath, storageFilename } = {}) => {
   try {
+    if (!storageType || !storagePath || !storageFilename) {
+      throw Boom.badRequest();
+    }
+
     await storages.removeFile(storageType, storagePath, storageFilename);
     return { deleted: storageFilename };
   } catch (error) {

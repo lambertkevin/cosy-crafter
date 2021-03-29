@@ -19,7 +19,7 @@ export const jwtMiddleware = (socket, next) => {
     socket.handshake.decodedToken = jwt.decode(token);
     next();
   } catch (error) {
-    if (['JsonWebTokenError', 'TokenExpiredError'].includes(error.name)) {
+    if (error instanceof jwt.JsonWebTokenError || error instanceof jwt.TokenExpiredError) {
       error.data = { name: error.name, message: error.message };
 
       next(error);

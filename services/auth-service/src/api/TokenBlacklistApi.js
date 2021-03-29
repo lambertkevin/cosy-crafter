@@ -2,10 +2,7 @@ import joi from 'joi';
 import { standardizeSchema } from '@cosy/schema-utils';
 import failValidationHandler from '@cosy/hapi-fail-validation-handler';
 import * as TokenBlacklistController from '../controllers/TokenBlacklistController';
-import {
-  responseSchema,
-  creationSchema
-} from '../schemas/TokenBlacklistSchema';
+import { responseSchema, creationSchema } from '../schemas/TokenBlacklistSchema';
 
 export default {
   name: 'tokenApi',
@@ -47,14 +44,14 @@ export default {
       path: '/{id}',
       options: {
         // @TODO User Auth needed here
-        handler: (request) =>
-          TokenBlacklistController.findOne(request.params.id),
+        handler: (request) => TokenBlacklistController.findOne(request.params.id),
         tags: ['api', 'tokens'],
         description: 'Get a Token',
         notes: 'Returns a specific blacklisted token',
         validate: {
           failAction: failValidationHandler,
           params: joi.object({
+            // prettier-ignore
             id: joi
               .string()
               .length(24)
@@ -115,15 +112,15 @@ export default {
       method: 'DELETE',
       path: '/',
       options: {
-        handler: (request) =>
-          TokenBlacklistController.remove(request.payload.ids),
+        handler: (request) => TokenBlacklistController.remove(request.payload.ids),
         validate: {
           failAction: failValidationHandler,
           payload: joi.object({
+            // prettier-ignore
             ids: joi
               .array()
               .items(
-                joi
+                  joi
                   .string()
                   .length(24)
                   .required()
@@ -133,22 +130,22 @@ export default {
         },
         tags: ['api', 'tokens'],
         description: 'Delete Tokens',
-        notes:
-          'Removes tokens from the blacklist and returns their jwtid to confirm',
+        notes: 'Removes tokens from the blacklist and returns their jwtid to confirm',
         plugins: {
           'hapi-swagger': {
             responses: {
               200: {
                 schema: standardizeSchema(
                   joi.object({
+                    // prettier-ignore
                     deleted: joi
                       .array()
                       .items(
                         joi
-                          .string()
-                          .length(24)
-                          .required()
-                          .example('5f3fa3c85d413d6f42bf67b2')
+                        .string()
+                        .length(24)
+                        .required()
+                        .example('5f3fa3c85d413d6f42bf67b2')
                       )
                   }),
                   false
@@ -172,22 +169,21 @@ export default {
       path: '/{id}',
       options: {
         // @TODO User Auth needed here
-        handler: (request) =>
-          TokenBlacklistController.remove([request.params.id]),
+        handler: (request) => TokenBlacklistController.remove([request.params.id]),
         validate: {
           failAction: failValidationHandler,
           params: joi.object({
+            // prettier-ignore
             id: joi
-              .string()
-              .length(24)
-              .required()
-              .example('5f3fa3c85d413d6f42bf67b2')
+            .string()
+            .length(24)
+            .required()
+            .example('5f3fa3c85d413d6f42bf67b2')
           })
         },
         tags: ['api', 'tokens'],
         description: 'Delete a Token',
-        notes:
-          'Removes a token from blacklist and returns its jwtid to confirm',
+        notes: 'Removes a token from blacklist and returns its jwtid to confirm',
         plugins: {
           'hapi-swagger': {
             responses: {

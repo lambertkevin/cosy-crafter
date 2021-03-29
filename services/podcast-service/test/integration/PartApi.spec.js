@@ -6,6 +6,7 @@ import * as SectionController from '../../src/controllers/SectionController';
 import * as PodcastController from '../../src/controllers/PodcastController';
 import * as PartController from '../../src/controllers/PartController';
 import { startAuthService, accessToken } from '../utils/authUtils';
+import { hiddenFields } from '../../src/models/PartModel';
 import { objectToFormData } from '../utils/formUtils';
 import init from '../../src/server';
 
@@ -46,6 +47,66 @@ describe('Parts API V1 tests', () => {
     });
   });
 
+  describe('Parts Get', () => {
+    let part;
+
+    before(async () => {
+      const partPayload = {
+        name: `partToGet`,
+        section: section?._id?.toString(),
+        podcast: podcast?._id?.toString(),
+        tags: 'tag1',
+        file: {
+          path: path.resolve('./', 'test', 'files', 'blank.mp3'),
+          bytes: 61637,
+          filename: 'blank.mp3',
+          headers: {
+            'content-disposition': 'form-data; name="file"; filename="blank.mp3"',
+            'content-type': 'audio/mpeg'
+          }
+        }
+      };
+      part = await PartController.create(partPayload);
+    });
+
+    it('should return a sanitized part', () => {
+      return server
+        .inject({
+          method: 'GET',
+          url: `/v1/parts/${part._id.toString()}`
+        })
+        .then((response) => {
+          expect(response).to.be.a('object');
+          expect(response).to.include({ statusCode: 200 });
+          expect(response?.result).to.include({
+            statusCode: 200
+          });
+          expect(response?.result?.data?._id?.toString()).to.be.equal(part._id?.toString());
+          expect(response?.result?.data).to.not.have.keys(...hiddenFields);
+        });
+    });
+
+    it('should return a non sanitized part', () => {
+      return server
+        .inject({
+          method: 'GET',
+          url: `/v1/parts/${part._id.toString()}`,
+          headers: {
+            authorization: accessToken
+          }
+        })
+        .then((response) => {
+          expect(response).to.be.a('object');
+          expect(response).to.include({ statusCode: 200 });
+          expect(response?.result).to.include({
+            statusCode: 200
+          });
+          expect(response?.result?.data?._id?.toString()).to.be.equal(part._id?.toString());
+          expect(response?.result?.data?.toJSON()).to.include.keys(...hiddenFields);
+        });
+    });
+  });
+
   describe('Parts Creation', () => {
     let partPayloadFormData;
     let partPayloadStream;
@@ -58,9 +119,7 @@ describe('Parts API V1 tests', () => {
         podcast: podcast._id.toString(),
         // Be carefull, you can't spread this stream after it being consumed.
         // You'll have to have to manually add this property again.
-        file: fs.createReadStream(
-          path.resolve('./', 'test', 'files', 'blank.mp3')
-        ),
+        file: fs.createReadStream(path.resolve('./', 'test', 'files', 'blank.mp3')),
         tags: 'tag1'
       };
       partPayloadFormData = objectToFormData(partPayload);
@@ -120,9 +179,7 @@ describe('Parts API V1 tests', () => {
           file: Buffer.alloc(0),
           section: '1234-1234-1234-1234-1234'
         });
-        const partPayloadStreamNoPodcast = await getStream(
-          partPayloadFormDataNoPodcast
-        );
+        const partPayloadStreamNoPodcast = await getStream(partPayloadFormDataNoPodcast);
 
         return server
           .inject({
@@ -152,9 +209,7 @@ describe('Parts API V1 tests', () => {
           file: Buffer.alloc(0),
           section: '1234-1234-1234-1234-1234'
         });
-        const partPayloadStreamNoSection = await getStream(
-          partPayloadFormDataNoSection
-        );
+        const partPayloadStreamNoSection = await getStream(partPayloadFormDataNoSection);
 
         return server
           .inject({
@@ -321,8 +376,7 @@ describe('Parts API V1 tests', () => {
               expect(response.result).to.deep.include({
                 statusCode: 400,
                 error: 'Bad Request',
-                message:
-                  '"name" length must be less than or equal to 100 characters long'
+                message: '"name" length must be less than or equal to 100 characters long'
               });
             });
         });
@@ -353,8 +407,7 @@ describe('Parts API V1 tests', () => {
               expect(response.result).to.deep.include({
                 statusCode: 400,
                 error: 'Bad Request',
-                message:
-                  '"tags" length must be less than or equal to 200 characters long'
+                message: '"tags" length must be less than or equal to 200 characters long'
               });
             });
         });
@@ -413,8 +466,7 @@ describe('Parts API V1 tests', () => {
           bytes: 61637,
           filename: 'blank.mp3',
           headers: {
-            'content-disposition':
-              'form-data; name="file"; filename="blank.mp3"',
+            'content-disposition': 'form-data; name="file"; filename="blank.mp3"',
             'content-type': 'audio/mpeg'
           }
         }
@@ -571,10 +623,7 @@ describe('Parts API V1 tests', () => {
             expect(response?.result?.data).to.include({
               name: 'partNameUpdated'
             });
-            expect(response?.result?.data?.tags).to.include.members([
-              'new-tag',
-              'new-tag-2'
-            ]);
+            expect(response?.result?.data?.tags).to.include.members(['new-tag', 'new-tag-2']);
           });
       });
 
@@ -621,9 +670,7 @@ describe('Parts API V1 tests', () => {
 
       it('should succeed updating part file', async () => {
         const payloadUpdateFormData = objectToFormData({
-          file: fs.createReadStream(
-            path.resolve('./', 'test', 'files', 'blank2.mp3')
-          )
+          file: fs.createReadStream(path.resolve('./', 'test', 'files', 'blank2.mp3'))
         });
         const payloadUpdateStream = await getStream(payloadUpdateFormData);
 
@@ -683,8 +730,7 @@ describe('Parts API V1 tests', () => {
             bytes: 61637,
             filename: 'blank.mp3',
             headers: {
-              'content-disposition':
-                'form-data; name="file"; filename="blank.mp3"',
+              'content-disposition': 'form-data; name="file"; filename="blank.mp3"',
               'content-type': 'audio/mpeg'
             }
           }
@@ -705,9 +751,42 @@ describe('Parts API V1 tests', () => {
             expect(response?.result).to.include({
               statusCode: 200
             });
-            expect(response?.result?.data?.deleted[0]).to.be.equal(
-              partToDelete?._id?.toString()
-            );
+            expect(response?.result?.data?.deleted[0]).to.be.equal(partToDelete?._id?.toString());
+          });
+      });
+
+      it('should succeed deleting part', async () => {
+        const partToDelete = await PartController.create({
+          name: `partToDelete`,
+          section: section?._id?.toString(),
+          podcast: podcast?._id?.toString(),
+          tags: 'tag1',
+          file: {
+            path: path.resolve('./', 'test', 'files', 'blank.mp3'),
+            bytes: 61637,
+            filename: 'blank.mp3',
+            headers: {
+              'content-disposition': 'form-data; name="file"; filename="blank.mp3"',
+              'content-type': 'audio/mpeg'
+            }
+          }
+        });
+
+        return server
+          .inject({
+            method: 'DELETE',
+            url: `/v1/parts/${partToDelete?._id?.toString()}`,
+            headers: {
+              authorization: accessToken
+            }
+          })
+          .then((response) => {
+            expect(response).to.be.a('object');
+            expect(response).to.include({ statusCode: 200 });
+            expect(response?.result).to.include({
+              statusCode: 200
+            });
+            expect(response?.result?.data?.deleted[0]).to.be.equal(partToDelete?._id?.toString());
           });
       });
 
@@ -726,49 +805,12 @@ describe('Parts API V1 tests', () => {
             bytes: 61637,
             filename: 'blank.mp3',
             headers: {
-              'content-disposition':
-                'form-data; name="file"; filename="blank.mp3"',
+              'content-disposition': 'form-data; name="file"; filename="blank.mp3"',
               'content-type': 'audio/mpeg'
             }
           }
         });
         await PodcastController.remove([podcastToDelete._id]);
-
-        return server
-          .inject({
-            method: 'GET',
-            url: `/v1/parts/${partToDelete._id.toString()}`,
-            headers: {
-              authorization: accessToken
-            }
-          })
-          .then((response) => {
-            expect(response).to.be.a('object');
-            expect(response).to.include({ statusCode: 404 });
-          });
-      });
-
-      it('should cascade delete part when deleting section', async () => {
-        const sectionToDelete = await SectionController.create({
-          name: 'integration-podcast-to-cascade-delete'
-        });
-        const partToDelete = await PartController.create({
-          name: `part2`,
-          section: sectionToDelete?._id?.toString(),
-          podcast: podcast?._id?.toString(),
-          tags: 'tag1',
-          file: {
-            path: path.resolve('./', 'test', 'files', 'blank.mp3'),
-            bytes: 61637,
-            filename: 'blank.mp3',
-            headers: {
-              'content-disposition':
-                'form-data; name="file"; filename="blank.mp3"',
-              'content-type': 'audio/mpeg'
-            }
-          }
-        });
-        await PodcastController.remove([podcast._id]);
 
         return server
           .inject({

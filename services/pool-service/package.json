@@ -8,8 +8,7 @@
     "dev": "nodemon --exec npm start -e js",
     "lint": "eslint ./src",
     "debug": "npm run start --inspect",
-    "test": "NODE_ENV=test mocha test/integration/**/*.js",
-    "test-unit": "NODE_ENV=test mocha test/unit/**/*.js"
+    "test": "NODE_ENV=test mocha test/**/*.spec.js"
   },
   "author": "Kevin Lambert",
   "license": "ISC",
@@ -42,13 +41,16 @@
     "babel-eslint": "^10.1.0",
     "babel-plugin-istanbul": "^6.0.0",
     "chai": "^4.3.0",
+    "chai-http": "^4.3.0",
     "chai-spies": "^1.0.0",
+    "chai-subset": "^1.6.0",
     "eslint": "^7.7.0",
     "eslint-config-airbnb-base": "^14.2.0",
     "eslint-config-prettier": "^6.11.0",
     "eslint-plugin-import": "^2.22.0",
     "mocha": "^8.3.0",
     "nodemon": "^2.0.4",
-    "prettier": "^2.0.5"
+    "prettier": "^2.0.5",
+    "proxyquire": "^2.1.3"
   }
 }

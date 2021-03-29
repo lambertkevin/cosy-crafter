@@ -1,7 +1,8 @@
 import _ from 'lodash';
 import Boom from '@hapi/boom';
+import mongoose from 'mongoose';
 import { logger } from '@cosy/logger';
-import Token, { projection, hiddenFields } from '../models/TokenBlaclistModel';
+import Token, { projection, hiddenFields } from '../models/TokenBlacklistModel';
 
 /**
  * Return a list of all Token
@@ -62,11 +63,9 @@ export const findOneByJwtId = (jwtid, sanitized = true) =>
  */
 export const create = ({ jwtid, type }, sanitized = true) =>
   Token.create({ jwtid, type })
-    .then((token) =>
-      sanitized ? _.omit(token.toObject(), hiddenFields) : token
-    )
+    .then((token) => (sanitized ? _.omit(token.toObject(), hiddenFields) : token))
     .catch((error) => {
-      if (error.name === 'ValidationError') {
+      if (error instanceof mongoose.Error) {
         logger.error('Token Create Validation Error', error);
         const response = Boom.boomify(error, { statusCode: 409 });
         response.output.payload.data = error.errors;
@@ -90,21 +89,21 @@ export const create = ({ jwtid, type }, sanitized = true) =>
  * @return {Promise<Object[]>} {Token}
  */
 export const update = (id, { jwtid, type }, sanitized = true) =>
-  Token.updateOne({ _id: id }, _.omitBy({ jwtid, type }, _.isUndefined))
+  Token.updateOne({ _id: id }, _.omitBy({ jwtid, type }, _.isUndefined), {
+    runValidators: true,
+    context: 'query'
+  })
     .exec()
     .then(async (res) => {
       if (!res.n) {
         return Boom.notFound();
-      }
-      if (!res.nModified) {
-        return Boom.expectationFailed('No changes required');
       }
 
       const token = await findOne(id, sanitized);
       return token;
     })
     .catch((error) => {
-      if (error.name === 'ValidationError') {
+      if (error instanceof mongoose.Error) {
         logger.error('Token Update Validation Error', error);
         const response = Boom.boomify(error, { statusCode: 409 });
         response.output.payload.data = error.errors;
@@ -119,7 +118,7 @@ export const update = (id, { jwtid, type }, sanitized = true) =>
 /**
  * Remove Tokens
  *
- * @param {Arrays} ids
+ * @param {Array} ids
  *
  * @return {Promise<void>}
  */

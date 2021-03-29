@@ -6,12 +6,6 @@ import * as StorageController from '../controllers/StorageController';
 export default {
   name: 'podcastStorageApi',
   async register(server) {
-    server.route({
-      method: 'get',
-      path: '/ping',
-      handler: () => 'pong'
-    });
-
     /**
      * Upload a podcast part file
      *
@@ -36,21 +30,13 @@ export default {
           failAction: failValidationHandler,
           payload: joi
             .object({
-              podcastName: joi
-                .string()
-                .min(1)
-                .max(100)
-                .required()
-                .example('Mon super podcast'),
+              podcastName: joi.string().min(1).max(100).required().example('Mon super podcast'),
               filename: joi.string().required().example('fichier.mp3'),
               file: joi.any().required().meta({ swaggerType: 'file' }),
               storageStrategy: joi
                 .string()
                 .allow('')
-                .regex(
-                  /^[a-zA-Z0-9, -]*$/,
-                  'Alphanumerics, space, dash and comma characters'
-                )
+                .regex(/^[a-zA-Z0-9, -]*$/, 'Alphanumerics, space, dash and comma characters')
             })
             .label('PodcastPartCreationSchema'),
           headers: joi
@@ -69,14 +55,9 @@ export default {
               200: {
                 schema: standardizeSchema(
                   joi.object({
-                    filename: joi
-                      .string()
-                      .example('57319dfe-f6dc-473c-aabb-b3c8d642cdc2.mp3'),
+                    filename: joi.string().example('57319dfe-f6dc-473c-aabb-b3c8d642cdc2.mp3'),
                     location: joi.string().example('path/to/the/file'),
-                    storageType: joi
-                      .string()
-                      .valid('local', 'aws', 'scaleway')
-                      .example('aws'),
+                    storageType: joi.string().valid('local', 'aws', 'scaleway').example('aws'),
                     publicLink: joi
                       .string()
                       .example(
@@ -102,8 +83,8 @@ export default {
       method: 'GET',
       path: '/{id}',
       options: {
-        handler: async ({ params }, h) =>
-          StorageController.getPodcastPartFile(params.id, h),
+        handler: async ({ params, headers }, h) =>
+          StorageController.getPodcastPartFile(params.id, h, headers),
         tags: ['api', 'podcasts', 'v1'],
         description: 'Get a podcast part file',
         notes: 'Returns a podcast part file from its podcast part id',
@@ -139,8 +120,7 @@ export default {
           strategy: 'service-jwt',
           mode: 'required'
         },
-        handler: async ({ payload }) =>
-          StorageController.removePodcastPartFile(payload),
+        handler: async ({ payload }) => StorageController.removePodcastPartFile(payload),
         tags: ['api', 'podcasts', 'v1'],
         description: 'Delete a podcast part file',
         notes: 'Deletes a specific file the podcast files',
@@ -148,11 +128,7 @@ export default {
           failAction: failValidationHandler,
           payload: joi
             .object({
-              storageType: joi
-                .string()
-                .required()
-                .valid('aws', 'scaleway', 'local')
-                .example('aws'),
+              storageType: joi.string().required().valid('aws', 'scaleway', 'local').example('aws'),
               storagePath: joi.string().required().example('path/to/folder'),
               storageFilename: joi
                 .string()
@@ -174,13 +150,7 @@ export default {
                   joi.object({
                     deleted: joi
                       .array()
-                      .items(
-                        joi
-                          .string()
-                          .length(24)
-                          .required()
-                          .example('5f3ed184201d35c0c309aaaa')
-                      )
+                      .items(joi.string().length(24).required().example('5f3ed184201d35c0c309aaaa'))
                   }),
                   false
                 )

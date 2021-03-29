@@ -1,3 +1,5 @@
+/* istanbul ignore file */
+
 export const identifier = `${process.env.POOL_SERVICE_NAME}-leia`;
 
 /**

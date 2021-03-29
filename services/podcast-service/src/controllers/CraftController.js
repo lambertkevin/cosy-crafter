@@ -1,5 +1,6 @@
 import _ from 'lodash';
 import Boom from '@hapi/boom';
+import mongoose from 'mongoose';
 import { logger } from '@cosy/logger';
 import Craft, { projection, hiddenFields } from '../models/CraftModel';
 
@@ -53,11 +54,9 @@ export const create = (
   sanitized = true
 ) =>
   Craft.create({ name, jobId, user, storageType, storagePath, storageFilename })
-    .then((craft) =>
-      sanitized ? _.omit(craft.toObject(), hiddenFields) : craft
-    )
+    .then((craft) => (sanitized ? _.omit(craft.toObject(), hiddenFields) : craft))
     .catch((error) => {
-      if (error.name === 'ValidationError') {
+      if (error instanceof mongoose.Error) {
         logger.error('Craft Create Validation Error', error);
         const response = Boom.boomify(error, { statusCode: 409 });
         response.output.payload.data = error.errors;
@@ -91,25 +90,23 @@ export const update = (
 ) =>
   Craft.updateOne(
     { _id: id },
-    _.omitBy(
-      { name, jobId, user, storageType, storagePath, storageFilename },
-      _.isUndefined
-    )
+    _.omitBy({ name, jobId, user, storageType, storagePath, storageFilename }, _.isUndefined),
+    {
+      runValidators: true,
+      context: 'query'
+    }
   )
     .exec()
     .then(async (res) => {
       if (!res.n) {
         return Boom.notFound();
       }
-      if (!res.nModified) {
-        return Boom.expectationFailed('No changes required');
-      }
 
       const craft = await findOne(id, sanitized);
       return craft;
     })
     .catch((error) => {
-      if (error.name === 'ValidationError') {
+      if (error instanceof mongoose.Error) {
         logger.error('Craft Update Validation Error', error);
         const response = Boom.boomify(error, { statusCode: 409 });
         response.output.payload.data = error.errors;
@@ -124,7 +121,7 @@ export const update = (
 /**
  * Delete crafts
  *
- * @param {Arrays} ids
+ * @param {Array} ids
  *
  * @return {Promise<Object[]>}
  */

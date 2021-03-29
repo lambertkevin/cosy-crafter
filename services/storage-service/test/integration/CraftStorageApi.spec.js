@@ -2,13 +2,13 @@ import fs from 'fs';
 import path from 'path';
 import { expect } from 'chai';
 import getStream from 'get-stream';
-import * as StorageController from '../../src/controllers/StorageController';
 import { startAuthService, accessToken } from '../utils/authUtils';
+import * as StorageController from '../../src/controllers/StorageController';
 import { objectToFormData } from '../utils/formUtils';
 import mockS3 from '../utils/mockS3';
 import init from '../../src/server';
 
-describe('Podcast Part Storage API V1 tests', () => {
+describe('Craft Storage API V1 tests', () => {
   let s3FakeServers;
   let server;
   let authServiceChild;
@@ -26,34 +26,46 @@ describe('Podcast Part Storage API V1 tests', () => {
     s3FakeServers.forEach((s3) => s3.close());
   });
 
-  describe('Server Testing', () => {
-    it('should validate if podcast parts v1 API is reachable', () => {
+  describe('Craft Get', () => {
+    it('should get a buffer as string', async () => {
+      const filepath = path.resolve('./', 'test', 'files', 'blank.mp3');
+      const craftPayload = {
+        filename: 'integration-craft-filename.mp3',
+        file: fs.createReadStream(filepath)
+      };
+      const bufferedFile = fs.readFileSync(filepath);
+      const craft = await StorageController.addCraftFile(craftPayload);
       return server
         .inject({
           method: 'GET',
-          url: '/v1/podcast-parts/ping'
+          url: `/v1/crafts/605e3daaf96692bb3780009e`,
+          headers: {
+            'X-Mock': JSON.stringify({
+              storageType: craft.storageType,
+              storagePath: craft.location,
+              storageFilename: craft.filename
+            })
+          }
         })
         .then((response) => {
-          expect(response).to.be.a('object');
           expect(response).to.include({ statusCode: 200 });
-          expect(response?.result?.data).to.be.equal('pong');
+          expect(response?.result).to.be.equal(bufferedFile.toString());
         });
     });
   });
 
-  describe('Podcast Part Upload', () => {
-    const podcastPartPayload = {
-      podcastName: 'integration-podcast',
-      filename: 'integration-filename.mp3',
+  describe('Craft Upload', () => {
+    const craftPayload = {
+      filename: 'integration-craft-filename.mp3',
       file: Buffer.alloc(0)
     };
 
     describe('Fails', () => {
-      it('should fail uploading a podcast part without jwt. HTTP 401', () => {
+      it('should fail uploading a craft without jwt. HTTP 401', () => {
         return server
           .inject({
             method: 'POST',
-            url: '/v1/podcast-parts'
+            url: '/v1/crafts'
           })
           .then((response) => {
             expect(response).to.be.a('object');
@@ -70,7 +82,7 @@ describe('Podcast Part Storage API V1 tests', () => {
         return server
           .inject({
             method: 'POST',
-            url: '/v1/podcast-parts',
+            url: '/v1/crafts',
             headers: {
               contentType: 'application/json',
               authorization: accessToken
@@ -87,20 +99,18 @@ describe('Podcast Part Storage API V1 tests', () => {
           });
       });
 
-      it('should fail if podcast part file is not a stream. HTTP 422', async () => {
+      it('should fail if craft file is not a stream. HTTP 422', async () => {
         const payloadFormData = objectToFormData({
-          ...podcastPartPayload,
+          ...craftPayload,
           // Returns string and not ReadableStream
-          file: fs.readFileSync(
-            path.resolve('./', 'test', 'files', 'blank.mp3')
-          )
+          file: fs.readFileSync(path.resolve('./', 'test', 'files', 'blank.mp3'))
         });
         const payloadStream = await getStream(payloadFormData);
 
         return server
           .inject({
             method: 'POST',
-            url: '/v1/podcast-parts',
+            url: '/v1/crafts',
             payload: payloadStream,
             headers: {
               ...payloadFormData.getHeaders(),
@@ -120,7 +130,7 @@ describe('Podcast Part Storage API V1 tests', () => {
 
       it('should fail if storageType is defined but with unknow storage. HTTP 422', async () => {
         const payloadFormData = objectToFormData({
-          ...podcastPartPayload,
+          ...craftPayload,
           storageStrategy: 'unknown-storage'
         });
         const payloadStream = await getStream(payloadFormData);
@@ -128,7 +138,7 @@ describe('Podcast Part Storage API V1 tests', () => {
         return server
           .inject({
             method: 'POST',
-            url: '/v1/podcast-parts',
+            url: '/v1/crafts',
             payload: payloadStream,
             headers: {
               ...payloadFormData.getHeaders(),
@@ -147,37 +157,9 @@ describe('Podcast Part Storage API V1 tests', () => {
       });
 
       describe('Requirements', () => {
-        it('should fail if missing podcastName', async () => {
-          const payloadFormData = objectToFormData({
-            ...podcastPartPayload,
-            podcastName: null
-          });
-          const payloadStream = await getStream(payloadFormData);
-
-          return server
-            .inject({
-              method: 'POST',
-              url: '/v1/podcast-parts',
-              payload: payloadStream,
-              headers: {
-                ...payloadFormData.getHeaders(),
-                authorization: accessToken
-              }
-            })
-            .then((response) => {
-              expect(response).to.be.a('object');
-              expect(response).to.include({ statusCode: 400 });
-              expect(response.result).to.deep.include({
-                statusCode: 400,
-                error: 'Bad Request',
-                message: '"podcastName" is required'
-              });
-            });
-        });
-
         it('should fail if missing filename', async () => {
           const payloadFormData = objectToFormData({
-            ...podcastPartPayload,
+            ...craftPayload,
             filename: null
           });
           const payloadStream = await getStream(payloadFormData);
@@ -185,7 +167,7 @@ describe('Podcast Part Storage API V1 tests', () => {
           return server
             .inject({
               method: 'POST',
-              url: '/v1/podcast-parts',
+              url: '/v1/crafts',
               payload: payloadStream,
               headers: {
                 ...payloadFormData.getHeaders(),
@@ -205,7 +187,7 @@ describe('Podcast Part Storage API V1 tests', () => {
 
         it('should fail if missing file', async () => {
           const payloadFormData = objectToFormData({
-            ...podcastPartPayload,
+            ...craftPayload,
             file: null
           });
           const payloadStream = await getStream(payloadFormData);
@@ -213,7 +195,7 @@ describe('Podcast Part Storage API V1 tests', () => {
           return server
             .inject({
               method: 'POST',
-              url: '/v1/podcast-parts',
+              url: '/v1/crafts',
               payload: payloadStream,
               headers: {
                 ...payloadFormData.getHeaders(),
@@ -234,19 +216,17 @@ describe('Podcast Part Storage API V1 tests', () => {
     });
 
     describe('Success', () => {
-      it('should succeed uploading podcast part on local', async () => {
+      it('should succeed uploading craft on local', async () => {
         const payloadFormData = objectToFormData({
-          ...podcastPartPayload,
-          file: fs.createReadStream(
-            path.resolve('./', 'test', 'files', 'blank.mp3')
-          )
+          ...craftPayload,
+          file: fs.createReadStream(path.resolve('./', 'test', 'files', 'blank.mp3'))
         });
         const payloadStream = await getStream(payloadFormData);
 
         return server
           .inject({
             method: 'POST',
-            url: '/v1/podcast-parts',
+            url: '/v1/crafts',
             payload: payloadStream,
             headers: {
               ...payloadFormData.getHeaders(),
@@ -259,21 +239,19 @@ describe('Podcast Part Storage API V1 tests', () => {
             expect(response?.result).to.include({
               statusCode: 200
             });
-            expect(response?.result?.data).to.have.property('filename');
             expect(response?.result?.data).to.include({
-              location: 'podcasts/integration-podcast',
+              filename: 'integration-craft-filename.mp3',
+              location: 'crafts',
               storageType: 'local',
               publicLink: undefined
             });
           });
       });
 
-      it('should succeed uploading podcast part on aws', async () => {
+      it('should succeed uploading craft on aws', async () => {
         const payloadFormData = objectToFormData({
-          ...podcastPartPayload,
-          file: fs.createReadStream(
-            path.resolve('./', 'test', 'files', 'blank.mp3')
-          ),
+          ...craftPayload,
+          file: fs.createReadStream(path.resolve('./', 'test', 'files', 'blank.mp3')),
           storageStrategy: 'aws'
         });
         const payloadStream = await getStream(payloadFormData);
@@ -281,7 +259,7 @@ describe('Podcast Part Storage API V1 tests', () => {
         return server
           .inject({
             method: 'POST',
-            url: '/v1/podcast-parts',
+            url: '/v1/crafts',
             payload: payloadStream,
             headers: {
               ...payloadFormData.getHeaders(),
@@ -294,21 +272,19 @@ describe('Podcast Part Storage API V1 tests', () => {
             expect(response?.result).to.include({
               statusCode: 200
             });
-            expect(response?.result?.data).to.have.property('filename');
             expect(response?.result?.data).to.include({
-              location: 'podcasts/integration-podcast',
+              filename: 'integration-craft-filename.mp3',
+              location: 'crafts',
               storageType: 'aws',
-              publicLink: `https://cosy-crafter-backup.s3.eu-west-3.amazonaws.com/podcasts/integration-podcast/${response?.result?.data?.filename}`
+              publicLink: `https://cosy-crafter-backup.s3.eu-west-3.amazonaws.com/crafts/${response?.result?.data?.filename}`
             });
           });
       });
 
-      it('should succeed uploading podcast part on scaleway', async () => {
+      it('should succeed uploading craft on scaleway', async () => {
         const payloadFormData = objectToFormData({
-          ...podcastPartPayload,
-          file: fs.createReadStream(
-            path.resolve('./', 'test', 'files', 'blank.mp3')
-          ),
+          ...craftPayload,
+          file: fs.createReadStream(path.resolve('./', 'test', 'files', 'blank.mp3')),
           storageStrategy: 'scaleway'
         });
         const payloadStream = await getStream(payloadFormData);
@@ -316,7 +292,7 @@ describe('Podcast Part Storage API V1 tests', () => {
         return server
           .inject({
             method: 'POST',
-            url: '/v1/podcast-parts',
+            url: '/v1/crafts',
             payload: payloadStream,
             headers: {
               ...payloadFormData.getHeaders(),
@@ -329,18 +305,18 @@ describe('Podcast Part Storage API V1 tests', () => {
             expect(response?.result).to.include({
               statusCode: 200
             });
-            expect(response?.result?.data).to.have.property('filename');
             expect(response?.result?.data).to.include({
-              location: 'podcasts/integration-podcast',
+              filename: 'integration-craft-filename.mp3',
+              location: 'crafts',
               storageType: 'scaleway',
-              publicLink: `https://cosy-crafter.s3.fr-par.scw.cloud/podcasts/integration-podcast/${response?.result?.data?.filename}`
+              publicLink: `https://cosy-crafter.s3.fr-par.scw.cloud/crafts/${response?.result?.data?.filename}`
             });
           });
       });
     });
   });
 
-  describe('Podcast Part Deletion', () => {
+  describe('Craft Deletion', () => {
     let localStoredFile;
     let awsStoredFile;
     let scalewayStoredFile;
@@ -367,11 +343,11 @@ describe('Podcast Part Storage API V1 tests', () => {
     });
 
     describe('Fails', () => {
-      it('should fail deleting a podcast part without jwt. HTTP 401', () => {
+      it('should fail deleting a craft without jwt. HTTP 401', () => {
         return server
           .inject({
             method: 'DELETE',
-            url: '/v1/podcast-parts',
+            url: '/v1/crafts',
             payload: {
               storageType: localStoredFile?.storageType,
               storagePath: localStoredFile?.location,
@@ -394,7 +370,7 @@ describe('Podcast Part Storage API V1 tests', () => {
           return server
             .inject({
               method: 'DELETE',
-              url: '/v1/podcast-parts',
+              url: '/v1/crafts',
               payload: {
                 storageFilename: localStoredFile?.filename,
                 storageFilename: localStoredFile?.filename
@@ -418,7 +394,7 @@ describe('Podcast Part Storage API V1 tests', () => {
           return server
             .inject({
               method: 'DELETE',
-              url: '/v1/podcast-parts',
+              url: '/v1/crafts',
               payload: {
                 storageType: localStoredFile?.storageType,
                 storageFilename: localStoredFile?.filename
@@ -442,7 +418,7 @@ describe('Podcast Part Storage API V1 tests', () => {
           return server
             .inject({
               method: 'DELETE',
-              url: '/v1/podcast-parts',
+              url: '/v1/crafts',
               payload: {
                 storageType: localStoredFile?.storageType,
                 storagePath: localStoredFile?.location
@@ -465,11 +441,11 @@ describe('Podcast Part Storage API V1 tests', () => {
     });
 
     describe('Success', () => {
-      it('should succeed deleting podcast part on local', () => {
+      it('should succeed deleting craft on local', () => {
         return server
           .inject({
             method: 'DELETE',
-            url: '/v1/podcast-parts',
+            url: '/v1/crafts',
             payload: {
               storageType: localStoredFile?.storageType,
               storagePath: localStoredFile?.location,
@@ -489,11 +465,11 @@ describe('Podcast Part Storage API V1 tests', () => {
           });
       });
 
-      it('should succeed deleting podcast part on aws', () => {
+      it('should succeed deleting craft on aws', () => {
         return server
           .inject({
             method: 'DELETE',
-            url: '/v1/podcast-parts',
+            url: '/v1/crafts',
             payload: {
               storageType: awsStoredFile?.storageType,
               storagePath: awsStoredFile?.location,
@@ -515,11 +491,11 @@ describe('Podcast Part Storage API V1 tests', () => {
           });
       });
 
-      it('should succeed deleting podcast part on scaleway', () => {
+      it('should succeed deleting craft on scaleway', () => {
         return server
           .inject({
             method: 'DELETE',
-            url: '/v1/podcast-parts',
+            url: '/v1/crafts',
             payload: {
               storageType: scalewayStoredFile?.storageType,
               storagePath: scalewayStoredFile?.location,

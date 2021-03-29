@@ -32,13 +32,9 @@ export default async () => {
 
     server.auth.strategy('service-jwt', 'jwt', {
       key: process.env.SERVICE_JWT_SECRET,
-      validate: async (decoded) =>
-        decoded.service ? { isValid: true } : { isValid: false },
+      validate: async (decoded) => ({ isValid: Boolean(decoded.service) }),
       errorFunc: (error, request) => {
-        logger.error(
-          'Storage Service Request JWT Error',
-          _.pick(request, ['info', 'auth'])
-        );
+        logger.error('Storage Service Request JWT Error', _.pick(request, ['info', 'auth']));
 
         return error;
       }
@@ -49,13 +45,14 @@ export default async () => {
 
     console.log('Server running on %s', server.info.uri);
     return server;
-  } catch (err) {
+  } catch (err) /* istanbul ignore next */ {
     /** @WARNING Change this to fatal when feature available in winston + sentry */
     logger.error('Fatal Error while starting the service', err);
     process.exit(0);
   }
 };
 
+// istanbul ignore if
 if (process.env.NODE_ENV !== 'test') {
   process.on('unhandledRejection', (err) => {
     /** @WARNING Change this to fatal when feature available in winston + sentry */
