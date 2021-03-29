@@ -787,6 +787,7 @@ describe('PartController unit test', () => {
 
       expect(error).to.be.an('error').and.to.be.an.instanceOf(Boom.Boom);
       expect(error?.output?.statusCode).to.be.equal(500);
+      PartModel.deleteMany = PartModel._backup.deleteMany;
     });
   });
 });

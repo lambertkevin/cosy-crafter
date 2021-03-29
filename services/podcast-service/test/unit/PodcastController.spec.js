@@ -387,6 +387,7 @@ describe('PodcastController unit test', () => {
 
       expect(error).to.be.an('error').and.to.be.an.instanceOf(Boom.Boom);
       expect(error?.output?.statusCode).to.be.equal(500);
+      PodcastModel.deleteMany = PodcastModel._backup.deleteMany;
     });
   });
 });

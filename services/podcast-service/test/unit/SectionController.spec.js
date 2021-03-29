@@ -288,7 +288,7 @@ describe('SectionController unit test', () => {
       expect(error?.output?.statusCode).to.be.equal(404);
     });
 
-    it('should update a section and return it not sanitized', async () => {
+    it('should delete a section and return it not sanitized', async () => {
       const response = await SectionController.remove([sectionToDelete._id]);
       expect(response).to.deep.include({ deleted: [sectionToDelete._id] });
     });
@@ -303,6 +303,7 @@ describe('SectionController unit test', () => {
 
       expect(error).to.be.an('error').and.to.be.an.instanceOf(Boom.Boom);
       expect(error?.output?.statusCode).to.be.equal(500);
+      SectionModel.deleteMany = SectionModel._backup.deleteMany;
     });
   });
 });
