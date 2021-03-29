@@ -10,18 +10,9 @@ import CustomError from '@cosy/custom-error';
 import { refresh, tokens } from '@cosy/auth';
 import { sentry, logger } from '@cosy/logger';
 import { makeAxiosInstance } from '@cosy/axios-utils';
-import {
-  fileSchema,
-  filesSchema,
-  jobIdSchema,
-  nameSchema,
-  socketSchema
-} from '../schemas';
+import { fileSchema, filesSchema, jobIdSchema, nameSchema, socketSchema } from '../schemas';
 import { getMp3ListDuration } from '../utils/Mp3Utils';
-import {
-  getCrossFadeFilters,
-  percentageFromTimemark
-} from '../utils/FfmpegUtils';
+import { getCrossFadeFilters, percentageFromTimemark } from '../utils/FfmpegUtils';
 
 const {
   STORAGE_SERVICE_NAME,
@@ -29,7 +20,20 @@ const {
   PODCAST_SERVICE_NAME,
   PODCAST_SERVICE_PORT
 } = process.env;
+
 let busyFlag = false;
+
+// istanbul ignore next
+export const setBusyFlag = (val) => {
+  if (process.env.NODE_ENV === 'test') {
+    busyFlag = val;
+  } else {
+    throw new CustomError(
+      'This feature is only available for testing purposes in test environement',
+      'AccessForbidden'
+    );
+  }
+};
 
 /**
  * Download a file and save it to cache
@@ -127,30 +131,20 @@ export const joinFiles = async (files, jobId, socket) => {
   const { duration, values } = await getMp3ListDuration(filesPaths);
 
   return new Promise((resolve, reject) => {
-    const mergedFilePath = path.join(
-      path.resolve('./'),
-      'tmp',
-      `${uuid()}.mp3`
-    );
+    const mergedFilePath = path.join(path.resolve('./'), 'tmp', `${uuid()}.mp3`);
     const ff = ffmpeg();
 
     for (let i = 0; i < files.length; i += 1) {
-      if (files[i] && fs.existsSync(files[i].path)) {
-        let inputOptions = [];
-        if (files[i].seek) {
-          inputOptions = [
-            `-ss ${files[i]?.seek?.start ?? 0}`,
-            `-to ${files[i]?.seek?.end ?? values[i]}`
-          ];
-        }
-        ff.input(files[i].path).inputOptions(inputOptions);
-      }
+      // File existence has already been tested by getMp3ListDuration
+      const inputOptions = files[i].seek
+        ? [`-ss ${files[i]?.seek?.start ?? 0}`, `-to ${files[i]?.seek?.end ?? values[i]}`]
+        : [];
+
+      ff.input(files[i].path).inputOptions(inputOptions);
     }
 
     const crossFadeFilters = getCrossFadeFilters(files, duration);
-    if (crossFadeFilters) {
-      ff.complexFilter(crossFadeFilters);
-    }
+    ff.complexFilter(crossFadeFilters);
 
     ff.on('start', () => {
       /* istanbul ignore if  */
@@ -161,7 +155,7 @@ export const joinFiles = async (files, jobId, socket) => {
         ff.kill('SIGSTOP');
         const transcodingKilled = new CustomError(
           'Transcoding stopped by worker',
-          'TranscodingKilled',
+          'TranscodingKilledError',
           499
         );
         reject(transcodingKilled);
@@ -190,9 +184,8 @@ export const joinFiles = async (files, jobId, socket) => {
         resolve(mergedFilePath);
       })
       .on('error', (err) => {
-        console.log(err);
         logger.error(`[${jobId}] Error while transcoding`, err);
-        reject(err);
+        reject(new CustomError('', '', null, err));
       })
       // .audioQuality(5) /** @WARNING Try different qualities to optimize transcoding time */
       .save(mergedFilePath);
@@ -209,10 +202,7 @@ export const joinFiles = async (files, jobId, socket) => {
  */
 export const upload = async (filepath, jobId) => {
   if (typeof filepath !== 'string') {
-    const filePathError = new CustomError(
-      'Filepath is invalid',
-      'FilePathError'
-    );
+    const filePathError = new CustomError('Filepath is invalid', 'FilePathError');
     throw filePathError;
   }
 
@@ -247,10 +237,7 @@ export const upload = async (filepath, jobId) => {
     const savedFile = savingFile?.data ?? {};
 
     if (_.isEmpty(savedFile)) {
-      const saveError = new CustomError(
-        'An error occured while saving the file',
-        'SaveError'
-      );
+      const saveError = new CustomError('An error occured while saving the file', 'SaveError');
       throw saveError;
     }
     return savedFile;
@@ -285,11 +272,7 @@ export const upload = async (filepath, jobId) => {
  *
  * @return {Promise<String|Error>}
  */
-export const createTranscodeJob = async (
-  { files, name, jobId } = {},
-  ack,
-  socket
-) => {
+export const createTranscodeJob = async ({ files, name, jobId } = {}, ack, socket) => {
   let transaction;
   try {
     const { error: argsError } = joi
@@ -312,11 +295,7 @@ export const createTranscodeJob = async (
     }
 
     if (busyFlag) {
-      const workerBusyError = new CustomError(
-        'Resource is busy',
-        'WorkerBusy',
-        419
-      );
+      const workerBusyError = new CustomError('Resource is busy', 'WorkerBusyError', 419);
       throw workerBusyError;
     }
 
@@ -397,15 +376,6 @@ export const createTranscodeJob = async (
     uploadingSpan?.finish();
     // --- End Uploading
 
-    if (!savedFile || _.isEmpty(savedFile)) {
-      throw new CustomError(
-        'The saved file is incorrect',
-        'IncorrectSavedFile',
-        417,
-        { mergedFilePath, jobId }
-      );
-    }
-
     // --- Start Saving Craft
     const payload = {
       name,
@@ -452,6 +422,8 @@ export const createTranscodeJob = async (
       }
     });
 
+    busyFlag = false;
+
     // Finish job
     return ack({
       statusCode: 201,
@@ -467,8 +439,11 @@ export const createTranscodeJob = async (
     }
 
     // Check if error is a custom error and not a native one
-    /* istanbul ignore else  */
     if (e instanceof CustomError) {
+      if (e?.name !== 'WorkerBusyError') {
+        busyFlag = false;
+      }
+
       return ack({
         statusCode: e.code,
         errorName: e.name,
@@ -476,7 +451,7 @@ export const createTranscodeJob = async (
       });
     }
 
-    /* istanbul ignore next  */
+    busyFlag = false;
     return ack({
       statusCode: 500,
       errorName: e.name,
@@ -484,7 +459,6 @@ export const createTranscodeJob = async (
     });
   } finally {
     transaction?.finish();
-    busyFlag = false;
   }
 };
 
