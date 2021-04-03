@@ -1,0 +1,111 @@
+# This workflow will do a clean install of node dependencies, build the source code and run tests across different versions of node
+# For more information see: https://help.github.com/actions/language-and-framework-guides/using-nodejs-with-github-actions
+
+name: Testing
+
+on:
+  push:
+    branches: [develop]
+  pull_request:
+    branches: [develop]
+
+jobs:
+  tests:
+    name: Checking libs and services tests
+
+    runs-on: ubuntu-18.04
+    strategy:
+      matrix:
+        node-version: [12.18.4]
+
+    steps:
+      - uses: actions/checkout@v2
+      - name: Use Node.js ${{ matrix.node-version }}
+
+        uses: actions/setup-node@v1
+        with:
+          node-version: ${{ matrix.node-version }}
+
+      - name: Install FFMpeg
+        run: |
+          sudo add-apt-repository -y ppa:jonathonf/ffmpeg-4
+          sudo apt-get update
+          sudo apt-get install -y ffmpeg
+
+      - name: Pre-build + Install packages
+        run: ./scripts/pre-build.sh && ./scripts/install.sh
+
+      - uses: xom9ikk/dotenv@v1.0.2
+        with:
+          path: .github/workflows
+          mode: ci
+
+      - name: Testing @cosy/array-to-projection
+        run: (cd shared/@cosy/array-to-projection && npm run test -- --bail false --timeout 20000)
+      - name: Testing @cosy/auth
+        run: (cd shared/@cosy/auth && npm run test -- --bail false --timeout 20000)
+      - name: Testing @cosy/axios-utils
+        run: (cd shared/@cosy/axios-utils && npm run test -- --bail false --timeout 20000)
+      - name: Testing @cosy/hapi-fail-validation-handler
+        run: (cd shared/@cosy/hapi-fail-validation-handler && npm run test -- --bail false --timeout 20000)
+      - name: Testing @cosy/json-api-standardize
+        run: (cd shared/@cosy/json-api-standardize && npm run test -- --bail false --timeout 20000)
+      - name: Testing @cosy/logger
+        run: (cd shared/@cosy/logger && npm run test -- --bail false --timeout 20000)
+      - name: Testing @cosy/rsa-utils
+        run: (cd shared/@cosy/rsa-utils && npm run test -- --bail false --timeout 20000)
+      - name: Testing @cosy/schema-utils
+        run: (cd shared/@cosy/schema-utils && npm run test -- --bail false --timeout 20000)
+      - name: Testing auth-service
+        run: (cd services/auth-service && npm run test -- --bail false --timeout 20000)
+      - name: Testing podcast-service
+        run: (cd services/podcast-service && npm run test -- --bail false --timeout 20000)
+      - name: Testing pool-service
+        run: (cd services/pool-service && npm run test -- --bail false --timeout 20000)
+      - name: Testing storage-service
+        run: (cd services/storage-service && npm run test -- --bail false --timeout 20000)
+      - name: Testing transcoder-service
+        run: (cd services/transcoder-service && npm run test -- --bail false --timeout 20000)
+
+  coverage:
+    name: Code Coverage
+
+    runs-on: ubuntu-18.04
+    strategy:
+      matrix:
+        node-version: [12.18.4]
+
+    steps:
+      - uses: actions/checkout@v2
+      - name: Use Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v1
+        with:
+          node-version: ${{ matrix.node-version }}
+
+      - name: Install FFMpeg
+        run: |
+          sudo add-apt-repository -y ppa:jonathonf/ffmpeg-4
+          sudo apt-get update
+          sudo apt-get install -y ffmpeg
+
+      - name: Pre-build + Install packages
+        run: ./scripts/pre-build.sh && ./scripts/install.sh
+
+      - name: Install nyc dependencies
+        run: npm i @babel/register @babel/core
+
+      - uses: xom9ikk/dotenv@v1.0.2
+        with:
+          path: .github/workflows
+          mode: ci
+
+      - name: Nyc
+        run: npx nyc ./scripts/test.sh
+
+      - name: Uploading to codecov.io
+        run: npx codecov
+        env:
+          CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
+
+
+
