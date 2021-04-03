@@ -18,8 +18,8 @@ describe('Socket Workers Api tests', () => {
     server = await init();
   });
 
-  after(() => {
-    authServiceChild.kill('SIGINT');
+  after(async () => {
+    await authServiceChild.kill();
     server.close();
   });
 

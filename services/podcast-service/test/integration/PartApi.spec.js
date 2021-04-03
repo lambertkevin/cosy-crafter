@@ -28,8 +28,8 @@ describe('Parts API V1 tests', () => {
     });
   });
 
-  after(() => {
-    authServiceChild.kill('SIGINT');
+  after(async () => {
+    await authServiceChild.kill();
     server.stop();
   });
 
