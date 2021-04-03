@@ -1,3 +1,5 @@
+[![codecov](https://codecov.io/gh/lambertkevin/cosy-crafter/branch/develop/graph/badge.svg?token=X7K9WC1S9T)](https://codecov.io/gh/lambertkevin/cosy-crafter)
+
 # Cosy Crafter
 
 ## What is it
