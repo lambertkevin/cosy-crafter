@@ -14,8 +14,8 @@ describe('Service global api integration tests', () => {
     server = await init();
   });
 
-  after(() => {
-    authServiceChild.kill('SIGINT');
+  after(async () => {
+    await authServiceChild.kill();
   });
 
   it('should respond the details of the transcoding queue', async () => {

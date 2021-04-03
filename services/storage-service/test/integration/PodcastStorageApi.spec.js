@@ -19,8 +19,8 @@ describe('Podcast Part Storage API V1 tests', () => {
     s3FakeServers = await mockS3();
   });
 
-  after(() => {
-    authServiceChild.kill('SIGINT');
+  after(async () => {
+    await authServiceChild.kill();
     server.stop();
     fs.rmdirSync(path.resolve('./bucket/tests/'), { recursive: true });
     s3FakeServers.forEach((s3) => s3.close());
