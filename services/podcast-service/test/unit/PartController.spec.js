@@ -47,14 +47,15 @@ describe('PartController unit test', () => {
       PartModel._backup = {};
       mongoServer = new MongoMemoryServer();
       const uri = await mongoServer.getUri();
-      await mongoose.connect(uri, mongooseOpts);
+      const conn = await mongoose.connect(uri, mongooseOpts);
+      delete conn.connections[0].$wasForceClosed;
       section = await createSection({ name: 'section-test ' });
       podcast = await createPodcast({ name: 'podcast-test', edition: 12 });
     });
 
     afterEach(async () => {
+      await mongoose.connection.close(true);
       await mongoServer.stop();
-      await mongoose.disconnect();
     });
 
     it('should find no part', async () => {
@@ -158,14 +159,15 @@ describe('PartController unit test', () => {
       PartModel._backup = {};
       mongoServer = new MongoMemoryServer();
       const uri = await mongoServer.getUri();
-      await mongoose.connect(uri, mongooseOpts);
+      const conn = await mongoose.connect(uri, mongooseOpts);
+      delete conn.connections[0].$wasForceClosed;
       section = await createSection({ name: 'section-test ' });
       podcast = await createPodcast({ name: 'podcast-test', edition: 12 });
     });
 
     afterEach(async () => {
+      await mongoose.connection.close(true);
       await mongoServer.stop();
-      await mongoose.disconnect();
     });
 
     it('should find no part', async () => {
@@ -239,14 +241,15 @@ describe('PartController unit test', () => {
       PartModel._backup = {};
       mongoServer = new MongoMemoryServer();
       const uri = await mongoServer.getUri();
-      await mongoose.connect(uri, mongooseOpts);
+      const conn = await mongoose.connect(uri, mongooseOpts);
+      delete conn.connections[0].$wasForceClosed;
       section = await createSection({ name: 'section-test ' });
       podcast = await createPodcast({ name: 'podcast-test', edition: 12 });
     });
 
     afterEach(async () => {
+      await mongoose.connection.close(true);
       await mongoServer.stop();
-      await mongoose.disconnect();
     });
 
     it('should create a part and return it sanitized', async () => {
@@ -479,7 +482,8 @@ describe('PartController unit test', () => {
       PartModel._backup = {};
       mongoServer = new MongoMemoryServer();
       const uri = await mongoServer.getUri();
-      await mongoose.connect(uri, mongooseOpts);
+      const conn = await mongoose.connect(uri, mongooseOpts);
+      delete conn.connections[0].$wasForceClosed;
       section = await createSection({ name: 'section-test' });
       podcast = await createPodcast({ name: 'podcast-test', edition: 12 });
       partToUpdate = await PartController.create(
@@ -495,8 +499,8 @@ describe('PartController unit test', () => {
     });
 
     afterEach(async () => {
+      await mongoose.connection.close(true);
       await mongoServer.stop();
-      await mongoose.disconnect();
     });
 
     it('should update a part and return it sanitized', async () => {
@@ -768,7 +772,8 @@ describe('PartController unit test', () => {
       PartModel._backup = {};
       mongoServer = new MongoMemoryServer();
       const uri = await mongoServer.getUri();
-      await mongoose.connect(uri, mongooseOpts);
+      const conn = await mongoose.connect(uri, mongooseOpts);
+      delete conn.connections[0].$wasForceClosed;
       section = await createSection({ name: 'section-test' });
       podcast = await createPodcast({ name: 'podcast-test', edition: 12 });
       partToDelete = await PartController.create({
@@ -781,8 +786,8 @@ describe('PartController unit test', () => {
     });
 
     afterEach(async () => {
+      await mongoose.connection.close(true);
       await mongoServer.stop();
-      await mongoose.disconnect();
     });
 
     it("should return a 404 if part doesn't exist", async () => {
