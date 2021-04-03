@@ -6,5 +6,9 @@
   "useInlineSourceMaps": false,
   "instrument": false,
   "require": ["@babel/register"],
-  "exclude": ["**/node_modules", "**/test/*", "**/coverage", "**/.*"]
+  "exclude": ["**/node_modules", "**/test/*", "**/coverage", "**/.*"],
+  "branches": 100,
+  "lines": 100,
+  "functions": 100,
+  "statements": 100
 }

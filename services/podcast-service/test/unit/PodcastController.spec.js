@@ -24,12 +24,13 @@ describe('PodcastController unit test', () => {
       PodcastModel._backup = {};
       mongoServer = new MongoMemoryServer();
       const uri = await mongoServer.getUri();
-      await mongoose.connect(uri, mongooseOpts);
+      const conn = await mongoose.connect(uri, mongooseOpts);
+      delete conn.connections[0].$wasForceClosed;
     });
 
     afterEach(async () => {
+      await mongoose.connection.close(true);
       await mongoServer.stop();
-      await mongoose.disconnect();
     });
 
     it('should find no podcast', async () => {
@@ -119,12 +120,13 @@ describe('PodcastController unit test', () => {
       PodcastModel._backup = {};
       mongoServer = new MongoMemoryServer();
       const uri = await mongoServer.getUri();
-      await mongoose.connect(uri, mongooseOpts);
+      const conn = await mongoose.connect(uri, mongooseOpts);
+      delete conn.connections[0].$wasForceClosed;
     });
 
     afterEach(async () => {
+      await mongoose.connection.close(true);
       await mongoServer.stop();
-      await mongoose.disconnect();
     });
 
     it('should find no podcast', async () => {
@@ -182,12 +184,13 @@ describe('PodcastController unit test', () => {
       PodcastModel._backup = {};
       mongoServer = new MongoMemoryServer();
       const uri = await mongoServer.getUri();
-      await mongoose.connect(uri, mongooseOpts);
+      const conn = await mongoose.connect(uri, mongooseOpts);
+      delete conn.connections[0].$wasForceClosed;
     });
 
     afterEach(async () => {
+      await mongoose.connection.close(true);
       await mongoServer.stop();
-      await mongoose.disconnect();
     });
 
     it('should create a podcast and return it sanitized', async () => {
@@ -251,7 +254,8 @@ describe('PodcastController unit test', () => {
       PodcastModel._backup = {};
       mongoServer = new MongoMemoryServer();
       const uri = await mongoServer.getUri();
-      await mongoose.connect(uri, mongooseOpts);
+      const conn = await mongoose.connect(uri, mongooseOpts);
+      delete conn.connections[0].$wasForceClosed;
       podcastToUpdate = await PodcastController.create(
         {
           name: 'podcast-1',
@@ -263,8 +267,8 @@ describe('PodcastController unit test', () => {
     });
 
     afterEach(async () => {
+      await mongoose.connection.close(true);
       await mongoServer.stop();
-      await mongoose.disconnect();
     });
 
     it('should update a podcast and return it sanitized', async () => {
@@ -352,7 +356,8 @@ describe('PodcastController unit test', () => {
       PodcastModel._backup = {};
       mongoServer = new MongoMemoryServer();
       const uri = await mongoServer.getUri();
-      await mongoose.connect(uri, mongooseOpts);
+      const conn = await mongoose.connect(uri, mongooseOpts);
+      delete conn.connections[0].$wasForceClosed;
       podcastToDelete = await PodcastController.create({
         name: 'podcast-1',
         edition: 1,
@@ -361,8 +366,8 @@ describe('PodcastController unit test', () => {
     });
 
     afterEach(async () => {
+      await mongoose.connection.close(true);
       await mongoServer.stop();
-      await mongoose.disconnect();
     });
 
     it("should return a 404 if podcast doesn't exist", async () => {

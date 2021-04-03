@@ -23,12 +23,13 @@ describe('TokenBlacklistController unit test', () => {
       TokenBlacklistModel._backup = {};
       mongoServer = new MongoMemoryServer();
       const uri = await mongoServer.getUri();
-      await mongoose.connect(uri, mongooseOpts);
+      const conn = await mongoose.connect(uri, mongooseOpts);
+      delete conn.connections[0].$wasForceClosed;
     });
 
     afterEach(async () => {
+      await mongoose.connection.close(true);
       await mongoServer.stop();
-      await mongoose.disconnect();
     });
 
     it('should find no token', async () => {
@@ -92,12 +93,13 @@ describe('TokenBlacklistController unit test', () => {
       TokenBlacklistModel._backup = {};
       mongoServer = new MongoMemoryServer();
       const uri = await mongoServer.getUri();
-      await mongoose.connect(uri, mongooseOpts);
+      const conn = await mongoose.connect(uri, mongooseOpts);
+      delete conn.connections[0].$wasForceClosed;
     });
 
     afterEach(async () => {
+      await mongoose.connection.close(true);
       await mongoServer.stop();
-      await mongoose.disconnect();
     });
 
     it('should find no token', async () => {
@@ -145,12 +147,13 @@ describe('TokenBlacklistController unit test', () => {
       TokenBlacklistModel._backup = {};
       mongoServer = new MongoMemoryServer();
       const uri = await mongoServer.getUri();
-      await mongoose.connect(uri, mongooseOpts);
+      const conn = await mongoose.connect(uri, mongooseOpts);
+      delete conn.connections[0].$wasForceClosed;
     });
 
     afterEach(async () => {
+      await mongoose.connection.close(true);
       await mongoServer.stop();
-      await mongoose.disconnect();
     });
 
     it('should find no token', async () => {
@@ -198,12 +201,13 @@ describe('TokenBlacklistController unit test', () => {
       TokenBlacklistModel._backup = {};
       mongoServer = new MongoMemoryServer();
       const uri = await mongoServer.getUri();
-      await mongoose.connect(uri, mongooseOpts);
+      const conn = await mongoose.connect(uri, mongooseOpts);
+      delete conn.connections[0].$wasForceClosed;
     });
 
     afterEach(async () => {
+      await mongoose.connection.close(true);
       await mongoServer.stop();
-      await mongoose.disconnect();
     });
 
     it('should create a token and return it sanitized', async () => {
@@ -252,7 +256,8 @@ describe('TokenBlacklistController unit test', () => {
       TokenBlacklistModel._backup = {};
       mongoServer = new MongoMemoryServer();
       const uri = await mongoServer.getUri();
-      await mongoose.connect(uri, mongooseOpts);
+      const conn = await mongoose.connect(uri, mongooseOpts);
+      delete conn.connections[0].$wasForceClosed;
       tokenToUpdate = await TokenBlacklistController.create({
         jwtid: uuid(),
         type: 'access'
@@ -260,8 +265,8 @@ describe('TokenBlacklistController unit test', () => {
     });
 
     afterEach(async () => {
+      await mongoose.connection.close(true);
       await mongoServer.stop();
-      await mongoose.disconnect();
     });
 
     it('should update a token and return it sanitized', async () => {
@@ -334,7 +339,8 @@ describe('TokenBlacklistController unit test', () => {
       TokenBlacklistModel._backup = {};
       mongoServer = new MongoMemoryServer();
       const uri = await mongoServer.getUri();
-      await mongoose.connect(uri, mongooseOpts);
+      const conn = await mongoose.connect(uri, mongooseOpts);
+      delete conn.connections[0].$wasForceClosed;
       tokenToDelete = await TokenBlacklistController.create({
         jwtid: uuid(),
         type: 'access'
@@ -342,8 +348,8 @@ describe('TokenBlacklistController unit test', () => {
     });
 
     afterEach(async () => {
+      await mongoose.connection.close(true);
       await mongoServer.stop();
-      await mongoose.disconnect();
     });
 
     it("should return a 404 if token doesn't exist", async () => {

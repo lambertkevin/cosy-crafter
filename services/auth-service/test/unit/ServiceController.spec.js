@@ -27,12 +27,14 @@ describe('ServiceController unit test', () => {
       ServiceModel._backup = {};
       mongoServer = new MongoMemoryServer();
       const uri = await mongoServer.getUri();
-      await mongoose.connect(uri, mongooseOpts);
+      const conn = await mongoose.connect(uri, mongooseOpts);
+      delete conn.connections[0].$wasForceClosed;
+
     });
 
     afterEach(async () => {
+      await mongoose.connection.close(true);
       await mongoServer.stop();
-      await mongoose.disconnect();
     });
 
     it('should find no service', async () => {
@@ -96,12 +98,13 @@ describe('ServiceController unit test', () => {
       ServiceModel._backup = {};
       mongoServer = new MongoMemoryServer();
       const uri = await mongoServer.getUri();
-      await mongoose.connect(uri, mongooseOpts);
+      const conn = await mongoose.connect(uri, mongooseOpts);
+      delete conn.connections[0].$wasForceClosed;
     });
 
     afterEach(async () => {
+      await mongoose.connection.close(true);
       await mongoServer.stop();
-      await mongoose.disconnect();
     });
 
     it('should find no service', async () => {
@@ -163,12 +166,13 @@ describe('ServiceController unit test', () => {
       ServiceModel._backup = {};
       mongoServer = new MongoMemoryServer();
       const uri = await mongoServer.getUri();
-      await mongoose.connect(uri, mongooseOpts);
+      const conn = await mongoose.connect(uri, mongooseOpts);
+      delete conn.connections[0].$wasForceClosed;
     });
 
     afterEach(async () => {
+      await mongoose.connection.close(true);
       await mongoServer.stop();
-      await mongoose.disconnect();
     });
 
     it('should find no service', async () => {
@@ -231,12 +235,14 @@ describe('ServiceController unit test', () => {
       ServiceModel._backup = {};
       mongoServer = new MongoMemoryServer();
       const uri = await mongoServer.getUri();
-      await mongoose.connect(uri, mongooseOpts);
+      const conn = await mongoose.connect(uri, mongooseOpts);
+      delete conn.connections[0].$wasForceClosed;
+
     });
 
     afterEach(async () => {
+      await mongoose.connection.close(true);
       await mongoServer.stop();
-      await mongoose.disconnect();
     });
 
     it('should create a service and return it sanitized', async () => {
@@ -306,7 +312,9 @@ describe('ServiceController unit test', () => {
       ServiceModel._backup = {};
       mongoServer = new MongoMemoryServer();
       const uri = await mongoServer.getUri();
-      await mongoose.connect(uri, mongooseOpts);
+      const conn = await mongoose.connect(uri, mongooseOpts);
+      delete conn.connections[0].$wasForceClosed;
+
       serviceToUpdate = await ServiceController.create({
         identifier: 'service-1',
         ip: 'private',
@@ -315,8 +323,8 @@ describe('ServiceController unit test', () => {
     });
 
     afterEach(async () => {
+      await mongoose.connection.close(true);
       await mongoServer.stop();
-      await mongoose.disconnect();
     });
 
     it('should update a service and return it sanitized', async () => {
@@ -411,7 +419,9 @@ describe('ServiceController unit test', () => {
       ServiceModel._backup = {};
       mongoServer = new MongoMemoryServer();
       const uri = await mongoServer.getUri();
-      await mongoose.connect(uri, mongooseOpts);
+      const conn = await mongoose.connect(uri, mongooseOpts);
+      delete conn.connections[0].$wasForceClosed;
+
       serviceToDelete = await ServiceController.create({
         identifier: 'service-1',
         ip: 'private',
@@ -420,8 +430,8 @@ describe('ServiceController unit test', () => {
     });
 
     afterEach(async () => {
+      await mongoose.connection.close(true);
       await mongoServer.stop();
-      await mongoose.disconnect();
     });
 
     it("should return a 404 if service doesn't exist", async () => {
@@ -455,7 +465,9 @@ describe('ServiceController unit test', () => {
     before(async () => {
       mongoServer = new MongoMemoryServer();
       const uri = await mongoServer.getUri();
-      await mongoose.connect(uri, mongooseOpts);
+      const conn = await mongoose.connect(uri, mongooseOpts);
+      delete conn.connections[0].$wasForceClosed;
+
       await ServiceController.create({
         identifier: 'service-local',
         ip: 'private',
@@ -470,7 +482,7 @@ describe('ServiceController unit test', () => {
 
     after(async () => {
       await mongoServer.stop();
-      await mongoose.disconnect();
+      await mongoose.connection.close();
     });
 
     it('should return 401 if service is remote and request ip are not matching', async () => {
@@ -530,7 +542,9 @@ describe('ServiceController unit test', () => {
     before(async () => {
       mongoServer = new MongoMemoryServer();
       const uri = await mongoServer.getUri();
-      await mongoose.connect(uri, mongooseOpts);
+      const conn = await mongoose.connect(uri, mongooseOpts);
+      delete conn.connections[0].$wasForceClosed;
+
       await ServiceController.create({
         identifier: 'service-1',
         ip: 'private',
@@ -540,7 +554,7 @@ describe('ServiceController unit test', () => {
 
     after(async () => {
       await mongoServer.stop();
-      await mongoose.disconnect();
+      await mongoose.connection.close();
     });
 
     beforeEach(() => {

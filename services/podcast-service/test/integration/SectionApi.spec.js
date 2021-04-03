@@ -13,8 +13,8 @@ describe('Sections API V1 tests', () => {
     server = await init();
   });
 
-  after(() => {
-    authServiceChild.kill('SIGINT');
+  after(async () => {
+    await authServiceChild.kill();
     server.stop();
   });
 

@@ -66,8 +66,8 @@ describe("@cosy/auth unit tests", () => {
       authServiceChild = await startAuthService();
     });
 
-    after(() => {
-      authServiceChild.kill("SIGINT");
+    after(async () => {
+      await authServiceChild.kill();
     });
 
     beforeEach(() => {
@@ -172,8 +172,9 @@ describe("@cosy/auth unit tests", () => {
       await register();
     });
 
-    after(() => {
-      authServiceChild.kill("SIGINT");
+    after(async () => {
+      await authServiceChild.kill();
+
       if (fs.existsSync(credentialsPath)) {
         fs.unlinkSync(credentialsPath);
       }
@@ -291,8 +292,9 @@ describe("@cosy/auth unit tests", () => {
       authServiceChild = await startAuthService();
     });
 
-    afterEach(() => {
-      authServiceChild.kill("SIGINT");
+    afterEach(async () => {
+      await authServiceChild.kill();
+
       if (fs.existsSync(credentialsPath)) {
         fs.unlinkSync(credentialsPath);
       }
@@ -340,8 +342,8 @@ describe("@cosy/auth unit tests", () => {
       authServiceChild = await startAuthService();
     });
 
-    after(() => {
-      authServiceChild.kill("SIGINT");
+    after(async () => {
+      await authServiceChild.kill();
     });
 
     it("should fail refreshing if the tokens are empty", async () => {

@@ -25,12 +25,13 @@ describe('CraftController unit test', () => {
       CraftModel._backup = {};
       mongoServer = new MongoMemoryServer();
       const uri = await mongoServer.getUri();
-      await mongoose.connect(uri, mongooseOpts);
+      const conn = await mongoose.connect(uri, mongooseOpts);
+      delete conn.connections[0].$wasForceClosed;
     });
 
     afterEach(async () => {
+      await mongoose.connection.close(true);
       await mongoServer.stop();
-      await mongoose.disconnect();
     });
 
     it('should find no craft', async () => {
@@ -130,12 +131,13 @@ describe('CraftController unit test', () => {
       CraftModel._backup = {};
       mongoServer = new MongoMemoryServer();
       const uri = await mongoServer.getUri();
-      await mongoose.connect(uri, mongooseOpts);
+      const conn = await mongoose.connect(uri, mongooseOpts);
+      delete conn.connections[0].$wasForceClosed;
     });
 
     afterEach(async () => {
+      await mongoose.connection.close(true);
       await mongoServer.stop();
-      await mongoose.disconnect();
     });
 
     it('should find no craft', async () => {
@@ -195,12 +197,13 @@ describe('CraftController unit test', () => {
       CraftModel._backup = {};
       mongoServer = new MongoMemoryServer();
       const uri = await mongoServer.getUri();
-      await mongoose.connect(uri, mongooseOpts);
+      const conn = await mongoose.connect(uri, mongooseOpts);
+      delete conn.connections[0].$wasForceClosed;
     });
 
     afterEach(async () => {
+      await mongoose.connection.close(true);
       await mongoServer.stop();
-      await mongoose.disconnect();
     });
 
     it('should create a craft and return it sanitized', async () => {
@@ -270,7 +273,8 @@ describe('CraftController unit test', () => {
       CraftModel._backup = {};
       mongoServer = new MongoMemoryServer();
       const uri = await mongoServer.getUri();
-      await mongoose.connect(uri, mongooseOpts);
+      const conn = await mongoose.connect(uri, mongooseOpts);
+      delete conn.connections[0].$wasForceClosed;
       craftToUpdate = await CraftController.create(
         {
           name: 'craft-1',
@@ -284,8 +288,8 @@ describe('CraftController unit test', () => {
     });
 
     afterEach(async () => {
+      await mongoose.connection.close(true);
       await mongoServer.stop();
-      await mongoose.disconnect();
     });
 
     it('should update a craft and return it sanitized', async () => {
@@ -373,7 +377,8 @@ describe('CraftController unit test', () => {
       CraftModel._backup = {};
       mongoServer = new MongoMemoryServer();
       const uri = await mongoServer.getUri();
-      await mongoose.connect(uri, mongooseOpts);
+      const conn = await mongoose.connect(uri, mongooseOpts);
+      delete conn.connections[0].$wasForceClosed;
       craftToDelete = await CraftController.create({
         name: 'craft-1',
         jobId: uuid(),
@@ -384,8 +389,8 @@ describe('CraftController unit test', () => {
     });
 
     afterEach(async () => {
+      await mongoose.connection.close(true);
       await mongoServer.stop();
-      await mongoose.disconnect();
     });
 
     it("should return a 404 if craft doesn't exist", async () => {
