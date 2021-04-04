@@ -1,0 +1,28 @@
+{
+  "name": "gateway-service",
+  "version": "0.0.1",
+  "description": "API Gateway",
+  "main": "src/index.js",
+  "scripts": {
+    "start": "pwd && babel-node --ignore='../../**/node_modules' ./src/index.js",
+    "dev": "nodemon --exec npm start -e js",
+    "lint": "eslint ./src",
+    "debug": "npm run start --inspect",
+    "test": "NODE_ENV=test mocha test/**/*.spec.js"
+  },
+  "author": "Kévin Lambert",
+  "license": "ISC",
+  "dependencies": {
+    "@babel/node": "^7.13.13",
+    "@babel/preset-env": "^7.13.12",
+    "@sentry/node": "^6.2.5",
+    "@sentry/tracing": "^6.2.5",
+    "dotenv": "^8.2.0",
+    "express": "^4.17.1",
+    "http-proxy-middleware": "^1.1.0"
+  },
+  "devDependencies": {
+    "babel-plugin-istanbul": "^6.0.0",
+    "nodemon": "^2.0.7"
+  }
+}

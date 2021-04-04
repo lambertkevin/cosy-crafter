@@ -187,3 +187,28 @@ services:
     command: ./run.sh
     links:
       - auth-service
+
+  gateway-service:
+    container_name: gateway-service
+    image: "node:12.18"
+    user: "node"
+    working_dir: /home/node/app
+    volumes:
+      - ./services/gateway-service:/home/node/app
+      - ./shared:/home/shared
+      - type: bind
+        source: .keys/auth.pem
+        target: /.keys/auth.pem
+        read_only: true
+    expose:
+      - ${GATEWAY_SERVICE_PORT}
+    ports:
+      - "${GATEWAY_SERVICE_PORT}:${GATEWAY_SERVICE_PORT}"
+    env_file:
+      - services.env
+    environment:
+      - NODE_ENV=${NODE_ENV}
+      - SENTRY_DSN_GATEWAY_SERVICE=${SENTRY_DSN_GATEWAY_SERVICE}
+    command: ./run.sh
+    links:
+      - auth-service
