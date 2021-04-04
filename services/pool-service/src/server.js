@@ -12,8 +12,8 @@ export default async () => {
   try {
     await auth();
     const app = express();
-    const server = app.listen(nodeConfig.apiPort, () => {
-      console.log(`Server running on http://${os.hostname()}:${nodeConfig.apiPort}`);
+    const server = app.listen(nodeConfig.port, () => {
+      console.log(`Server running on http://${os.hostname()}:${nodeConfig.port}`);
     });
     const io = socket(server, {
       cors: {
