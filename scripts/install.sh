@@ -15,3 +15,4 @@ set +e
 (cd ./services/pool-service  && rm -rf node_modules && npm i)
 (cd ./services/storage-service  && rm -rf node_modules && npm i)
 (cd ./services/transcoder-service  && rm -rf node_modules && npm i)
+(cd ./services/gateway-service  && rm -rf node_modules && npm i)

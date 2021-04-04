@@ -14,3 +14,4 @@ set +e
 && (cd ./services/pool-service && npm run test  -- --timeout 40000) \
 && (cd ./services/storage-service && npm run test  -- --timeout 40000) \
 && (cd ./services/transcoder-service && npm run test  -- --timeout 40000)
+&& (cd ./services/gateway-service && npm run test  -- --timeout 40000)
