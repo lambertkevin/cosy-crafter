@@ -23,7 +23,7 @@ _At this stage of the project, this is the used architecture. It will obviously 
 
 - REST Api microservices: `hapi@19`
 - Websocket microservices: `express@4` + `socket-io@3`
-- Transcoding microservice: `ffmpeg@latest` + `fluent-ffmpeg@2`
+- Transcoding microservice: `ffmpeg@4.3.2` + `fluent-ffmpeg@2`
 - Environment: `docker` + `docker-compose@2.4`
 
 ## Security
