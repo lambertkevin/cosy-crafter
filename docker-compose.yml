@@ -33,10 +33,6 @@ services:
         source: .keys/auth.pem
         target: /.keys/auth.pem
         read_only: true
-    expose:
-      - ${PODCAST_SERVICE_PORT}
-    ports:
-      - "${PODCAST_SERVICE_PORT}:${PODCAST_SERVICE_PORT}"
     env_file:
       - services.env
     environment:
@@ -65,10 +61,6 @@ services:
         source: .keys/auth.pem
         target: /.keys/auth.pem
         read_only: true
-    expose:
-      - ${STORAGE_SERVICE_PORT}
-    ports:
-      - "${STORAGE_SERVICE_PORT}:${STORAGE_SERVICE_PORT}"
     env_file:
       - services.env
     environment:
@@ -102,10 +94,6 @@ services:
         source: .keys
         target: /.keys
         read_only: true
-    expose:
-      - ${AUTH_SERVICE_PORT}
-    ports:
-      - "${AUTH_SERVICE_PORT}:${AUTH_SERVICE_PORT}"
     env_file:
       - services.env
     environment:
@@ -171,10 +159,6 @@ services:
         source: .keys/pool.pem
         target: /.keys/pool.pem
         read_only: true
-    expose:
-      - ${POOL_SERVICE_PORT}
-    ports:
-      - "${POOL_SERVICE_PORT}:${POOL_SERVICE_PORT}"
     env_file:
       - services.env
     environment:
@@ -200,8 +184,6 @@ services:
         source: .keys/auth.pem
         target: /.keys/auth.pem
         read_only: true
-    expose:
-      - ${GATEWAY_SERVICE_PORT}
     ports:
       - "${GATEWAY_SERVICE_PORT}:${GATEWAY_SERVICE_PORT}"
     env_file:
