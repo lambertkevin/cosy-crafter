@@ -23,7 +23,15 @@
     "http-proxy-middleware": "^1.1.0"
   },
   "devDependencies": {
+    "@babel/polyfill": "^7.12.1",
+    "@babel/register": "^7.13.14",
     "babel-plugin-istanbul": "^6.0.0",
-    "nodemon": "^2.0.7"
+    "chai": "^4.3.4",
+    "chai-http": "^4.3.0",
+    "json-server": "^0.16.3",
+    "mocha": "^8.3.2",
+    "nodemon": "^2.0.7",
+    "socket.io": "^4.0.1",
+    "socket.io-client": "^4.0.1"
   }
 }

@@ -44,7 +44,10 @@ export default () => {
     createProxyMiddleware({
       target: `http://${process.env.PODCAST_SERVICE_NAME}:${process.env.PODCAST_SERVICE_PORT}`,
       pathRewrite: { '^/podcast': '' },
-      logLevel: 'debug'
+      // prettier-ignore
+      logLevel: /* istanbul ignore next */ process.env.NODE_ENV === 'test'
+          ? 'silent'
+          : 'debug'
     })
   );
 
@@ -58,7 +61,10 @@ export default () => {
     createProxyMiddleware({
       target: `http://${process.env.AUTH_SERVICE_NAME}:${process.env.AUTH_SERVICE_PORT}`,
       pathRewrite: { '^/auth': '' },
-      logLevel: 'debug'
+      // prettier-ignore
+      logLevel: /* istanbul ignore next */ process.env.NODE_ENV === 'test'
+          ? 'silent'
+          : 'debug'
     })
   );
 
@@ -72,7 +78,10 @@ export default () => {
     createProxyMiddleware({
       target: `http://${process.env.STORAGE_SERVICE_NAME}:${process.env.STORAGE_SERVICE_PORT}`,
       pathRewrite: { '^/storage': '' },
-      logLevel: 'debug'
+      // prettier-ignore
+      logLevel: /* istanbul ignore next */ process.env.NODE_ENV === 'test'
+          ? 'silent'
+          : 'debug'
     })
   );
 
@@ -86,7 +95,10 @@ export default () => {
     createProxyMiddleware({
       target: `http://${process.env.POOL_SERVICE_NAME}:${process.env.POOL_SERVICE_PORT}`,
       pathRewrite: { '^/pool': '' },
-      logLevel: 'debug'
+      // prettier-ignore
+      logLevel: /* istanbul ignore next */ process.env.NODE_ENV === 'test'
+          ? 'silent'
+          : 'debug'
     })
   );
 
@@ -116,9 +128,7 @@ export default () => {
     res.status(404).send(error?.output?.payload);
   });
 
-  app.listen(process.env.GATEWAY_SERVICE_PORT, () => {
+  return app.listen(process.env.GATEWAY_SERVICE_PORT, () => {
     console.log(`Server running on http://${os.hostname()}:${process.env.GATEWAY_SERVICE_PORT}`);
   });
-
-  return app;
 };
