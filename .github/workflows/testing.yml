@@ -66,6 +66,8 @@ jobs:
         run: (cd services/storage-service && npm run test -- --bail false --timeout 20000)
       - name: Testing transcoder-service
         run: (cd services/transcoder-service && npm run test -- --bail false --timeout 20000)
+      - name: Testing gateway-service
+        run: (cd services/gateway-service && npm run test -- --bail false --timeout 20000)
 
   coverage:
     name: Code Coverage
@@ -106,6 +108,3 @@ jobs:
         run: npx codecov
         env:
           CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
-
-
-

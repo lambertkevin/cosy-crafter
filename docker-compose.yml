@@ -33,10 +33,6 @@ services:
         source: .keys/auth.pem
         target: /.keys/auth.pem
         read_only: true
-    expose:
-      - ${PODCAST_SERVICE_PORT}
-    ports:
-      - "${PODCAST_SERVICE_PORT}:${PODCAST_SERVICE_PORT}"
     env_file:
       - services.env
     environment:
@@ -65,10 +61,6 @@ services:
         source: .keys/auth.pem
         target: /.keys/auth.pem
         read_only: true
-    expose:
-      - ${STORAGE_SERVICE_PORT}
-    ports:
-      - "${STORAGE_SERVICE_PORT}:${STORAGE_SERVICE_PORT}"
     env_file:
       - services.env
     environment:
@@ -102,10 +94,6 @@ services:
         source: .keys
         target: /.keys
         read_only: true
-    expose:
-      - ${AUTH_SERVICE_PORT}
-    ports:
-      - "${AUTH_SERVICE_PORT}:${AUTH_SERVICE_PORT}"
     env_file:
       - services.env
     environment:
@@ -171,10 +159,6 @@ services:
         source: .keys/pool.pem
         target: /.keys/pool.pem
         read_only: true
-    expose:
-      - ${POOL_SERVICE_PORT}
-    ports:
-      - "${POOL_SERVICE_PORT}:${POOL_SERVICE_PORT}"
     env_file:
       - services.env
     environment:
@@ -184,6 +168,29 @@ services:
       - POOL_RSA_KEYS_NAME=${POOL_RSA_KEYS_NAME}
       - SERVICE_JWT_SECRET=${SERVICE_JWT_SECRET}
       - SENTRY_DSN_POOL_SERVICE=${SENTRY_DSN_POOL_SERVICE}
+    command: ./run.sh
+    links:
+      - auth-service
+
+  gateway-service:
+    container_name: gateway-service
+    image: "node:12.18"
+    user: "node"
+    working_dir: /home/node/app
+    volumes:
+      - ./services/gateway-service:/home/node/app
+      - ./shared:/home/shared
+      - type: bind
+        source: .keys/auth.pem
+        target: /.keys/auth.pem
+        read_only: true
+    ports:
+      - "${GATEWAY_SERVICE_PORT}:${GATEWAY_SERVICE_PORT}"
+    env_file:
+      - services.env
+    environment:
+      - NODE_ENV=${NODE_ENV}
+      - SENTRY_DSN_GATEWAY_SERVICE=${SENTRY_DSN_GATEWAY_SERVICE}
     command: ./run.sh
     links:
       - auth-service
