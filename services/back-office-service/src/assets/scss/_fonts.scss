@@ -1,0 +1,15 @@
+@mixin font($name, $file, $weight, $style) {
+	$url: '~@/assets/fonts/';
+	@font-face {
+	  font-family: $name;
+	  src:
+	    url($url + $name + '/' + $file +'.eot') format('embedded-opentype'),
+	    url($url + $name + '/' + $file +'.woff') format('woff'),
+	    url($url + $name + '/' + $file +'.ttf')  format('truetype');
+	    // url($url + $name + '/' + $file +'.svg#'+ $name) format('svg');
+	  font-weight: $weight;
+	  font-style: $style;
+	}
+}
+
+// @include font('FontName', 'font-bold', bold, normal);
