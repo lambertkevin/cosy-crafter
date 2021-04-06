@@ -4,6 +4,7 @@ coverage
 .initialized
 .credentials
 .nyc_output
+.vscode
 
 logs
 
@@ -25,3 +26,7 @@ services/transcoder-service/tmp/*
 
 # Pool
 services/pool-service/.job-save.json
+
+# Front & Back Office
+services/back-office-service/dist
+services/front-service/dist
