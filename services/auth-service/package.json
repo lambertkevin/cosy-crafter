@@ -40,7 +40,7 @@
     "mongoose": "^5.10.0",
     "mongoose-unique-validator": "^2.0.3",
     "node-rsa": "^1.1.1",
-    "private-ip": "^1.0.5",
+    "private-ip": "^2.0.0",
     "uuid": "^8.3.0"
   },
   "devDependencies": {
