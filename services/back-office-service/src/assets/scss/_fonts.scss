@@ -1,15 +1,20 @@
 @mixin font($name, $file, $weight, $style) {
-	$url: '~@/assets/fonts/';
-	@font-face {
-	  font-family: $name;
-	  src:
-	    url($url + $name + '/' + $file +'.eot') format('embedded-opentype'),
-	    url($url + $name + '/' + $file +'.woff') format('woff'),
-	    url($url + $name + '/' + $file +'.ttf')  format('truetype');
-	    // url($url + $name + '/' + $file +'.svg#'+ $name) format('svg');
-	  font-weight: $weight;
-	  font-style: $style;
-	}
+  $url: '~@/assets/fonts/';
+
+  @font-face {
+    font-family: $name;
+    src:
+      url($url + $name + '/' + $file +'.woff') format('woff'),
+      url($url + $name + '/' + $file +'.ttf') format('truetype');
+    font-weight: $weight;
+    font-style: $style;
+  }
 }
 
-// @include font('FontName', 'font-bold', bold, normal);
+@include font('Muli', 'muli-extralight', 100, normal);
+@include font('Muli', 'muli-light', 400, normal);
+@include font('Muli', 'muli-regular', 500, normal);
+@include font('Muli', 'muli-bold', 700, normal);
+@include font('Muli', 'muli-semibold', 900, normal);
+
+@include font('FeatherIcons', 'FeatherIcons', normal, normal);

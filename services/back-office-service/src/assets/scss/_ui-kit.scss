@@ -1,4 +1,42 @@
+@use 'variables';
+@use 'foundation';
+
 html, body{
     -webkit-font-smoothing: antialiased;
     font-size: 16px;
+    background: variables.$black;
+    color: variables.$white;
+    font-family: variables.$muli-font;
+}
+
+body {
+  overflow: hidden;
+
+  &::before {
+    content: '';
+    height: foundation.rem-calc(1800);
+    width: foundation.rem-calc(1800);
+    background: radial-gradient(circle at center, rgba(variables.$red, 0.1) 0, transparent 50%);
+    position: absolute;
+    top: 0;
+    right: 0;
+    transform: translate(50%, -50%);
+  }
+}
+
+.icon {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+@each $name, $code in variables.$icons {
+  .icon--#{$name}::before {
+    font-family: variables.$icons-font;
+    font-style: normal;
+    font-size: inherit;
+    color: inherit;
+    fill: inherit;
+    content: $code;
+  }
 }
