@@ -1,8 +1,6 @@
-@import 'exports';
-@import 'foundation';
-@import 'settings';
-@import 'variables';
-@import 'fonts';
+@use 'foundation' as *;
+@use 'fonts' as *;
+@use 'settings' as *;
 
 @include foundation-global-styles;
 @include foundation-xy-grid-classes;
@@ -12,9 +10,4 @@
 @include foundation-table;
 @include foundation-prototype-text-utilities;
 @include foundation-visibility-classes;
-
-
-@import 'ui-kit';
-
-
 
