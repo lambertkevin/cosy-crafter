@@ -26,8 +26,7 @@ module.exports = {
       sass: {
         sassOptions: {
           includePaths: [path.resolve('node_modules', 'foundation-sites', 'scss')]
-        },
-        prependData: '@import "src/assets/scss/imports";'
+        }
       }
     }
   }
