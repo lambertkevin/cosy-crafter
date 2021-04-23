@@ -1,13 +1,12 @@
-@use 'foundation' as *;
-@use 'fonts' as *;
-@use 'settings' as *;
+@use 'fonts';
+
+@import '~foundation-sites/scss/foundation';
+@import 'settings';
 
 @include foundation-global-styles;
 @include foundation-xy-grid-classes;
 @include foundation-flex-classes;
 @include foundation-typography;
 @include foundation-forms;
-@include foundation-table;
 @include foundation-prototype-text-utilities;
 @include foundation-visibility-classes;
-
