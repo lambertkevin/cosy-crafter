@@ -1,5 +1,3 @@
-const path = require('path');
-
 module.exports = {
   chainWebpack: config => {
     const svgRule = config.module.rule('svg');
@@ -19,15 +17,5 @@ module.exports = {
       .options({
         name: 'assets/[name].[hash:8].[ext]'
       });
-  },
-
-  css: {
-    loaderOptions: {
-      sass: {
-        sassOptions: {
-          includePaths: [path.resolve('node_modules', 'foundation-sites', 'scss')]
-        }
-      }
-    }
   }
 };
