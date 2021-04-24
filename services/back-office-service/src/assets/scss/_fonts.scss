@@ -3,17 +3,16 @@
 
   @font-face {
     font-family: $name;
-    src:
-      url($url + $name + '/' + $file +'.woff') format('woff'),
-      url($url + $name + '/' + $file +'.ttf') format('truetype');
+    src: url($url+$name+'/'+$file+'.woff') format('woff'),
+      url($url+$name+'/'+$file+'.ttf') format('truetype');
     font-weight: $weight;
     font-style: $style;
   }
 }
 
 @include font('Muli', 'muli-extralight', 100, normal);
-@include font('Muli', 'muli-light', 400, normal);
-@include font('Muli', 'muli-regular', 500, normal);
+@include font('Muli', 'muli-light', 300, normal);
+@include font('Muli', 'muli-regular', 400, normal);
 @include font('Muli', 'muli-bold', 700, normal);
 @include font('Muli', 'muli-semibold', 900, normal);
 
