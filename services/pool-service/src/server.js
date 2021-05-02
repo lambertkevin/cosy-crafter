@@ -1,4 +1,5 @@
 import os from 'os';
+import cors from 'cors';
 import express from 'express';
 import socket from 'socket.io';
 import { auth } from '@cosy/auth';
@@ -15,6 +16,7 @@ export default async () => {
     const server = app.listen(nodeConfig.port, () => {
       console.log(`Server running on http://${os.hostname()}:${nodeConfig.port}`);
     });
+
     const io = socket(server, {
       cors: {
         origin /* istanbul ignore next */: process.env.NODE_ENV === 'development' ? '*' : undefined
@@ -37,6 +39,17 @@ export default async () => {
         }
       });
 
+    app.options(
+      '*',
+      cors({
+        origin: [
+          process.env.NODE_ENV === 'development' /* istanbul ignore next */
+            ? 'http://localhost:8080'
+            : ''
+        ],
+        optionsSuccessStatus: 200 // some legacy browsers (IE11, various SmartTVs) choke on 204
+      })
+    );
     app.get('/details', (req, res) => {
       res.send(transcodingQueue);
     });

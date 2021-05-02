@@ -15,26 +15,29 @@ export const startAuthService = () =>
       cwd: path.resolve('./', '..', 'auth-service')
     });
 
-    child.kill = () => new Promise((resolveKill, rejectKill) => {
-      exec(`lsof -i tcp:${process.env.AUTH_SERVICE_PORT} | grep LISTEN | awk '{print $2}' | xargs kill -9`, (error) => {
-        if (error) {
-          rejectKill(new Error('Killing the auth-service subprocess failed'));
-        } else {
-          resolveKill();
-        }
+    child.kill = () =>
+      new Promise((resolveKill, rejectKill) => {
+        exec(
+          `lsof -i tcp:${process.env.AUTH_SERVICE_PORT} | grep LISTEN | awk '{print $2}' | xargs kill -9`,
+          (error) => {
+            if (error) {
+              rejectKill(new Error('Killing the auth-service subprocess failed'));
+            } else {
+              resolveKill();
+            }
+          }
+        );
       });
-    });
 
-    child.on("exit", () => {
+    child.on('exit', () => {
       console.log(`\x1b[43m🔑 Auth-Service (#${child.pid}) killed\x1b[0m`);
-      reject(
-        new Error("You must kill the process running on the auth-service port")
-      );
+      reject(new Error('You must kill the process running on the auth-service port'));
     });
 
-    child.stdout.on("data", (data) => {
+    child.stdout.on('data', (data) => {
+      console.log(data.toString());
       // Service is ready when it logs 'Server running'
-      if (data.toString().includes("Server running")) {
+      if (data.toString().includes('Server running')) {
         // prettier-ignore
         console.log(`\x1b[42m🔑 Auth-Service (#${child.pid}) spwaned:\x1b[0m ${data.toString().trim()}`);
         resolve(child);
