@@ -26,9 +26,9 @@ export default {
       contenu: {
         icon: 'grid',
         links: {
-          morceau: '/content/part',
-          podcast: '/content/podcast',
-          section: '/content/section'
+          morceaux: '/content/parts',
+          podcasts: '/content/podcasts',
+          sections: '/content/sections'
         }
       },
       utilisateurs: {
@@ -38,7 +38,7 @@ export default {
       services: {
         icon: 'share-2',
         links: {
-          liste: '/services',
+          overview: '/services',
           tokens: '/services/tokens'
         }
       }
@@ -52,13 +52,13 @@ export default {
 </script>
 
 <style lang="scss" scoped>
-@use 'foundation';
+@use '~foundation-sites/scss/foundation';
 @use '~@/assets/scss/variables';
 
 .sidebar {
   $radius: 20px;
-  width: 250px;
-  height: 100vh;
+  width: 275px;
+  height: 100%;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -80,7 +80,7 @@ export default {
     letter-spacing: 0.07rem;
   }
 
-  .nav::v-deep {
+  .nav {
     margin-top: 50px;
   }
 }

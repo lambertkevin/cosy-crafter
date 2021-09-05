@@ -103,7 +103,7 @@ export default {
 </script>
 
 <style lang="scss" scoped>
-@use 'foundation';
+@use '~foundation-sites/scss/foundation';
 @use '~@/assets/scss/variables';
 
 $lineHeight: 30px;

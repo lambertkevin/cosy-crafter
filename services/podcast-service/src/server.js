@@ -37,10 +37,12 @@ export default async () => {
       key: process.env.SERVICE_JWT_SECRET,
       validate: async (decoded) => ({ isValid: Boolean(decoded.service) }),
       errorFunc: (error, request) => {
-        logger.error('Podcast Service Request JWT Error', {
-          error,
-          request: _.pick(request, ['info', 'auth'])
-        });
+        if (request?.info?.auth?.mode === 'required') {
+          logger.error('Podcast Service Request JWT Error', {
+            error,
+            request: _.pick(request, ['info', 'auth'])
+          });
+        }
 
         return error;
       }
