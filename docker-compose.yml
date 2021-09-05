@@ -44,6 +44,7 @@ services:
       - AUTH_RSA_KEYS_NAME=${AUTH_RSA_KEYS_NAME}
       - SERVICE_JWT_SECRET=${SERVICE_JWT_SECRET}
       - SENTRY_DSN_PODCAST_SERVICE=${SENTRY_DSN_PODCAST_SERVICE}
+      - CORS_ORIGIN=${CORS_ORIGIN}
     command: ./run.sh
     links:
       - mongo-service
@@ -78,6 +79,7 @@ services:
       - AUTH_RSA_KEYS_NAME=${AUTH_RSA_KEYS_NAME}
       - SERVICE_JWT_SECRET=${SERVICE_JWT_SECRET}
       - SENTRY_DSN_STORAGE_SERVICE=${SENTRY_DSN_STORAGE_SERVICE}
+      - CORS_ORIGIN=${CORS_ORIGIN}
     command: ./run.sh
     links:
       - auth-service
@@ -108,6 +110,7 @@ services:
       - RSA_KEYS_LOCATION=${RSA_KEYS_LOCATION}
       - AUTH_RSA_KEYS_NAME=${AUTH_RSA_KEYS_NAME}
       - SENTRY_DSN_AUTH_SERVICE=${SENTRY_DSN_AUTH_SERVICE}
+      - CORS_ORIGIN=${CORS_ORIGIN}
     command: ./run.sh
     links:
       - mongo-service
@@ -168,6 +171,7 @@ services:
       - POOL_RSA_KEYS_NAME=${POOL_RSA_KEYS_NAME}
       - SERVICE_JWT_SECRET=${SERVICE_JWT_SECRET}
       - SENTRY_DSN_POOL_SERVICE=${SENTRY_DSN_POOL_SERVICE}
+      - CORS_ORIGIN=${CORS_ORIGIN}
     command: ./run.sh
     links:
       - auth-service
@@ -191,6 +195,7 @@ services:
     environment:
       - NODE_ENV=${NODE_ENV}
       - SENTRY_DSN_GATEWAY_SERVICE=${SENTRY_DSN_GATEWAY_SERVICE}
+      - CORS_ORIGIN=${CORS_ORIGIN}
     command: ./run.sh
     links:
       - auth-service
