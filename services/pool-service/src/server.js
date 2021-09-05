@@ -1,4 +1,5 @@
 import os from 'os';
+import cors from 'cors';
 import express from 'express';
 import socket from 'socket.io';
 import { auth } from '@cosy/auth';
@@ -15,9 +16,10 @@ export default async () => {
     const server = app.listen(nodeConfig.port, () => {
       console.log(`Server running on http://${os.hostname()}:${nodeConfig.port}`);
     });
+
     const io = socket(server, {
       cors: {
-        origin /* istanbul ignore next */: process.env.NODE_ENV === 'development' ? '*' : undefined
+        origin: process.env.CORS_ORIGIN ?? ''
       }
     });
 
@@ -37,14 +39,21 @@ export default async () => {
         }
       });
 
+    app.options(
+      '*',
+      cors({
+        origin: [process.env.CORS_ORIGIN ?? ''],
+        optionsSuccessStatus: 200 // some legacy browsers (IE11, various SmartTVs) choke on 204
+      })
+    );
+
     app.get('/details', (req, res) => {
       res.send(transcodingQueue);
     });
 
     return server;
   } catch (err) /* istanbul ignore next */ {
-    /** @WARNING Change this to fatal when feature available in winston + sentry */
-    logger.error('Fatal Error while starting the service', err);
+    logger.fatal('Fatal Error while starting the service', err);
     return process.exit(0);
   }
 };
@@ -52,7 +61,7 @@ export default async () => {
 // istanbul ignore if
 if (process.env.NODE_ENV !== 'test') {
   process.on('unhandledRejection', (err) => {
-    logger.error('unhandledRejection', err);
+    logger.fatal('unhandledRejection', err);
     process.exit(1);
   });
 }

@@ -36,6 +36,28 @@ const failAsyncAction = () =>
   });
 
 describe('Queue Unit Test', () => {
+  describe('Init', () => {
+    const JOB_LIST_SAVE_FILE = path.resolve('./', '.job-save.json');
+    const JOB_LIST_SAVE_FILE_BAK = path.resolve('./', '.job-save.json.bak');
+
+    before(() => {
+      if (fs.existsSync(JOB_LIST_SAVE_FILE)) {
+        fs.renameSync(JOB_LIST_SAVE_FILE, JOB_LIST_SAVE_FILE_BAK);
+      }
+    });
+
+    after(() => {
+      if (fs.existsSync(JOB_LIST_SAVE_FILE_BAK)) {
+        fs.renameSync(JOB_LIST_SAVE_FILE_BAK, JOB_LIST_SAVE_FILE);
+      }
+    });
+
+    it("should create a job list save file if it doesn't exist", () => {
+      proxyquire.noPreserveCache().load('../../src/lib/QueueFactory.js', {});
+      expect(fs.existsSync(JOB_LIST_SAVE_FILE)).to.be.equal(true);
+    });
+  });
+
   describe('Job Methods', () => {
     describe('Fails', () => {
       it('should fail to remove a job that is not in the queue', () => {
