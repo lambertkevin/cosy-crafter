@@ -12,7 +12,7 @@ import { JOB_STATUS_WAITING, JOB_STATUS_FAILED, JOB_STATUS_ONGOING } from './typ
 const JOB_LIST_SAVE_FILE = path.resolve('./', '.job-save.json');
 
 if (!fs.existsSync(JOB_LIST_SAVE_FILE)) {
-  fs.writeFileSync(JOB_LIST_SAVE_FILE);
+  fs.writeFileSync(JOB_LIST_SAVE_FILE, JSON.stringify({}));
 }
 
 const prioritizeArray = (arr) => _.orderBy(arr, ['priority'], ['desc']);
