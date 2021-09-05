@@ -9,7 +9,12 @@ export const identifier = `${process.env.PODCAST_SERVICE_NAME}-jessica`;
  * @type {Object}
  */
 export const nodeConfig = {
-  port: process.env.PODCAST_SERVICE_PORT || 3000
+  port: process.env.PODCAST_SERVICE_PORT || 3000,
+  routes: {
+    cors: {
+      origin: [process.env.CORS_ORIGIN ?? '']
+    }
+  }
 };
 
 /**

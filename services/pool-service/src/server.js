@@ -19,7 +19,7 @@ export default async () => {
 
     const io = socket(server, {
       cors: {
-        origin /* istanbul ignore next */: process.env.NODE_ENV === 'development' ? '*' : undefined
+        origin: process.env.CORS_ORIGIN ?? ''
       }
     });
 
@@ -38,6 +38,14 @@ export default async () => {
           workerHandler(worker);
         }
       });
+
+    app.options(
+      '*',
+      cors({
+        origin: [process.env.CORS_ORIGIN ?? ''],
+        optionsSuccessStatus: 200 // some legacy browsers (IE11, various SmartTVs) choke on 204
+      })
+    );
 
     app.get('/details', (req, res) => {
       res.send(transcodingQueue);

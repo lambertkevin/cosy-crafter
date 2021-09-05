@@ -9,7 +9,12 @@ export const identifier = `${process.env.AUTH_SERVICE_NAME}-kathlene`;
  * @type {Object}
  */
 export const nodeConfig = {
-  port: process.env.AUTH_SERVICE_PORT || 3000
+  port: process.env.AUTH_SERVICE_PORT || 3000,
+  routes: {
+    cors: {
+      origin: [process.env.CORS_ORIGIN ?? '']
+    }
+  }
 };
 
 /**

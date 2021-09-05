@@ -9,7 +9,12 @@ export const identifier = `${process.env.STORAGE_SERVICE_NAME}-florence`;
  * @type {Object}
  */
 export const nodeConfig = {
-  port: process.env.STORAGE_SERVICE_PORT || 3000
+  port: process.env.STORAGE_SERVICE_PORT || 3000,
+  routes: {
+    cors: {
+      origin: [process.env.CORS_ORIGIN ?? '']
+    }
+  }
 };
 
 /**
