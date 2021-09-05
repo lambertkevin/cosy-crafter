@@ -4,7 +4,17 @@ import safeStringify from "fast-safe-stringify";
 import { ExtraErrorData } from "@sentry/integrations";
 import DailyRotateFile from "winston-daily-rotate-file";
 import SentryTransport from "winston-transport-sentry-node";
-import { createLogger, format, transports } from "winston";
+import winston, { createLogger, format, transports } from "winston";
+
+winston.addColors({ fatal: 'red' });
+
+const levels = {
+  fatal: 0,
+  error: 1,
+  warn: 2,
+  info: 3,
+  debug: 4
+}
 
 let pkg;
 try {
@@ -45,6 +55,7 @@ const sentryTransport =
         },
         format: raw(),
         level: "error",
+        levelMap: Object.keys(levels).reduce((acc, curr) => ({...acc, [curr]: curr}), {})
       })
     : null;
 
@@ -61,16 +72,18 @@ const consoleTransport = new transports.Console({
       }`;
     })
   ),
+  level: process.env.NODE_ENV === "test" ? "fatal" : "debug"
 });
 
 const transportsBasedOnEnv = [
   process.env.NODE_ENV === "production" ? sentryTransport : null,
-  process.env.NODE_ENV === "development" ? consoleTransport : null,
+  process.env.NODE_ENV !== "production" ? consoleTransport : null,
 ].filter((x) => x);
 
 export const { sentry } = sentryTransport || {};
 
 export const logger = createLogger({
+  levels,
   // Using timestamp with format Date.now() instead of toISOString because of performances. See https://github.com/mcollina/the-cost-of-logging
   format: format.combine(
     format.ms(),

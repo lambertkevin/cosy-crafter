@@ -123,13 +123,14 @@ describe("@cosy/logger unit tests", () => {
       process.env.NODE_ENV = "test";
     });
 
-    it("should import a logger with 2 transports", () => {
+    it("should import a logger with 3 transports", () => {
       const { logger } = require("../index");
       const transportPipes = logger?._readableState?.pipes ?? [];
 
-      expect(transportPipes).to.have.lengthOf(2);
+      expect(transportPipes).to.have.lengthOf(3);
       expect(transportPipes?.[0]).to.be.an.instanceOf(DailyRotateFile);
       expect(transportPipes?.[1]).to.be.an.instanceOf(DailyRotateFile);
+      expect(transportPipes?.[2]).to.be.an.instanceOf(transports.Console);
     });
   });
 });
