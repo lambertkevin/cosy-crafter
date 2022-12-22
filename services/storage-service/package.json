@@ -38,7 +38,7 @@
     "hapi-auth-jwt2": "^10.1.0",
     "hapi-swagger": "^14.0.0",
     "joi": "^17.4.0",
-    "jsonwebtoken": "^8.5.1",
+    "jsonwebtoken": "^9.0.0",
     "lodash": "^4.17.19",
     "node-rsa": "^1.1.1",
     "rimraf": "^3.0.2",
