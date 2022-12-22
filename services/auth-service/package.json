@@ -34,7 +34,7 @@
     "hapi-swagger": "^14.0.0",
     "joi": "^17.4.0",
     "joigoose": "^8.0.0",
-    "jsonwebtoken": "^8.5.1",
+    "jsonwebtoken": "^9.0.0",
     "lodash": "^4.17.20",
     "mongodb-memory-server": "^6.9.3",
     "mongoose": "^5.10.0",
