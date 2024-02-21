@@ -12,7 +12,7 @@
   "dependencies": {
     "@cosy/custom-error": "file:../custom-error",
     "@hapi/boom": "^9.1.2",
-    "axios": "^0.21.1",
+    "axios": "^0.28.0",
     "jsonwebtoken": "^8.5.1"
   },
   "devDependencies": {
